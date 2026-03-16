@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우유펫 관리자 — 유치원 상세</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/members.css">
+  <link rel="stylesheet" href="css/kindergartens.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ========== 사이드바 ========== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo-area">
+      <img src="assets/images/logo.png" alt="우유펫 로고" class="sidebar__logo-img">
+      <div class="sidebar__brand-ko">우유펫</div>
+      <div class="sidebar__brand-en">WOOYOOPET</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="dashboard.html" class="sidebar__menu-item">대시보드</a>
+      <a href="members.html" class="sidebar__menu-item">회원관리</a>
+      <a href="kindergartens.html" class="sidebar__menu-item active">유치원관리</a>
+      <a href="#" class="sidebar__menu-item">반려동물관리</a>
+      <a href="#" class="sidebar__menu-item">돌봄예약관리</a>
+      <a href="#" class="sidebar__menu-item">결제관리</a>
+      <a href="#" class="sidebar__menu-item">정산관리</a>
+      <a href="#" class="sidebar__menu-item">채팅관리</a>
+      <a href="#" class="sidebar__menu-item">후기관리</a>
+      <a href="#" class="sidebar__menu-item">교육관리</a>
+      <a href="#" class="sidebar__menu-item">콘텐츠관리</a>
+      <a href="#" class="sidebar__menu-item">설정</a>
+    </nav>
+    <div class="sidebar__profile">
+      <div class="sidebar__profile-row">
+        <div class="sidebar__avatar">
+          <svg class="sidebar__avatar-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+        </div>
+        <div class="sidebar__profile-info">
+          <span class="sidebar__admin-name">홍길동</span>
+          <span class="sidebar__admin-role">관리자</span>
+        </div>
+      </div>
+      <div class="sidebar__logout">로그아웃</div>
+    </div>
+  </aside>
+
+  <!-- ========== 메인 콘텐츠 ========== -->
+  <main class="main">
+
+    <header class="header">
+      <h1 class="header__title">유치원관리 <span style="color:var(--text-weak);font-weight:400;font-size:16px;">› 상세</span></h1>
+      <div class="header__right">
+        <span class="header__admin-name">홍길동 관리자</span>
+        <span class="header__logout">로그아웃</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- 상단: 뒤로가기 + 액션 버튼 -->
+      <div class="detail-top">
+        <button class="btn-back" onclick="location.href='kindergartens.html'">← 목록으로</button>
+        <div class="detail-actions">
+          <button class="btn-action btn-action--outline-coral">영업상태 변경</button>
+          <button class="btn-action btn-action--outline-warning">신선도 조정</button>
+          <button class="btn-action btn-action--filled-coral">강제 비활성화</button>
+        </div>
+      </div>
+
+      <!-- ── ① 유치원 기본정보 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">① 유치원 기본정보</span>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">유치원 고유번호</span>
+          <span class="info-grid__value">KG-000012</span>
+
+          <span class="info-grid__label">유치원명</span>
+          <span class="info-grid__value" style="font-weight:700;">밤톨이네</span>
+
+          <span class="info-grid__label">유치원 사진</span>
+          <span class="info-grid__value">
+            <div class="photo-gallery">
+              <div class="photo-gallery__item">
+                <div style="width:100%;height:100%;background:#e8f4fd;display:flex;align-items:center;justify-content:center;">
+                  <svg width="24" height="24" fill="#339DEE" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                </div>
+                <span class="photo-gallery__badge">대표</span>
+              </div>
+              <div class="photo-gallery__item">
+                <div style="width:100%;height:100%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
+                  <svg width="24" height="24" fill="#8C9AA5" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                </div>
+              </div>
+              <div class="photo-gallery__item">
+                <div style="width:100%;height:100%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
+                  <svg width="24" height="24" fill="#8C9AA5" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                </div>
+              </div>
+            </div>
+          </span>
+
+          <span class="info-grid__label">유치원 소개글</span>
+          <span class="info-grid__value">
+            <div class="intro-text" id="introText">안녕하세요, 밤톨이네입니다. 반려동물을 가족처럼 돌보는 곳이에요. 넓은 놀이 공간과 안전한 환경에서 아이들이 즐겁게 지낼 수 있도록 최선을 다하고 있습니다. 교육 이수를 완료한 전문 돌보미가 항상 상주하고 있어요.</div>
+            <button class="intro-toggle" onclick="toggleIntro()">더보기</button>
+          </span>
+
+          <span class="info-grid__label">영업 상태</span>
+          <span class="info-grid__value"><span class="badge badge--open">영업중</span></span>
+
+          <span class="info-grid__label">등록일</span>
+          <span class="info-grid__value">2025-11-03 14:23</span>
+        </div>
+      </div>
+
+      <!-- ── ② 운영자 정보 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">② 운영자 정보</span>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">운영자 성명</span>
+          <span class="info-grid__value">김민수</span>
+
+          <span class="info-grid__label">운영자 연락처</span>
+          <span class="info-grid__value">
+            <span class="masked-field">
+              <span class="masked-field__value" data-masked="010-****-1234" data-raw="010-5678-1234">010-****-1234</span>
+              <button class="masked-field__toggle" type="button" onclick="toggleMask(this)">전체보기</button>
+            </span>
+          </span>
+
+          <span class="info-grid__label">운영자 회원번호</span>
+          <span class="info-grid__value"><a href="member-detail.html" class="info-grid__value--link">M-00002345</a></span>
+        </div>
+      </div>
+
+      <!-- ── ③ 유치원 주소 정보 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">③ 유치원 주소 정보</span>
+          <div class="detail-actions">
+            <button class="btn-action btn-action--success">승인</button>
+            <button class="btn-action btn-action--danger">거절</button>
+          </div>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">도로명 주소</span>
+          <span class="info-grid__value">서울특별시 강남구 삼성로 123</span>
+
+          <span class="info-grid__label">지번 주소</span>
+          <span class="info-grid__value">서울특별시 강남구 삼성동 100-5</span>
+
+          <span class="info-grid__label">단지명</span>
+          <span class="info-grid__value">래미안아파트</span>
+
+          <span class="info-grid__label">동</span>
+          <span class="info-grid__value">101동</span>
+
+          <span class="info-grid__label">호수</span>
+          <span class="info-grid__value">
+            <span class="masked-field">
+              <span class="masked-field__value" data-masked="****호" data-raw="1234호">****호</span>
+              <button class="masked-field__toggle" type="button" onclick="toggleMask(this)">전체보기</button>
+            </span>
+          </span>
+
+          <span class="info-grid__label">주소 인증 상태</span>
+          <span class="info-grid__value"><span class="badge badge--reviewing">심사중</span></span>
+
+          <span class="info-grid__label">인증 완료일</span>
+          <span class="info-grid__value" style="color:var(--text-weak);">—</span>
+
+          <span class="info-grid__label">제출 서류 보기</span>
+          <span class="info-grid__value"><span class="info-grid__value--link">서류 확인</span></span>
+        </div>
+      </div>
+
+      <!-- ── ④ 신선도 정보 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">④ 신선도 정보</span>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">현재 신선도</span>
+          <span class="info-grid__value" style="font-size:28px;font-weight:700;color:#2ECC71;">135%</span>
+
+          <span class="info-grid__label">초기 신선도</span>
+          <span class="info-grid__value" style="color:var(--text-weak);">100%</span>
+
+          <span class="info-grid__label">총 돌봄 완료 건수</span>
+          <span class="info-grid__value">58건</span>
+
+          <span class="info-grid__label">총 받은 후기 수</span>
+          <span class="info-grid__value">28건</span>
+
+          <span class="info-grid__label">긍정 후기 비율</span>
+          <span class="info-grid__value" style="color:#2ECC71;font-weight:700;">95%</span>
+
+          <span class="info-grid__label">유치원 측 노쇼 횟수</span>
+          <span class="info-grid__value" style="color:#E05A3A;font-weight:700;">1회</span>
+
+          <span class="info-grid__label">유치원 측 취소 횟수</span>
+          <span class="info-grid__value" style="color:#F5A623;font-weight:700;">2회</span>
+        </div>
+      </div>
+
+      <!-- ── ⑤ 상주 반려동물 목록 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">⑤ 상주 반려동물 목록</span>
+        </div>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>이름</th>
+              <th>견종</th>
+              <th>성별</th>
+              <th>나이</th>
+              <th>몸무게</th>
+              <th>중성화</th>
+              <th>번호</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>코코</td>
+              <td>비숑프리제</td>
+              <td>수컷</td>
+              <td>4살</td>
+              <td>5.8kg</td>
+              <td><span class="badge badge--done">했어요</span></td>
+              <td><span class="mini-table__link">P-00008765</span></td>
+            </tr>
+            <tr>
+              <td>두부</td>
+              <td>포메라니안</td>
+              <td>암컷</td>
+              <td>2살</td>
+              <td>3.1kg</td>
+              <td><span class="badge badge--notdone">안 했어요</span></td>
+              <td><span class="mini-table__link">P-00008766</span></td>
+            </tr>
+            <tr>
+              <td>몽이</td>
+              <td>말티즈</td>
+              <td>수컷</td>
+              <td>6살</td>
+              <td>4.2kg</td>
+              <td><span class="badge badge--done">했어요</span></td>
+              <td><span class="mini-table__link">P-00008767</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── ⑥ 돌봄비 가격표 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">⑥ 돌봄비 가격표</span>
+        </div>
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>1시간</th>
+              <th>24시간</th>
+              <th>산책 1회</th>
+              <th>픽업/드랍</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>소형 (10kg 미만)</td>
+              <td>15,000원</td>
+              <td>45,000원</td>
+              <td>8,000원</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td>중형 (25kg 미만)</td>
+              <td>20,000원</td>
+              <td>60,000원</td>
+              <td>10,000원</td>
+              <td>5,000원</td>
+            </tr>
+            <tr>
+              <td>대형 (25kg 이상)</td>
+              <td>25,000원</td>
+              <td>80,000원</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── ⑦ 교육이수 정보 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">⑦ 교육이수 정보</span>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">교육이수 상태</span>
+          <span class="info-grid__value"><span class="badge badge--in-progress">진행중</span></span>
+
+          <span class="info-grid__label">진행률</span>
+          <span class="info-grid__value">
+            <div class="progress-bar">
+              <div class="progress-bar__track">
+                <div class="progress-bar__fill" style="width:60%;"></div>
+              </div>
+              <span class="progress-bar__text">12 / 20</span>
+            </div>
+          </span>
+
+          <span class="info-grid__label">교육 완료 일시</span>
+          <span class="info-grid__value" style="color:var(--text-weak);">—</span>
+
+          <span class="info-grid__label">서약서 동의 여부</span>
+          <span class="info-grid__value"><span class="badge badge--pledge-no">미동의</span></span>
+
+          <span class="info-grid__label">서약서 동의 일시</span>
+          <span class="info-grid__value" style="color:var(--text-weak);">—</span>
+        </div>
+      </div>
+
+      <!-- ── ⑧ 정산정보 및 서브몰 등록 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">⑧ 정산정보 및 서브몰 등록</span>
+          <div class="detail-actions">
+            <button class="btn-action btn-action--outline-primary">서브몰 재등록 요청</button>
+          </div>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">정산정보 심사 상태</span>
+          <span class="info-grid__value"><span class="badge badge--submitted">제출됨</span></span>
+
+          <span class="info-grid__label">이니시스 서브몰 등록 상태</span>
+          <span class="info-grid__value"><span class="badge badge--registered">등록완료</span></span>
+
+          <span class="info-grid__label">이니시스 서브몰 코드</span>
+          <span class="info-grid__value">INICIS-WYP-012</span>
+
+          <span class="info-grid__label">판매자 ID</span>
+          <span class="info-grid__value">wooyoo12</span>
+
+          <span class="info-grid__label">정산정보 상세 링크</span>
+          <span class="info-grid__value"><span class="info-grid__value--link">정산관리로 이동</span></span>
+        </div>
+      </div>
+
+      <!-- ── ⑨ 정산 이력 요약 (수정본) ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">⑨ 정산 이력 요약</span>
+        </div>
+        <div class="stat-cards stat-cards--3col">
+          <div class="stat-card">
+            <div class="stat-card__label">누적 돌봄 결제금액</div>
+            <div class="stat-card__value">12,500,000</div>
+            <div class="stat-card__unit">원</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">누적 위약금 결제금액</div>
+            <div class="stat-card__value">350,000</div>
+            <div class="stat-card__unit">원</div>
+          </div>
+          <div class="stat-card stat-card--highlight">
+            <div class="stat-card__label">누적 유효금액</div>
+            <div class="stat-card__value">12,850,000</div>
+            <div class="stat-card__unit">원</div>
+          </div>
+          <div class="stat-card stat-card--fee">
+            <div class="stat-card__label">누적 플랫폼수수료</div>
+            <div class="stat-card__value">2,570,000</div>
+            <div class="stat-card__unit">원</div>
+          </div>
+          <div class="stat-card stat-card--settlement">
+            <div class="stat-card__label">누적 정산금액</div>
+            <div class="stat-card__value">10,280,000</div>
+            <div class="stat-card__unit">원</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">현재 정산예정 금액</div>
+            <div class="stat-card__value">1,200,000</div>
+            <div class="stat-card__unit">원</div>
+          </div>
+          <div class="stat-card stat-card--link">
+            <div class="stat-card__value">정산내역 전체 보기 →</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ⑩ 노쇼 이력 (유치원 측) ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">⑩ 노쇼 이력 (유치원 측)</span>
+        </div>
+        <div class="info-grid" style="margin-bottom:20px;">
+          <span class="info-grid__label">누적 노쇼 횟수</span>
+          <span class="info-grid__value" style="color:#E05A3A;font-weight:700;">1회</span>
+
+          <span class="info-grid__label">현재 제재 상태</span>
+          <span class="info-grid__value"><span class="badge badge--warning">경고(신선도하락)</span></span>
+        </div>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>발생일</th>
+              <th>예약번호</th>
+              <th>보호자 이름</th>
+              <th>소명 상태</th>
+              <th style="width:140px">액션</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-03-10</td>
+              <td><span class="mini-table__link">RES-000789</span></td>
+              <td>홍길동</td>
+              <td><span class="badge badge--claim-received">소명접수</span></td>
+              <td>
+                <button class="btn-action btn-action--success" style="padding:4px 10px;font-size:12px;">소명 인정</button>
+                <button class="btn-action btn-action--danger" style="padding:4px 10px;font-size:12px;">소명 거부</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── ⑪ 상태 변경 이력 ── -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <span class="detail-card__title">⑪ 상태 변경 이력</span>
+        </div>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>변경 일시</th>
+              <th>변경 항목</th>
+              <th>이전 값</th>
+              <th>변경 후 값</th>
+              <th>변경 주체</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-03-15 10:30</td>
+              <td>영업상태</td>
+              <td><span class="badge badge--vacation">방학중</span></td>
+              <td><span class="badge badge--open">영업중</span></td>
+              <td>유치원(본인)</td>
+              <td>방학 종료</td>
+            </tr>
+            <tr>
+              <td>2026-03-01 09:00</td>
+              <td>신선도</td>
+              <td>130%</td>
+              <td>135%</td>
+              <td>시스템(자동)</td>
+              <td>긍정 후기 반영</td>
+            </tr>
+            <tr>
+              <td>2026-02-15 14:20</td>
+              <td>서브몰등록</td>
+              <td><span class="badge badge--registering">등록요청중</span></td>
+              <td><span class="badge badge--registered">등록완료</span></td>
+              <td>시스템(자동)</td>
+              <td>이니시스 처리 완료</td>
+            </tr>
+            <tr>
+              <td>2026-01-20 11:00</td>
+              <td>교육이수</td>
+              <td><span class="badge badge--not-started">미시작</span></td>
+              <td><span class="badge badge--in-progress">진행중</span></td>
+              <td>유치원(본인)</td>
+              <td>교육 시작</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- .content -->
+  </main>
+
+</div><!-- .layout -->
+
+<!-- 마스킹 토글 + 소개글 토글 스크립트 -->
+<script>
+function toggleMask(btn) {
+  const valueEl = btn.previousElementSibling;
+  const masked = valueEl.getAttribute('data-masked');
+  const raw = valueEl.getAttribute('data-raw');
+  if (valueEl.textContent === masked) {
+    valueEl.textContent = raw;
+    btn.textContent = '숨기기';
+  } else {
+    valueEl.textContent = masked;
+    btn.textContent = '전체보기';
+  }
+}
+
+function toggleIntro() {
+  const el = document.getElementById('introText');
+  const btn = el.nextElementSibling;
+  el.classList.toggle('expanded');
+  btn.textContent = el.classList.contains('expanded') ? '접기' : '더보기';
+}
+</script>
+
+</body>
+</html>
