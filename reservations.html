@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우유펫 관리자 — 돌봄예약관리</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pets.css">
+  <link rel="stylesheet" href="css/reservations.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ========== 사이드바 ========== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo-area">
+      <img src="assets/images/logo.png" alt="우유펫 로고" class="sidebar__logo-img">
+      <div class="sidebar__brand-ko">우유펫</div>
+      <div class="sidebar__brand-en">WOOYOOPET</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="dashboard.html" class="sidebar__menu-item">대시보드</a>
+      <a href="members.html" class="sidebar__menu-item">회원관리</a>
+      <a href="kindergartens.html" class="sidebar__menu-item">유치원관리</a>
+      <a href="pets.html" class="sidebar__menu-item">반려동물관리</a>
+      <a href="reservations.html" class="sidebar__menu-item active">돌봄예약관리</a>
+      <a href="#" class="sidebar__menu-item">결제관리</a>
+      <a href="#" class="sidebar__menu-item">정산관리</a>
+      <a href="#" class="sidebar__menu-item">채팅관리</a>
+      <a href="#" class="sidebar__menu-item">후기관리</a>
+      <a href="#" class="sidebar__menu-item">교육관리</a>
+      <a href="#" class="sidebar__menu-item">콘텐츠관리</a>
+      <a href="#" class="sidebar__menu-item">설정</a>
+    </nav>
+    <div class="sidebar__profile">
+      <div class="sidebar__profile-row">
+        <div class="sidebar__avatar">
+          <svg class="sidebar__avatar-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+        </div>
+        <div class="sidebar__profile-info">
+          <span class="sidebar__admin-name">홍길동</span>
+          <span class="sidebar__admin-role">관리자</span>
+        </div>
+      </div>
+      <div class="sidebar__logout">로그아웃</div>
+    </div>
+  </aside>
+
+  <!-- ========== 메인 콘텐츠 ========== -->
+  <div class="main">
+
+    <!-- 헤더 -->
+    <header class="header">
+      <h1 class="header__title">돌봄예약관리</h1>
+      <div class="header__right">
+        <span class="header__admin-name">홍길동 관리자</span>
+        <span class="header__logout">로그아웃</span>
+      </div>
+    </header>
+
+    <!-- 콘텐츠 영역 -->
+    <div class="content">
+
+      <!-- 필터 바 (3행) -->
+      <div class="filter-bar">
+        <!-- 1행: 기간 -->
+        <div class="filter-row">
+          <span class="filter-label">기간</span>
+          <input type="date" class="filter-input filter-input--date" value="2025-01-01">
+          <span class="filter-separator">~</span>
+          <input type="date" class="filter-input filter-input--date" value="2025-12-31">
+        </div>
+        <!-- 2행: 예약 상태 -->
+        <div class="filter-row">
+          <span class="filter-label">상태</span>
+          <select class="filter-select">
+            <option>전체</option>
+            <option>수락대기</option>
+            <option>예약확정</option>
+            <option>돌봄진행중</option>
+            <option>돌봄완료</option>
+            <option>보호자취소</option>
+            <option>유치원취소</option>
+            <option>유치원거절</option>
+            <option>노쇼</option>
+          </select>
+        </div>
+        <!-- 3행: 검색 -->
+        <div class="filter-row">
+          <span class="filter-label">검색</span>
+          <select class="filter-select">
+            <option>보호자 이름</option>
+            <option>반려동물 이름</option>
+            <option>유치원명</option>
+            <option>예약번호</option>
+          </select>
+          <input type="text" class="filter-input filter-input--search" placeholder="검색어를 입력하세요">
+          <button class="btn-search">검색</button>
+        </div>
+      </div>
+
+      <!-- 결과 헤더 -->
+      <div class="result-header">
+        <span class="result-header__count">검색 결과 <strong>1,284</strong>건</span>
+        <button class="btn-excel">
+          <svg class="btn-excel__icon" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 12l-4-4h2.5V3h3v5H12L8 12zm-6 2h12v1.5H2V14z"/>
+          </svg>
+          내역 다운로드
+        </button>
+      </div>
+
+      <!-- 데이터 테이블 -->
+      <div class="data-table-wrap data-table-wrap--scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>번호</th>
+              <th>신청일시</th>
+              <th>보호자 이름</th>
+              <th>보호자 연락처</th>
+              <th>반려동물 이름</th>
+              <th>크기</th>
+              <th>유치원명</th>
+              <th>위치</th>
+              <th>등원일시</th>
+              <th>하원일시</th>
+              <th>산책</th>
+              <th>픽업/드랍</th>
+              <th>결제금액</th>
+              <th>예약 상태</th>
+              <th>결제번호</th>
+              <th>상세</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 1행: 수락대기 -->
+            <tr>
+              <td>1</td>
+              <td>2026-03-15 09:12</td>
+              <td>김민수</td>
+              <td class="masked">010-****-1234</td>
+              <td>코코</td>
+              <td><span class="badge badge--size-s">소형</span></td>
+              <td>밤톨이네</td>
+              <td>서울 강남구</td>
+              <td>2026-03-18 09:00</td>
+              <td>2026-03-18 18:00</td>
+              <td>2회</td>
+              <td><span class="badge badge--pickup-yes">이용</span></td>
+              <td class="text-right">55,000원</td>
+              <td><span class="badge badge--res-pending">수락대기</span></td>
+              <td><a href="#" class="data-table__link">P-00005678</a></td>
+              <td><a href="reservation-detail.html" class="data-table__link">상세</a></td>
+            </tr>
+            <!-- 2행: 예약확정 -->
+            <tr>
+              <td>2</td>
+              <td>2026-03-14 14:30</td>
+              <td>이영희</td>
+              <td class="masked">010-****-5678</td>
+              <td>몽이</td>
+              <td><span class="badge badge--size-s">소형</span></td>
+              <td>사랑이네</td>
+              <td>서울 서초구</td>
+              <td>2026-03-17 09:00</td>
+              <td>2026-03-19 18:00</td>
+              <td>1회</td>
+              <td><span class="badge badge--pickup-no">미이용</span></td>
+              <td class="text-right">90,000원</td>
+              <td><span class="badge badge--res-confirmed">예약확정</span></td>
+              <td><a href="#" class="data-table__link">P-00005665</a></td>
+              <td><a href="reservation-detail.html" class="data-table__link">상세</a></td>
+            </tr>
+            <!-- 3행: 돌봄진행중 -->
+            <tr>
+              <td>3</td>
+              <td>2026-03-10 11:45</td>
+              <td>박서연</td>
+              <td class="masked">010-****-9012</td>
+              <td>초코</td>
+              <td><span class="badge badge--size-m">중형</span></td>
+              <td>행복한강아지</td>
+              <td>서울 송파구</td>
+              <td>2026-03-15 09:00</td>
+              <td>2026-03-15 18:00</td>
+              <td>0회</td>
+              <td><span class="badge badge--pickup-yes">이용</span></td>
+              <td class="text-right">35,000원</td>
+              <td><span class="badge badge--res-ongoing">돌봄진행중</span></td>
+              <td><a href="#" class="data-table__link">P-00005620</a></td>
+              <td><a href="reservation-detail.html" class="data-table__link">상세</a></td>
+            </tr>
+            <!-- 4행: 돌봄완료 -->
+            <tr>
+              <td>4</td>
+              <td>2026-03-08 08:20</td>
+              <td>최지훈</td>
+              <td class="masked">010-****-3456</td>
+              <td>뽀삐</td>
+              <td><span class="badge badge--size-l">대형</span></td>
+              <td>밤톨이네</td>
+              <td>서울 강남구</td>
+              <td>2026-03-12 09:00</td>
+              <td>2026-03-14 18:00</td>
+              <td>3회</td>
+              <td><span class="badge badge--pickup-no">미이용</span></td>
+              <td class="text-right">120,000원</td>
+              <td><span class="badge badge--res-completed">돌봄완료</span></td>
+              <td><a href="#" class="data-table__link">P-00005589</a></td>
+              <td><a href="reservation-detail.html" class="data-table__link">상세</a></td>
+            </tr>
+            <!-- 5행: 보호자취소 -->
+            <tr>
+              <td>5</td>
+              <td>2026-03-05 16:50</td>
+              <td>정하늘</td>
+              <td class="masked">010-****-7890</td>
+              <td>보리</td>
+              <td><span class="badge badge--size-s">소형</span></td>
+              <td>사랑이네</td>
+              <td>서울 서초구</td>
+              <td>2026-03-10 09:00</td>
+              <td>2026-03-10 18:00</td>
+              <td>1회</td>
+              <td><span class="badge badge--pickup-no">미이용</span></td>
+              <td class="text-right">25,000원</td>
+              <td><span class="badge badge--res-cancel-g">보호자취소</span></td>
+              <td><a href="#" class="data-table__link">P-00005534</a></td>
+              <td><a href="reservation-detail.html" class="data-table__link">상세</a></td>
+            </tr>
+            <!-- 6행: 유치원취소 -->
+            <tr>
+              <td>6</td>
+              <td>2026-03-03 10:15</td>
+              <td>한수정</td>
+              <td class="masked">010-****-2345</td>
+              <td>루이</td>
+              <td><span class="badge badge--size-s">소형</span></td>
+              <td>행복한강아지</td>
+              <td>서울 송파구</td>
+              <td>2026-03-08 09:00</td>
+              <td>2026-03-09 18:00</td>
+              <td>2회</td>
+              <td><span class="badge badge--pickup-yes">이용</span></td>
+              <td class="text-right">70,000원</td>
+              <td><span class="badge badge--res-cancel-k">유치원취소</span></td>
+              <td><a href="#" class="data-table__link">P-00005498</a></td>
+              <td><a href="reservation-detail.html" class="data-table__link">상세</a></td>
+            </tr>
+            <!-- 7행: 유치원거절 -->
+            <tr>
+              <td>7</td>
+              <td>2026-03-01 13:40</td>
+              <td>김민수</td>
+              <td class="masked">010-****-1234</td>
+              <td>두부</td>
+              <td><span class="badge badge--size-s">소형</span></td>
+              <td>밤톨이네</td>
+              <td>서울 강남구</td>
+              <td>2026-03-05 09:00</td>
+              <td>2026-03-05 18:00</td>
+              <td>0회</td>
+              <td><span class="badge badge--pickup-no">미이용</span></td>
+              <td class="text-right">15,000원</td>
+              <td><span class="badge badge--res-rejected">유치원거절</span></td>
+              <td><a href="#" class="data-table__link">P-00005456</a></td>
+              <td><a href="reservation-detail.html" class="data-table__link">상세</a></td>
+            </tr>
+            <!-- 8행: 노쇼 -->
+            <tr>
+              <td>8</td>
+              <td>2026-02-28 09:55</td>
+              <td>이영희</td>
+              <td class="masked">010-****-5678</td>
+              <td>몽이</td>
+              <td><span class="badge badge--size-s">소형</span></td>
+              <td>사랑이네</td>
+              <td>서울 서초구</td>
+              <td>2026-03-03 09:00</td>
+              <td>2026-03-03 18:00</td>
+              <td>1회</td>
+              <td><span class="badge badge--pickup-no">미이용</span></td>
+              <td class="text-right">20,000원</td>
+              <td><span class="badge badge--res-noshow">노쇼</span></td>
+              <td><a href="#" class="data-table__link">P-00005412</a></td>
+              <td><a href="reservation-detail.html" class="data-table__link">상세</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 페이지네이션 -->
+      <div class="pagination">
+        <button class="pagination__btn pagination__btn--arrow" disabled>&laquo;</button>
+        <button class="pagination__btn pagination__btn--arrow" disabled>&lsaquo;</button>
+        <button class="pagination__btn active">1</button>
+        <button class="pagination__btn">2</button>
+        <button class="pagination__btn">3</button>
+        <button class="pagination__btn">4</button>
+        <button class="pagination__btn">5</button>
+        <button class="pagination__btn pagination__btn--arrow">&rsaquo;</button>
+        <button class="pagination__btn pagination__btn--arrow">&raquo;</button>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+</body>
+</html>

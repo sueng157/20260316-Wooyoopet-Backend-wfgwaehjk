@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우유펫 관리자 — 돌봄예약 상세</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pets.css">
+  <link rel="stylesheet" href="css/reservations.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ========== 사이드바 ========== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo-area">
+      <img src="assets/images/logo.png" alt="우유펫 로고" class="sidebar__logo-img">
+      <div class="sidebar__brand-ko">우유펫</div>
+      <div class="sidebar__brand-en">WOOYOOPET</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="dashboard.html" class="sidebar__menu-item">대시보드</a>
+      <a href="members.html" class="sidebar__menu-item">회원관리</a>
+      <a href="kindergartens.html" class="sidebar__menu-item">유치원관리</a>
+      <a href="pets.html" class="sidebar__menu-item">반려동물관리</a>
+      <a href="reservations.html" class="sidebar__menu-item active">돌봄예약관리</a>
+      <a href="#" class="sidebar__menu-item">결제관리</a>
+      <a href="#" class="sidebar__menu-item">정산관리</a>
+      <a href="#" class="sidebar__menu-item">채팅관리</a>
+      <a href="#" class="sidebar__menu-item">후기관리</a>
+      <a href="#" class="sidebar__menu-item">교육관리</a>
+      <a href="#" class="sidebar__menu-item">콘텐츠관리</a>
+      <a href="#" class="sidebar__menu-item">설정</a>
+    </nav>
+    <div class="sidebar__profile">
+      <div class="sidebar__profile-row">
+        <div class="sidebar__avatar">
+          <svg class="sidebar__avatar-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+        </div>
+        <div class="sidebar__profile-info">
+          <span class="sidebar__admin-name">홍길동</span>
+          <span class="sidebar__admin-role">관리자</span>
+        </div>
+      </div>
+      <div class="sidebar__logout">로그아웃</div>
+    </div>
+  </aside>
+
+  <!-- ========== 메인 콘텐츠 ========== -->
+  <div class="main">
+
+    <!-- 헤더 -->
+    <header class="header">
+      <h1 class="header__title">돌봄예약관리</h1>
+      <div class="header__right">
+        <span class="header__admin-name">홍길동 관리자</span>
+        <span class="header__logout">로그아웃</span>
+      </div>
+    </header>
+
+    <!-- 콘텐츠 영역 -->
+    <div class="content">
+
+      <!-- 상단 액션바 -->
+      <div class="detail-top">
+        <a href="reservations.html" class="btn-back">&larr; 목록으로</a>
+        <div class="detail-actions">
+          <button class="btn-action btn-action--outline-primary" onclick="document.getElementById('statusModal').classList.add('active')">상태 변경</button>
+          <button class="btn-action btn-action--outline-coral" onclick="document.getElementById('cancelModal').classList.add('active')">강제 취소/환불</button>
+          <button class="btn-action btn-action--outline-warning" onclick="document.getElementById('noshowModal').classList.add('active')">노쇼 처리</button>
+        </div>
+      </div>
+
+      <!-- ========== 영역 1: 예약 기본정보 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">예약 기본정보</h2>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">예약 고유번호</span>
+          <span class="info-grid__value">R-00005678</span>
+
+          <span class="info-grid__label">신청일시</span>
+          <span class="info-grid__value">2026-03-15 09:12</span>
+
+          <span class="info-grid__label">현재 예약 상태</span>
+          <span class="info-grid__value"><span class="badge badge--res-confirmed">예약확정</span></span>
+
+          <span class="info-grid__label">등원 예정일시</span>
+          <span class="info-grid__value">2026-03-18 09:00</span>
+
+          <span class="info-grid__label">하원 예정일시</span>
+          <span class="info-grid__value">2026-03-18 18:00</span>
+
+          <span class="info-grid__label">실제 등원일시</span>
+          <span class="info-grid__value">—</span>
+
+          <span class="info-grid__label">실제 하원일시</span>
+          <span class="info-grid__value">—</span>
+
+          <span class="info-grid__label">산책 횟수</span>
+          <span class="info-grid__value">2회</span>
+
+          <span class="info-grid__label">픽업/드랍 여부</span>
+          <span class="info-grid__value"><span class="badge badge--pickup-yes">이용</span></span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 2: 보호자 정보 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">보호자 정보</h2>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">보호자 이름</span>
+          <span class="info-grid__value">김민수</span>
+
+          <span class="info-grid__label">보호자 닉네임</span>
+          <span class="info-grid__value">코코맘</span>
+
+          <span class="info-grid__label">보호자 연락처</span>
+          <span class="info-grid__value">
+            <span class="masked-field">
+              <span class="masked-field__value">010-****-1234</span>
+              <button class="masked-field__toggle">[전체보기]</button>
+            </span>
+          </span>
+
+          <span class="info-grid__label">보호자 주소</span>
+          <span class="info-grid__value">래미안아파트 101동</span>
+
+          <span class="info-grid__label">보호자 회원번호</span>
+          <span class="info-grid__value"><a href="member-detail.html" class="info-grid__value--link">M-00002345</a></span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 3: 반려동물 정보 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">반려동물 정보</h2>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">반려동물 이름</span>
+          <span class="info-grid__value">코코</span>
+
+          <span class="info-grid__label">견종</span>
+          <span class="info-grid__value">비숑프리제</span>
+
+          <span class="info-grid__label">성별</span>
+          <span class="info-grid__value"><span class="badge badge--male">수컷</span></span>
+
+          <span class="info-grid__label">나이</span>
+          <span class="info-grid__value">4세</span>
+
+          <span class="info-grid__label">몸무게</span>
+          <span class="info-grid__value">5.8 kg</span>
+
+          <span class="info-grid__label">크기 분류</span>
+          <span class="info-grid__value"><span class="badge badge--size-s">소형</span></span>
+
+          <span class="info-grid__label">중성화 여부</span>
+          <span class="info-grid__value"><span class="badge badge--neutered">했어요</span></span>
+
+          <span class="info-grid__label">예방접종 여부</span>
+          <span class="info-grid__value"><span class="badge badge--vaccinated">했어요</span></span>
+
+          <span class="info-grid__label">반려동물 번호</span>
+          <span class="info-grid__value"><a href="pet-detail.html" class="info-grid__value--link">PT-000045</a></span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 4: 유치원 정보 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">유치원 정보</h2>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">유치원명</span>
+          <span class="info-grid__value">밤톨이네</span>
+
+          <span class="info-grid__label">운영자 성명</span>
+          <span class="info-grid__value">박운영</span>
+
+          <span class="info-grid__label">운영자 연락처</span>
+          <span class="info-grid__value">
+            <span class="masked-field">
+              <span class="masked-field__value">010-****-8888</span>
+              <button class="masked-field__toggle">[전체보기]</button>
+            </span>
+          </span>
+
+          <span class="info-grid__label">위치</span>
+          <span class="info-grid__value">서울 강남구 역삼동 123-45</span>
+
+          <span class="info-grid__label">유치원 번호</span>
+          <span class="info-grid__value"><a href="kindergarten-detail.html" class="info-grid__value--link">K-00000012</a></span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 5: 금액 상세 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">금액 상세</h2>
+        </div>
+        <div class="stat-cards--4col">
+          <div class="stat-card">
+            <div class="stat-card__label">돌봄비</div>
+            <div class="stat-card__value">30,000원</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">산책비 (2회)</div>
+            <div class="stat-card__value">10,000원</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">픽업/드랍비</div>
+            <div class="stat-card__value">15,000원</div>
+          </div>
+          <div class="stat-card stat-card--highlight">
+            <div class="stat-card__label">총 결제금액</div>
+            <div class="stat-card__value">55,000원</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 영역 6: 결제 정보 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">결제 정보</h2>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">결제 고유번호</span>
+          <span class="info-grid__value"><a href="#" class="info-grid__value--link">P-00005678</a></span>
+
+          <span class="info-grid__label">PG사 거래번호</span>
+          <span class="info-grid__value">INI-20260315-091234</span>
+
+          <span class="info-grid__label">결제일시</span>
+          <span class="info-grid__value">2026-03-15 09:12</span>
+
+          <span class="info-grid__label">결제 수단</span>
+          <span class="info-grid__value">카드결제</span>
+
+          <span class="info-grid__label">카드사</span>
+          <span class="info-grid__value">신한카드</span>
+
+          <span class="info-grid__label">결제 상태</span>
+          <span class="info-grid__value"><span class="badge badge--pay-completed">결제완료</span></span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 7: 환불 정보 (조건부 표시) ========== -->
+      <div class="detail-card conditional-section">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">환불 정보</h2>
+          <span class="conditional-section__badge">취소 건에만 표시</span>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">취소 요청자</span>
+          <span class="info-grid__value"><span class="badge badge--cancel-requester-guardian">보호자</span></span>
+
+          <span class="info-grid__label">취소 일시</span>
+          <span class="info-grid__value">2026-02-28 14:30</span>
+
+          <span class="info-grid__label">위약금 비율</span>
+          <span class="info-grid__value refund-penalty-rate--highlighted">50%</span>
+
+          <span class="info-grid__label">위약금 결제금액</span>
+          <span class="info-grid__value">35,000원</span>
+
+          <span class="info-grid__label">기존 결제 취소(환불) 금액</span>
+          <span class="info-grid__value">70,000원</span>
+
+          <span class="info-grid__label">환불 처리 상태</span>
+          <span class="info-grid__value"><span class="badge badge--refund-complete">완료</span></span>
+
+          <span class="info-grid__label">환불 상세</span>
+          <span class="info-grid__value"><a href="#" class="info-grid__value--link">결제관리 &gt; 환불·위약금 상세 &rarr;</a></span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 8: 거절 정보 (조건부 표시) ========== -->
+      <div class="detail-card conditional-section">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">거절 정보</h2>
+          <span class="conditional-section__badge">유치원거절 건에만 표시</span>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">거절 일시</span>
+          <span class="info-grid__value">2026-03-01 15:20</span>
+
+          <span class="info-grid__label">거절 사유</span>
+          <span class="info-grid__value">
+            <div class="reject-reason">당일 수용 가능 두수를 초과하여 예약을 수락할 수 없습니다. 다른 날짜로 변경해주시면 감사하겠습니다.</div>
+          </span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 9: 하원 확인 정보 (조건부 표시) ========== -->
+      <div class="detail-card conditional-section">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">하원 확인 정보</h2>
+          <span class="conditional-section__badge">돌봄완료 건에만 표시</span>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">하원 확인 상태</span>
+          <span class="info-grid__value"><span class="badge badge--checkout-confirmed">확인완료</span></span>
+
+          <span class="info-grid__label">확인자</span>
+          <span class="info-grid__value">보호자 (김민수)</span>
+
+          <span class="info-grid__label">확인 일시</span>
+          <span class="info-grid__value">2026-03-18 18:15</span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 10: 상태 변경 이력 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">상태 변경 이력</h2>
+        </div>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>변경일시</th>
+              <th>이전 상태</th>
+              <th>변경 후 상태</th>
+              <th>행위자</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-03-15 09:12</td>
+              <td>—</td>
+              <td><span class="badge badge--res-pending">수락대기</span></td>
+              <td><span class="badge badge--actor-system">시스템</span></td>
+              <td>보호자 예약 신청</td>
+            </tr>
+            <tr>
+              <td>2026-03-15 10:30</td>
+              <td><span class="badge badge--res-pending">수락대기</span></td>
+              <td><span class="badge badge--res-confirmed">예약확정</span></td>
+              <td><span class="badge badge--actor-kindergarten">유치원</span></td>
+              <td>유치원에서 예약 수락</td>
+            </tr>
+            <tr>
+              <td>2026-03-18 09:05</td>
+              <td><span class="badge badge--res-confirmed">예약확정</span></td>
+              <td><span class="badge badge--res-ongoing">돌봄진행중</span></td>
+              <td><span class="badge badge--actor-kindergarten">유치원</span></td>
+              <td>등원 확인</td>
+            </tr>
+            <tr>
+              <td>2026-03-18 18:10</td>
+              <td><span class="badge badge--res-ongoing">돌봄진행중</span></td>
+              <td><span class="badge badge--res-completed">돌봄완료</span></td>
+              <td><span class="badge badge--actor-kindergarten">유치원</span></td>
+              <td>하원 처리 완료</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ========== 모달 1: 관리자 강제 상태 변경 ========== -->
+<div class="modal-overlay" id="statusModal">
+  <div class="modal">
+    <div class="modal__title" style="color: var(--primary);">관리자 강제 상태 변경</div>
+    <div class="modal__message">
+      관리자 권한으로 예약 상태를 강제로 변경합니다.<br>
+      변경 사유를 반드시 입력해주세요.
+    </div>
+    <div class="modal__label">변경할 상태 <span>*</span></div>
+    <select class="modal__select" id="statusSelect">
+      <option value="">상태를 선택하세요</option>
+      <option>수락대기</option>
+      <option>예약확정</option>
+      <option>돌봄진행중</option>
+      <option>돌봄완료</option>
+    </select>
+    <div class="modal__label">변경 사유 <span>*</span></div>
+    <textarea class="modal__textarea" id="statusReason" placeholder="상태 변경 사유를 입력하세요"
+      oninput="document.getElementById('statusBtn').disabled = !(this.value.trim() && document.getElementById('statusSelect').value)"></textarea>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('statusModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-danger" id="statusBtn" disabled>상태 변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달 2: 관리자 강제 취소/환불 ========== -->
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal">
+    <div class="modal__title">관리자 강제 취소/환불</div>
+    <div class="modal__warning">
+      이 작업은 예약을 즉시 취소하고 환불 프로세스를 시작합니다.<br>
+      되돌릴 수 없으니 신중하게 진행해주세요.
+    </div>
+    <div class="modal__label">취소 사유 <span>*</span></div>
+    <textarea class="modal__textarea" id="cancelReason" placeholder="강제 취소 사유를 입력하세요"
+      oninput="document.getElementById('cancelBtn').disabled = !this.value.trim()"></textarea>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('cancelModal').classList.remove('active')">닫기</button>
+      <button class="modal__btn modal__btn--confirm-danger" id="cancelBtn" disabled>강제 취소/환불</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 모달 3: 노쇼 처리 ========== -->
+<div class="modal-overlay" id="noshowModal">
+  <div class="modal">
+    <div class="modal__title">노쇼 처리</div>
+    <div class="modal__warning">
+      보호자가 예약 시간에 등원하지 않은 경우 노쇼로 처리합니다.<br>
+      노쇼 처리 시 보호자에게 불이익이 발생할 수 있습니다.
+    </div>
+    <div class="modal__label">노쇼 처리 사유 <span>*</span></div>
+    <textarea class="modal__textarea" id="noshowReason" placeholder="노쇼 처리 사유를 입력하세요"
+      oninput="document.getElementById('noshowBtn').disabled = !this.value.trim()"></textarea>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('noshowModal').classList.remove('active')">닫기</button>
+      <button class="modal__btn modal__btn--confirm-warning" id="noshowBtn" disabled>노쇼 처리</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
