@@ -1,0 +1,397 @@
+/* ============================================
+   우유펫 백엔드 관리자 — 공통 CSS
+   Design System: The Ethereal Dashboard
+   Font: Pretendard
+   Primary: #339DEE / Accent: #4294FF
+   ============================================ */
+
+/* ── Pretendard 웹폰트 ── */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+/* ── CSS Variables ── */
+:root {
+  /* Colors — Brand */
+  --primary: #339DEE;
+  --primary-hover: #2B8AD6;
+  --accent: #4294FF;
+  --gradient: linear-gradient(135deg, #339DEE, #4294FF);
+
+  /* Colors — Status */
+  --success: #2ECC71;
+  --warning: #F5A623;
+  --coral: #E05A3A;
+  --error: #E05A3A;
+
+  /* Colors — Surface */
+  --surface-base: #f8f9fa;
+  --surface-card: #ffffff;
+  --surface-sidebar: #f3f4f5;
+
+  /* Colors — Text */
+  --text-primary: #191c1d;
+  --text-secondary: #3e484f;
+  --text-weak: #8C9AA5;
+
+  /* Shadows — Ambient (No harsh box-shadow) */
+  --shadow-card: 0 2px 24px rgba(25, 28, 29, 0.04);
+  --shadow-card-hover: 0 4px 32px rgba(25, 28, 29, 0.08);
+
+  /* Radius */
+  --radius-card: 12px;
+  --radius-badge: 20px;
+  --radius-sm: 8px;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.4rem;
+  --space-xl: 1.75rem;
+  --space-2xl: 2rem;
+
+  /* Sidebar */
+  --sidebar-width: 240px;
+
+  /* Font */
+  --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--surface-base);
+  color: var(--text-primary);
+  min-width: 1280px;
+  line-height: 1.5;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* ── Layout: Sidebar + Main ── */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--surface-sidebar);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.sidebar__logo-area {
+  padding: 28px 24px 0 24px;
+  text-align: center;
+}
+
+.sidebar__logo-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.sidebar__brand-ko {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 8px;
+}
+
+.sidebar__brand-en {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-weak);
+  letter-spacing: 1.5px;
+  margin-top: 2px;
+}
+
+.sidebar__nav {
+  margin-top: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar__menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.sidebar__menu-item:hover {
+  background: rgba(51, 157, 238, 0.04);
+}
+
+.sidebar__menu-item.active {
+  color: var(--primary);
+  font-weight: 700;
+  background: rgba(51, 157, 238, 0.06);
+}
+
+.sidebar__menu-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.sidebar__profile {
+  padding: 20px 24px;
+  margin-top: auto;
+}
+
+.sidebar__profile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(51, 157, 238, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar__avatar-icon {
+  width: 16px;
+  height: 16px;
+  fill: var(--primary);
+}
+
+.sidebar__profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar__admin-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.sidebar__admin-role {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-weak);
+}
+
+.sidebar__logout {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-weak);
+  cursor: pointer;
+  margin-top: 8px;
+  transition: color 0.15s ease;
+}
+
+.sidebar__logout:hover {
+  color: var(--coral);
+}
+
+/* ── Main Content ── */
+.main {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* ── Header Bar ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.header__right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header__admin-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.header__logout {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-weak);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.header__logout:hover {
+  color: var(--coral);
+}
+
+/* ── Content Area ── */
+.content {
+  padding: 24px 32px 40px;
+}
+
+/* ── Section Title ── */
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.section-title__sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-weak);
+  margin-left: 12px;
+}
+
+/* ── Card Base ── */
+.card {
+  background: var(--surface-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+}
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-badge);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge--reservation { background: rgba(51, 157, 238, 0.10); color: var(--primary); }
+.badge--payment    { background: rgba(46, 204, 113, 0.10); color: var(--success); }
+.badge--cancel     { background: rgba(245, 166, 35, 0.10); color: var(--warning); }
+.badge--signup     { background: rgba(66, 148, 255, 0.10); color: var(--accent); }
+.badge--report     { background: rgba(224, 90, 58, 0.10);  color: var(--coral); }
+.badge--settlement { background: rgba(46, 204, 113, 0.10); color: var(--success); }
+
+/* ── Pill (증감 표시) ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--radius-badge);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pill--up   { background: rgba(46, 204, 113, 0.08); color: var(--success); }
+.pill--down { background: rgba(224, 90, 58, 0.08);  color: var(--coral); }
+.pill--flat { background: rgba(0, 0, 0, 0.04);      color: var(--text-weak); }
+
+/* ── Link ── */
+.link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+/* ── Masked Field Component (민감정보 마스킹 + 전체보기) ── */
+.masked-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.masked-field__value {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.masked-field__toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.masked-field__toggle:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+/* ── Utility ── */
+.text-weak   { color: var(--text-weak); }
+.text-coral  { color: var(--coral); }
+.text-primary-blue { color: var(--primary); }
+.fw-bold     { font-weight: 700; }
+.fw-medium   { font-weight: 500; }
+.fw-regular  { font-weight: 400; }
