@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- 우유팩 몸체 -->
+  <rect x="10" y="14" width="28" height="30" rx="3" fill="#339DEE"/>
+  <!-- 우유팩 상단 삼각형 -->
+  <polygon points="10,14 24,4 38,14" fill="#4294FF"/>
+  <!-- 강아지 얼굴 (원형) -->
+  <circle cx="24" cy="28" r="9" fill="#ffffff"/>
+  <!-- 강아지 눈 -->
+  <circle cx="21" cy="26" r="1.5" fill="#191c1d"/>
+  <circle cx="27" cy="26" r="1.5" fill="#191c1d"/>
+  <!-- 강아지 코 -->
+  <ellipse cx="24" cy="29.5" rx="2" ry="1.5" fill="#191c1d"/>
+  <!-- 강아지 귀 (좌) -->
+  <ellipse cx="16" cy="21" rx="4" ry="5" fill="#339DEE" transform="rotate(-15 16 21)"/>
+  <ellipse cx="16" cy="21" rx="2.5" ry="3.5" fill="#ffffff" transform="rotate(-15 16 21)"/>
+  <!-- 강아지 귀 (우) -->
+  <ellipse cx="32" cy="21" rx="4" ry="5" fill="#339DEE" transform="rotate(15 32 21)"/>
+  <ellipse cx="32" cy="21" rx="2.5" ry="3.5" fill="#ffffff" transform="rotate(15 32 21)"/>
+  <!-- 강아지 입 -->
+  <path d="M22 31 Q24 33 26 31" stroke="#191c1d" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+</svg>

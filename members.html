@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우유펫 관리자 — 회원관리</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/members.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ========== 사이드바 ========== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo-area">
+      <img src="assets/images/logo.png" alt="우유펫 로고" class="sidebar__logo-img">
+      <div class="sidebar__brand-ko">우유펫</div>
+      <div class="sidebar__brand-en">WOOYOOPET</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="dashboard.html" class="sidebar__menu-item">대시보드</a>
+      <a href="members.html" class="sidebar__menu-item active">회원관리</a>
+      <a href="#" class="sidebar__menu-item">유치원관리</a>
+      <a href="#" class="sidebar__menu-item">반려동물관리</a>
+      <a href="#" class="sidebar__menu-item">돌봄예약관리</a>
+      <a href="#" class="sidebar__menu-item">결제관리</a>
+      <a href="#" class="sidebar__menu-item">정산관리</a>
+      <a href="#" class="sidebar__menu-item">채팅관리</a>
+      <a href="#" class="sidebar__menu-item">후기관리</a>
+      <a href="#" class="sidebar__menu-item">교육관리</a>
+      <a href="#" class="sidebar__menu-item">콘텐츠관리</a>
+      <a href="#" class="sidebar__menu-item">설정</a>
+    </nav>
+    <div class="sidebar__profile">
+      <div class="sidebar__profile-row">
+        <div class="sidebar__avatar">
+          <svg class="sidebar__avatar-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+        </div>
+        <div class="sidebar__profile-info">
+          <span class="sidebar__admin-name">홍길동</span>
+          <span class="sidebar__admin-role">관리자</span>
+        </div>
+      </div>
+      <div class="sidebar__logout">로그아웃</div>
+    </div>
+  </aside>
+
+  <!-- ========== 메인 콘텐츠 ========== -->
+  <main class="main">
+
+    <!-- 헤더 -->
+    <header class="header">
+      <h1 class="header__title">회원관리</h1>
+      <div class="header__right">
+        <span class="header__admin-name">홍길동 관리자</span>
+        <span class="header__logout">로그아웃</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── 필터 바 ── -->
+      <div class="filter-bar">
+        <!-- 1행: 기간 검색 -->
+        <div class="filter-row">
+          <span class="filter-label">가입일</span>
+          <input type="date" class="filter-input filter-input--date" value="2026-01-01">
+          <span class="filter-separator">~</span>
+          <input type="date" class="filter-input filter-input--date" value="2026-03-16">
+        </div>
+        <!-- 2행: 드롭다운 필터 -->
+        <div class="filter-row">
+          <span class="filter-label">필터</span>
+          <select class="filter-select">
+            <option>회원상태: 전체</option>
+            <option>정상</option>
+            <option>이용정지</option>
+            <option>탈퇴</option>
+          </select>
+          <select class="filter-select">
+            <option>모드: 전체</option>
+            <option>보호자</option>
+            <option>유치원</option>
+          </select>
+          <select class="filter-select">
+            <option>주소인증: 전체</option>
+            <option>미인증</option>
+            <option>심사중</option>
+            <option>인증완료</option>
+          </select>
+        </div>
+        <!-- 3행: 키워드 검색 -->
+        <div class="filter-row">
+          <span class="filter-label">검색</span>
+          <select class="filter-select" style="min-width:140px;">
+            <option>이름</option>
+            <option>닉네임</option>
+            <option>휴대폰번호</option>
+          </select>
+          <input type="text" class="filter-input filter-input--search" placeholder="검색어를 입력하세요">
+          <button class="btn-search">검색</button>
+        </div>
+      </div>
+
+      <!-- ── 결과 헤더 ── -->
+      <div class="result-header">
+        <span class="result-header__count">검색 결과 <strong>123</strong>건</span>
+        <button class="btn-excel">
+          <svg class="btn-excel__icon" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 12l-4-4h2.5V3h3v5H12L8 12zm-6 2h12v1.5H2V14z"/>
+          </svg>
+          엑셀 다운로드
+        </button>
+      </div>
+
+      <!-- ── 데이터 테이블 ── -->
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:50px">번호</th>
+              <th>이름</th>
+              <th>닉네임</th>
+              <th>생년월일</th>
+              <th>통신사</th>
+              <th>휴대폰번호</th>
+              <th>등록 주소</th>
+              <th>주소인증</th>
+              <th>본인인증</th>
+              <th>모드</th>
+              <th>상태</th>
+              <th class="text-right">결제건수</th>
+              <th class="text-right">결제금액</th>
+              <th>가입일</th>
+              <th style="width:60px">편집</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>홍길동</td>
+              <td>신길동최수종</td>
+              <td>900512</td>
+              <td>SKT</td>
+              <td class="masked">010-****-5678</td>
+              <td>래미안아파트 101동</td>
+              <td><span class="badge badge--verified">인증완료</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--guardian">보호자</span></td>
+              <td><span class="badge badge--normal">정상</span></td>
+              <td class="text-right">15</td>
+              <td class="text-right">4,500,000</td>
+              <td>2025-11-03</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>김민수</td>
+              <td>행복한강아지</td>
+              <td>851103</td>
+              <td>KT</td>
+              <td class="masked">010-****-1234</td>
+              <td>힐스테이트 203동</td>
+              <td><span class="badge badge--verified">인증완료</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--kindergarten">유치원</span></td>
+              <td><span class="badge badge--normal">정상</span></td>
+              <td class="text-right">8</td>
+              <td class="text-right">2,100,000</td>
+              <td>2025-12-15</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>박서연</td>
+              <td>뽀삐엄마</td>
+              <td>920318</td>
+              <td>LGU+</td>
+              <td class="masked">010-****-9012</td>
+              <td>자이아파트 105동</td>
+              <td><span class="badge badge--reviewing">심사중</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--guardian">보호자</span></td>
+              <td><span class="badge badge--normal">정상</span></td>
+              <td class="text-right">3</td>
+              <td class="text-right">450,000</td>
+              <td>2026-01-08</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>이준호</td>
+              <td>초코아빠</td>
+              <td>880725</td>
+              <td>SKT</td>
+              <td class="masked">010-****-3456</td>
+              <td>푸르지오 302동</td>
+              <td><span class="badge badge--verified">인증완료</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--guardian">보호자</span></td>
+              <td><span class="badge badge--suspended">이용정지</span></td>
+              <td class="text-right">22</td>
+              <td class="text-right">6,800,000</td>
+              <td>2025-09-20</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>최유진</td>
+              <td>몽이네</td>
+              <td>950601</td>
+              <td>KT</td>
+              <td class="masked">010-****-7890</td>
+              <td>래미안아파트 108동</td>
+              <td><span class="badge badge--unverified">미인증</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--guardian">보호자</span></td>
+              <td><span class="badge badge--normal">정상</span></td>
+              <td class="text-right">0</td>
+              <td class="text-right">0</td>
+              <td>2026-03-10</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>정다은</td>
+              <td>코코사랑</td>
+              <td>910214</td>
+              <td>LGU+</td>
+              <td class="masked">010-****-4567</td>
+              <td>힐스테이트 201동</td>
+              <td><span class="badge badge--verified">인증완료</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--kindergarten">유치원</span></td>
+              <td><span class="badge badge--normal">정상</span></td>
+              <td class="text-right">31</td>
+              <td class="text-right">9,200,000</td>
+              <td>2025-08-15</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>한소희</td>
+              <td>두부맘</td>
+              <td>930922</td>
+              <td>SKT</td>
+              <td class="masked">010-****-2345</td>
+              <td>자이아파트 110동</td>
+              <td><span class="badge badge--verified">인증완료</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--guardian">보호자</span></td>
+              <td><span class="badge badge--withdrawn">탈퇴</span></td>
+              <td class="text-right">5</td>
+              <td class="text-right">750,000</td>
+              <td>2025-10-01</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>오승현</td>
+              <td>멍멍이집사</td>
+              <td>870430</td>
+              <td>KT</td>
+              <td class="masked">010-****-6789</td>
+              <td>푸르지오 305동</td>
+              <td><span class="badge badge--verified">인증완료</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--guardian">보호자</span></td>
+              <td><span class="badge badge--normal">정상</span></td>
+              <td class="text-right">12</td>
+              <td class="text-right">3,600,000</td>
+              <td>2025-11-20</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>윤지현</td>
+              <td>포메러버</td>
+              <td>960815</td>
+              <td>SKT</td>
+              <td class="masked">010-****-0123</td>
+              <td>래미안아파트 103동</td>
+              <td><span class="badge badge--reviewing">심사중</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--guardian">보호자</span></td>
+              <td><span class="badge badge--normal">정상</span></td>
+              <td class="text-right">1</td>
+              <td class="text-right">85,000</td>
+              <td>2026-02-28</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>장민우</td>
+              <td>바둑이아빠</td>
+              <td>891107</td>
+              <td>LGU+</td>
+              <td class="masked">010-****-8901</td>
+              <td>힐스테이트 205동</td>
+              <td><span class="badge badge--verified">인증완료</span></td>
+              <td><span class="badge badge--done">완료</span></td>
+              <td><span class="badge badge--kindergarten">유치원</span></td>
+              <td><span class="badge badge--normal">정상</span></td>
+              <td class="text-right">18</td>
+              <td class="text-right">5,400,000</td>
+              <td>2025-10-12</td>
+              <td><a href="member-detail.html" class="data-table__link">편집</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── 페이지네이션 ── -->
+      <div class="pagination">
+        <button class="pagination__btn pagination__btn--arrow" disabled>◀</button>
+        <button class="pagination__btn active">1</button>
+        <button class="pagination__btn">2</button>
+        <button class="pagination__btn">3</button>
+        <button class="pagination__btn">4</button>
+        <button class="pagination__btn">5</button>
+        <button class="pagination__btn">...</button>
+        <button class="pagination__btn">7</button>
+        <button class="pagination__btn pagination__btn--arrow">▶</button>
+      </div>
+
+    </div><!-- .content -->
+  </main>
+
+</div><!-- .layout -->
+
+</body>
+</html>

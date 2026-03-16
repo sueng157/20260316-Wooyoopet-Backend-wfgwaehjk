@@ -1,0 +1,273 @@
+/* ============================================
+   대시보드 (Dashboard) — 전용 CSS
+   ============================================ */
+
+/* ── 영역 1: 오늘의 현황 ── */
+.dashboard-section {
+  margin-bottom: 16px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-header__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.section-header__date {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-weak);
+}
+
+/* 오늘의 현황 카드 그리드 */
+.status-cards {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+.status-card {
+  background: var(--surface-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.status-card:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.status-card__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-weak);
+}
+
+.status-card__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+.status-card__value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 16px;
+  text-align: center;
+}
+
+.status-card__value--money {
+  font-size: 24px;
+}
+
+.status-card__unit {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-weak);
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* ── 영역 2 + 3: 나란히 배치 ── */
+.dashboard-middle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* ── 영역 2: 관리자 승인 대기 ── */
+.approval-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.approval-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 8px;
+  margin: 0 -8px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+
+.approval-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.approval-item__name {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.approval-item__count {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-weak);
+}
+
+.approval-item__count--active {
+  font-weight: 700;
+  color: var(--coral);
+}
+
+/* ── 영역 3: 이달 매출 요약 ── */
+.sales-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sales-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.sales-item__label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-weak);
+  display: flex;
+  flex-direction: column;
+}
+
+.sales-item__label-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-weak);
+  margin-top: 2px;
+}
+
+.sales-item__value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* 총 유효 거래금액 — 강조 블록 */
+.sales-item--highlight {
+  background: rgba(51, 157, 238, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin: 6px 0;
+}
+
+.sales-item--highlight .sales-item__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.sales-item--highlight .sales-item__value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* 플랫폼 수수료 — 블루 강조 */
+.sales-item__value--blue {
+  color: var(--primary);
+}
+
+/* 유치원 정산 — 서브 강조 */
+.sales-item__value--sub {
+  color: var(--text-secondary);
+}
+
+/* 취소·환불 — 약하게 */
+.sales-item__value--weak {
+  font-weight: 400;
+  color: var(--text-weak);
+}
+
+/* 전월 대비 행 */
+.sales-item--compare {
+  margin-top: 4px;
+  padding-top: 12px;
+}
+
+.sales-item--compare .sales-item__value {
+  font-size: 14px;
+}
+
+/* ── 영역 4: 최근 활동 로그 ── */
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.log-table thead th {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-weak);
+  text-align: left;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0;
+}
+
+.log-table thead th:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.log-table thead th:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.log-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.log-table tbody tr:hover {
+  background: rgba(51, 157, 238, 0.03);
+}
+
+.log-table tbody td {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+.log-table__time {
+  font-size: 13px;
+  color: var(--text-weak);
+  white-space: nowrap;
+}
+
+.log-table__link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.log-table__link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
