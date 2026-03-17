@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우유펫 관리자 — 신고접수 상세</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pets.css">
+  <link rel="stylesheet" href="css/reservations.css">
+  <link rel="stylesheet" href="css/chats.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ========== 사이드바 ========== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo-area">
+      <img src="assets/images/logo.png" alt="우유펫 로고" class="sidebar__logo-img">
+      <div class="sidebar__brand-ko">우유펫</div>
+      <div class="sidebar__brand-en">WOOYOOPET</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="index.html" class="sidebar__menu-item">대시보드</a>
+      <a href="members.html" class="sidebar__menu-item">회원관리</a>
+      <a href="kindergartens.html" class="sidebar__menu-item">유치원관리</a>
+      <a href="pets.html" class="sidebar__menu-item">반려동물관리</a>
+      <a href="reservations.html" class="sidebar__menu-item">돌봄예약관리</a>
+      <a href="payments.html" class="sidebar__menu-item">결제관리</a>
+      <a href="settlements.html" class="sidebar__menu-item">정산관리</a>
+      <a href="chats.html" class="sidebar__menu-item active">채팅관리</a>
+      <a href="#" class="sidebar__menu-item">후기관리</a>
+      <a href="#" class="sidebar__menu-item">교육관리</a>
+      <a href="#" class="sidebar__menu-item">콘텐츠관리</a>
+      <a href="#" class="sidebar__menu-item">설정</a>
+    </nav>
+    <div class="sidebar__profile">
+      <div class="sidebar__profile-row">
+        <div class="sidebar__avatar">
+          <svg class="sidebar__avatar-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+        </div>
+        <div class="sidebar__profile-info">
+          <span class="sidebar__admin-name">홍길동</span>
+          <span class="sidebar__admin-role">관리자</span>
+        </div>
+      </div>
+      <div class="sidebar__logout">로그아웃</div>
+    </div>
+  </aside>
+
+  <!-- ========== 메인 콘텐츠 ========== -->
+  <div class="main">
+
+    <!-- 헤더 -->
+    <header class="header">
+      <h1 class="header__title">신고접수 상세</h1>
+      <div class="header__right">
+        <span class="header__admin-name">홍길동 관리자</span>
+        <span class="header__logout">로그아웃</span>
+      </div>
+    </header>
+
+    <!-- 콘텐츠 영역 -->
+    <div class="content">
+
+      <!-- 상단 네비게이션 -->
+      <div class="detail-top">
+        <a href="chats.html" class="btn-back">&larr; 신고접수 목록으로</a>
+        <div class="detail-actions">
+          <button class="btn-action btn-action--primary" onclick="document.getElementById('statusChangeModal').classList.add('active')">처리상태 변경</button>
+          <button class="btn-action btn-action--outline-warning" onclick="document.getElementById('sanctionModal').classList.add('active')">제재 적용</button>
+          <button class="btn-action btn-action--danger" onclick="document.getElementById('dismissModal').classList.add('active')">기각 처리</button>
+        </div>
+      </div>
+
+      <!-- 영역 1: 신고 기본정보 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">신고 기본정보</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-grid__label">신고 고유번호</div>
+          <div class="info-grid__value">RPT-00000001</div>
+
+          <div class="info-grid__label">신고일시</div>
+          <div class="info-grid__value">2026-03-17 10:30</div>
+
+          <div class="info-grid__label">신고 사유</div>
+          <div class="info-grid__value">부적절한 언어</div>
+
+          <div class="info-grid__label">신고 상세 내용</div>
+          <div class="info-grid__value">채팅 중 상대방이 욕설과 함께 위협적인 메시지를 보냈습니다. 반복적으로 공격적인 언어를 사용하여 불쾌감을 느꼈습니다.</div>
+
+          <div class="info-grid__label">첨부 이미지</div>
+          <div class="info-grid__value">
+            <div class="photo-gallery">
+              <div class="photo-gallery__item">
+                <div style="width:80px;height:80px;background:var(--surface-base);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8C9AA5" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </div>
+              </div>
+              <div class="photo-gallery__item">
+                <div style="width:80px;height:80px;background:var(--surface-base);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8C9AA5" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-grid__label">처리상태</div>
+          <div class="info-grid__value"><span class="badge badge--rpt-received">접수</span></div>
+
+          <div class="info-grid__label">처리일시</div>
+          <div class="info-grid__value">—</div>
+        </div>
+      </div>
+
+      <!-- 영역 2: 신고자 정보 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">신고자 정보</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-grid__label">이름</div>
+          <div class="info-grid__value">박민수</div>
+
+          <div class="info-grid__label">닉네임</div>
+          <div class="info-grid__value">초코아빠</div>
+
+          <div class="info-grid__label">유형</div>
+          <div class="info-grid__value"><span class="badge badge--guardian">보호자</span></div>
+
+          <div class="info-grid__label">연락처</div>
+          <div class="info-grid__value">
+            <span class="masked-field">
+              <span class="masked-field__value">010-****-9012</span>
+              <button class="masked-field__toggle">전체보기</button>
+            </span>
+          </div>
+
+          <div class="info-grid__label">회원번호</div>
+          <div class="info-grid__value"><a href="member-detail.html" class="data-table__link">M-00000789</a></div>
+        </div>
+      </div>
+
+      <!-- 영역 3: 피신고자 정보 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">피신고자 정보</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-grid__label">이름</div>
+          <div class="info-grid__value">이정훈</div>
+
+          <div class="info-grid__label">닉네임</div>
+          <div class="info-grid__value">해피독스</div>
+
+          <div class="info-grid__label">유형</div>
+          <div class="info-grid__value"><span class="badge badge--kindergarten">유치원</span></div>
+
+          <div class="info-grid__label">연락처</div>
+          <div class="info-grid__value">
+            <span class="masked-field">
+              <span class="masked-field__value">010-****-3456</span>
+              <button class="masked-field__toggle">전체보기</button>
+            </span>
+          </div>
+
+          <div class="info-grid__label">회원번호</div>
+          <div class="info-grid__value"><a href="member-detail.html" class="data-table__link">M-00000234</a></div>
+        </div>
+      </div>
+
+      <!-- 영역 4: 관련 채팅방 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">관련 채팅방</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-grid__label">채팅방 번호</div>
+          <div class="info-grid__value"><a href="chat-detail.html" class="data-table__link">CR-00000127</a></div>
+
+          <div class="info-grid__label">마지막 메시지 일시</div>
+          <div class="info-grid__value">2026-03-17 11:05</div>
+
+          <div class="info-grid__label">총 메시지 수</div>
+          <div class="info-grid__value">23건</div>
+        </div>
+      </div>
+
+      <!-- 영역 5: 처리 내역 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">처리 내역</h3>
+        </div>
+        <div class="info-grid" style="margin-bottom:20px;">
+          <div class="info-grid__label">처리 결과</div>
+          <div class="info-grid__value">—</div>
+
+          <div class="info-grid__label">제재 유형</div>
+          <div class="info-grid__value">—</div>
+
+          <div class="info-grid__label">제재 기간</div>
+          <div class="info-grid__value">—</div>
+
+          <div class="info-grid__label">처리 사유</div>
+          <div class="info-grid__value">—</div>
+
+          <div class="info-grid__label">처리 관리자</div>
+          <div class="info-grid__value">—</div>
+        </div>
+
+        <!-- 처리 이력 미니테이블 -->
+        <h4 style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">처리 이력</h4>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>변경일시</th>
+              <th>이전 상태</th>
+              <th>변경 상태</th>
+              <th>처리자</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-03-17 10:30</td>
+              <td>—</td>
+              <td><span class="badge badge--rpt-received">접수</span></td>
+              <td><span class="badge badge--actor-system">시스템</span></td>
+              <td>자동 접수</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /.content -->
+  </div><!-- /.main -->
+</div><!-- /.layout -->
+
+<!-- ==================== 모달 1: 처리상태 변경 ==================== -->
+<div class="modal-overlay" id="statusChangeModal">
+  <div class="modal">
+    <div class="modal__title modal__title--primary">처리상태 변경</div>
+    <div class="modal__message">신고의 처리상태를 변경합니다.</div>
+    <div class="modal__label">변경할 상태 <span style="color:#E05A3A;">*</span></div>
+    <select class="modal__select" id="statusSelect">
+      <option value="">선택하세요</option>
+      <option value="processing">처리중</option>
+      <option value="completed">처리완료</option>
+    </select>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('statusChangeModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-primary">상태 변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 모달 2: 제재 적용 ==================== -->
+<div class="modal-overlay" id="sanctionModal">
+  <div class="modal">
+    <div class="modal__title modal__title--warning">제재 적용</div>
+    <div class="modal__warning">피신고자에게 제재를 적용합니다. 적용된 제재는 회원관리 상태에 자동 반영됩니다.</div>
+    <div class="modal__label">제재 유형 <span style="color:#E05A3A;">*</span></div>
+    <select class="modal__select" id="sanctionType">
+      <option value="">선택하세요</option>
+      <option value="warning">경고</option>
+      <option value="7d">7일 정지</option>
+      <option value="30d">30일 정지</option>
+      <option value="permanent">영구 정지</option>
+    </select>
+    <div class="modal__label">제재 사유 <span style="color:#E05A3A;">*</span></div>
+    <textarea class="modal__textarea" id="sanctionReason" placeholder="제재 사유를 입력하세요..." oninput="document.getElementById('sanctionBtn').disabled = this.value.trim() === ''"></textarea>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('sanctionModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-warning" id="sanctionBtn" disabled>제재 적용</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 모달 3: 기각 처리 ==================== -->
+<div class="modal-overlay" id="dismissModal">
+  <div class="modal">
+    <div class="modal__title">기각 처리</div>
+    <div class="modal__warning">이 신고를 기각 처리합니다. 기각 사유를 필수로 입력해야 합니다.</div>
+    <div class="modal__label">기각 사유 <span style="color:#E05A3A;">*</span></div>
+    <textarea class="modal__textarea" id="dismissReason" placeholder="기각 사유를 입력하세요..." oninput="document.getElementById('dismissBtn').disabled = this.value.trim() === ''"></textarea>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('dismissModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-danger" id="dismissBtn" disabled>기각</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
