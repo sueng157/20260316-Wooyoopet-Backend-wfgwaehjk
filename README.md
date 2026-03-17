@@ -25,8 +25,8 @@ python3 -m http.server 8080
 | 2 | 유치원관리 | `kindergartens.html` | `kindergarten-detail.html` | ✅ |
 | 3 | 반려동물관리 | `pets.html` | `pet-detail.html` | ✅ |
 | 4 | 돌봄예약관리 | `reservations.html` | `reservation-detail.html` | ✅ |
-| 5 | 결제관리 | — | — | ⬜ |
-| 6 | 정산관리 | — | — | ⬜ |
+| 5 | 결제관리 | `payments.html` | `payment-detail.html`, `refund-detail.html` | ✅ |
+| 6 | 정산관리 | `settlements.html` | `settlement-info-detail.html`, `settlement-detail.html` | ✅ |
 | 7 | 채팅관리 | — | — | ⬜ |
 | 8 | 후기관리 | — | — | ⬜ |
 | 9 | 교육관리 | — | — | ⬜ |
@@ -46,7 +46,9 @@ webapp/
 │   ├── members.css         # 회원관리 전용 (현재 주석만)
 │   ├── kindergartens.css   # 유치원관리 전용 (현재 주석만)
 │   ├── pets.css            # 반려동물관리 전용 배지
-│   └── reservations.css    # 돌봄예약관리 전용 배지/모달
+│   ├── reservations.css    # 돌봄예약관리 전용 배지/모달
+│   ├── payments.css        # 결제관리 전용
+│   └── settlements.css     # 정산관리 전용 배지/버튼
 ├── assets/
 │   └── images/
 │       └── logo.png
@@ -59,6 +61,12 @@ webapp/
 ├── pet-detail.html
 ├── reservations.html
 ├── reservation-detail.html
+├── payments.html
+├── payment-detail.html
+├── refund-detail.html
+├── settlements.html
+├── settlement-info-detail.html
+├── settlement-detail.html
 ├── full_spec_with_tables.md   # 전체 기능 명세서
 ├── HANDOVER.md                # 개발 인수인계서 (CSS 구조, 규칙, 작업 프로세스)
 └── README.md
