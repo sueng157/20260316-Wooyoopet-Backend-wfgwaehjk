@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우유펫 관리자 — 채팅내역 상세</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pets.css">
+  <link rel="stylesheet" href="css/reservations.css">
+  <link rel="stylesheet" href="css/chats.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ========== 사이드바 ========== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo-area">
+      <img src="assets/images/logo.png" alt="우유펫 로고" class="sidebar__logo-img">
+      <div class="sidebar__brand-ko">우유펫</div>
+      <div class="sidebar__brand-en">WOOYOOPET</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="index.html" class="sidebar__menu-item">대시보드</a>
+      <a href="members.html" class="sidebar__menu-item">회원관리</a>
+      <a href="kindergartens.html" class="sidebar__menu-item">유치원관리</a>
+      <a href="pets.html" class="sidebar__menu-item">반려동물관리</a>
+      <a href="reservations.html" class="sidebar__menu-item">돌봄예약관리</a>
+      <a href="payments.html" class="sidebar__menu-item">결제관리</a>
+      <a href="settlements.html" class="sidebar__menu-item">정산관리</a>
+      <a href="chats.html" class="sidebar__menu-item active">채팅관리</a>
+      <a href="#" class="sidebar__menu-item">후기관리</a>
+      <a href="#" class="sidebar__menu-item">교육관리</a>
+      <a href="#" class="sidebar__menu-item">콘텐츠관리</a>
+      <a href="#" class="sidebar__menu-item">설정</a>
+    </nav>
+    <div class="sidebar__profile">
+      <div class="sidebar__profile-row">
+        <div class="sidebar__avatar">
+          <svg class="sidebar__avatar-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+        </div>
+        <div class="sidebar__profile-info">
+          <span class="sidebar__admin-name">홍길동</span>
+          <span class="sidebar__admin-role">관리자</span>
+        </div>
+      </div>
+      <div class="sidebar__logout">로그아웃</div>
+    </div>
+  </aside>
+
+  <!-- ========== 메인 콘텐츠 ========== -->
+  <div class="main">
+
+    <!-- 헤더 -->
+    <header class="header">
+      <h1 class="header__title">채팅내역 상세</h1>
+      <div class="header__right">
+        <span class="header__admin-name">홍길동 관리자</span>
+        <span class="header__logout">로그아웃</span>
+      </div>
+    </header>
+
+    <!-- 콘텐츠 영역 -->
+    <div class="content">
+
+      <!-- 상단 네비게이션 -->
+      <div class="detail-top">
+        <a href="chats.html" class="btn-back">&larr; 채팅내역 목록으로</a>
+        <div class="detail-actions">
+          <button class="btn-action btn-action--danger" onclick="document.getElementById('deactivateModal').classList.add('active')">채팅방 강제 비활성화</button>
+        </div>
+      </div>
+
+      <!-- 영역 1: 채팅방 기본정보 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">채팅방 기본정보</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-grid__label">채팅방 고유번호</div>
+          <div class="info-grid__value">CR-00000128</div>
+
+          <div class="info-grid__label">생성일</div>
+          <div class="info-grid__value">2026-02-15</div>
+
+          <div class="info-grid__label">채팅방 상태</div>
+          <div class="info-grid__value"><span class="badge badge--chat-active">활성</span></div>
+
+          <div class="info-grid__label">총 메시지 수</div>
+          <div class="info-grid__value">45건</div>
+        </div>
+      </div>
+
+      <!-- 영역 2: 참여자 정보 — 보호자 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">참여자 정보 — 보호자</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-grid__label">보호자 이름</div>
+          <div class="info-grid__value">김수진</div>
+
+          <div class="info-grid__label">보호자 닉네임</div>
+          <div class="info-grid__value">뽀삐맘</div>
+
+          <div class="info-grid__label">보호자 연락처</div>
+          <div class="info-grid__value">
+            <span class="masked-field">
+              <span class="masked-field__value">010-****-5678</span>
+              <button class="masked-field__toggle">전체보기</button>
+            </span>
+          </div>
+
+          <div class="info-grid__label">회원번호</div>
+          <div class="info-grid__value"><a href="member-detail.html" class="data-table__link">M-00000456</a></div>
+        </div>
+      </div>
+
+      <!-- 영역 3: 참여자 정보 — 유치원 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">참여자 정보 — 유치원</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-grid__label">유치원명</div>
+          <div class="info-grid__value">밤톨이네</div>
+
+          <div class="info-grid__label">운영자 성명</div>
+          <div class="info-grid__value">홍길동</div>
+
+          <div class="info-grid__label">운영자 연락처</div>
+          <div class="info-grid__value">
+            <span class="masked-field">
+              <span class="masked-field__value">010-****-1234</span>
+              <button class="masked-field__toggle">전체보기</button>
+            </span>
+          </div>
+
+          <div class="info-grid__label">유치원번호</div>
+          <div class="info-grid__value"><a href="kindergarten-detail.html" class="data-table__link">K-00000045</a></div>
+        </div>
+      </div>
+
+      <!-- 영역 4: 연동 예약 목록 (미니테이블) -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">연동 예약 목록</h3>
+        </div>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>예약번호</th>
+              <th>예약 상태</th>
+              <th>등원 예정일시</th>
+              <th>결제금액</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="reservation-detail.html" class="mini-table__link">R-00001234</a></td>
+              <td><span class="badge badge--res-confirmed">예약확정</span></td>
+              <td>2026-03-20 09:00</td>
+              <td class="text-right">55,000원</td>
+            </tr>
+            <tr>
+              <td><a href="reservation-detail.html" class="mini-table__link">R-00001100</a></td>
+              <td><span class="badge badge--res-completed">돌봄완료</span></td>
+              <td>2026-03-05 10:00</td>
+              <td class="text-right">48,000원</td>
+            </tr>
+            <tr>
+              <td><a href="reservation-detail.html" class="mini-table__link">R-00000980</a></td>
+              <td><span class="badge badge--res-completed">돌봄완료</span></td>
+              <td>2026-02-20 09:30</td>
+              <td class="text-right">55,000원</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 영역 5: 메시지 내역 (말풍선 UI) -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">메시지 내역</h3>
+          <span style="font-size:12px;color:var(--text-weak);">총 45건</span>
+        </div>
+
+        <div class="chat-messages">
+
+          <!-- 날짜 구분선 -->
+          <div class="chat-date-divider">2026-03-16</div>
+
+          <!-- 시스템 메시지 -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--system">
+            <div class="chat-bubble chat-bubble--system">예약 R-00001234 이(가) 확정되었습니다.</div>
+            <div class="chat-meta" style="justify-content:center;">
+              <span>시스템 · 09:00</span>
+            </div>
+          </div>
+
+          <!-- 보호자 메시지 (왼쪽) -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--guardian">
+            <div class="chat-bubble chat-bubble--guardian">안녕하세요~ 이번 주 금요일에 뽀삐 맡기려고 하는데 가능할까요?</div>
+            <div class="chat-meta">
+              <span>뽀삐맘</span>
+              <span>10:15</span>
+              <span class="chat-meta__read">읽음</span>
+            </div>
+          </div>
+
+          <!-- 유치원 메시지 (오른쪽) -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--kindergarten">
+            <div class="chat-bubble chat-bubble--kindergarten">안녕하세요! 네 금요일 09시부터 가능합니다. 예약 해주시면 됩니다 :)</div>
+            <div class="chat-meta chat-meta--right">
+              <span class="chat-meta__read">읽음</span>
+              <span>10:22</span>
+              <span>밤톨이네</span>
+            </div>
+          </div>
+
+          <!-- 보호자 메시지 -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--guardian">
+            <div class="chat-bubble chat-bubble--guardian">혹시 뽀삐가 좀 겁이 많은 편인데 괜찮을까요? 처음이라서요 ㅠㅠ</div>
+            <div class="chat-meta">
+              <span>뽀삐맘</span>
+              <span>10:30</span>
+              <span class="chat-meta__read">읽음</span>
+            </div>
+          </div>
+
+          <!-- 유치원 메시지 -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--kindergarten">
+            <div class="chat-bubble chat-bubble--kindergarten">걱정 마세요! 저희가 처음 오는 아이들도 잘 케어해드립니다. 적응 시간도 충분히 드려요 😊</div>
+            <div class="chat-meta chat-meta--right">
+              <span class="chat-meta__read">읽음</span>
+              <span>10:35</span>
+              <span>밤톨이네</span>
+            </div>
+          </div>
+
+          <!-- 보호자 이미지 메시지 -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--guardian">
+            <div class="chat-bubble chat-bubble--guardian">
+              <div style="background:var(--surface-base);width:180px;height:140px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-weak);font-size:12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </div>
+            </div>
+            <div class="chat-meta">
+              <span>뽀삐맘</span>
+              <span>10:40</span>
+              <span class="chat-meta__read">읽음</span>
+            </div>
+          </div>
+
+          <!-- 유치원 메시지 -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--kindergarten">
+            <div class="chat-bubble chat-bubble--kindergarten">와 뽀삐 너무 귀엽네요! 금요일에 만나서 반갑겠어요 ㅎㅎ</div>
+            <div class="chat-meta chat-meta--right">
+              <span class="chat-meta__read">읽음</span>
+              <span>10:45</span>
+              <span>밤톨이네</span>
+            </div>
+          </div>
+
+          <!-- 날짜 구분선 -->
+          <div class="chat-date-divider">2026-03-17</div>
+
+          <!-- 보호자 메시지 -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--guardian">
+            <div class="chat-bubble chat-bubble--guardian">안녕하세요~ 내일 예약 관련해서 문의드려요. 간식은 따로 챙겨가야 하나요?</div>
+            <div class="chat-meta">
+              <span>뽀삐맘</span>
+              <span>14:30</span>
+              <span class="chat-meta__read">읽음</span>
+            </div>
+          </div>
+
+          <!-- 유치원 메시지 -->
+          <div class="chat-bubble-wrap chat-bubble-wrap--kindergarten">
+            <div class="chat-bubble chat-bubble--kindergarten">간식은 저희가 준비해드려요! 혹시 알레르기가 있으면 미리 말씀해주세요.</div>
+            <div class="chat-meta chat-meta--right">
+              <span class="chat-meta__unread">안읽음</span>
+              <span>14:32</span>
+              <span>밤톨이네</span>
+            </div>
+          </div>
+
+        </div><!-- /.chat-messages -->
+
+        <!-- 페이지네이션 (메시지 더보기) -->
+        <div class="pagination" style="margin-top:16px;">
+          <button class="pagination__btn pagination__btn--arrow" disabled>&laquo;</button>
+          <button class="pagination__btn pagination__btn--arrow" disabled>&lsaquo;</button>
+          <button class="pagination__btn active">1</button>
+          <button class="pagination__btn">2</button>
+          <button class="pagination__btn">3</button>
+          <button class="pagination__btn">4</button>
+          <button class="pagination__btn">5</button>
+          <button class="pagination__btn pagination__btn--arrow">&rsaquo;</button>
+          <button class="pagination__btn pagination__btn--arrow">&raquo;</button>
+        </div>
+      </div>
+
+      <!-- 영역 6: 신고 이력 -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h3 class="detail-card__title">신고 이력</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-grid__label">신고 여부</div>
+          <div class="info-grid__value"><span class="report-no">없음</span></div>
+
+          <div class="info-grid__label">신고 건수</div>
+          <div class="info-grid__value">0건</div>
+
+          <div class="info-grid__label">최근 신고일시</div>
+          <div class="info-grid__value">—</div>
+
+          <div class="info-grid__label">신고 상세</div>
+          <div class="info-grid__value">—</div>
+        </div>
+      </div>
+
+    </div><!-- /.content -->
+  </div><!-- /.main -->
+</div><!-- /.layout -->
+
+<!-- ==================== 모달: 채팅방 강제 비활성화 ==================== -->
+<div class="modal-overlay" id="deactivateModal">
+  <div class="modal">
+    <div class="modal__title">채팅방 강제 비활성화</div>
+    <div class="modal__warning">이 채팅방을 강제로 비활성화합니다. 비활성화 후에는 양측 모두 메시지를 보낼 수 없습니다.</div>
+    <div class="modal__label">비활성화 사유 <span style="color:#E05A3A;">*</span></div>
+    <textarea class="modal__textarea" id="deactivateReason" placeholder="사유를 입력하세요..." oninput="document.getElementById('deactivateBtn').disabled = this.value.trim() === ''"></textarea>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('deactivateModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-danger" id="deactivateBtn" disabled>비활성화</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
