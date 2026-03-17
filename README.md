@@ -27,7 +27,7 @@ python3 -m http.server 8080
 | 4 | 돌봄예약관리 | `reservations.html` | `reservation-detail.html` | ✅ |
 | 5 | 결제관리 | `payments.html` | `payment-detail.html`, `refund-detail.html` | ✅ |
 | 6 | 정산관리 | `settlements.html` | `settlement-info-detail.html`, `settlement-detail.html` | ✅ |
-| 7 | 채팅관리 | — | — | ⬜ |
+| 7 | 채팅관리 | `chats.html` | `chat-detail.html`, `report-detail.html` | ✅ |
 | 8 | 후기관리 | — | — | ⬜ |
 | 9 | 교육관리 | — | — | ⬜ |
 | 10 | 콘텐츠관리 | — | — | ⬜ |
@@ -48,7 +48,8 @@ webapp/
 │   ├── pets.css            # 반려동물관리 전용 배지
 │   ├── reservations.css    # 돌봄예약관리 전용 배지/모달
 │   ├── payments.css        # 결제관리 전용
-│   └── settlements.css     # 정산관리 전용 배지/버튼
+│   ├── settlements.css     # 정산관리 전용 배지/버튼
+│   └── chats.css           # 채팅관리 전용 배지/말풍선 UI
 ├── assets/
 │   └── images/
 │       └── logo.png
@@ -67,6 +68,9 @@ webapp/
 ├── settlements.html
 ├── settlement-info-detail.html
 ├── settlement-detail.html
+├── chats.html
+├── chat-detail.html
+├── report-detail.html
 ├── full_spec_with_tables.md   # 전체 기능 명세서
 ├── HANDOVER.md                # 개발 인수인계서 (CSS 구조, 규칙, 작업 프로세스)
 └── README.md
