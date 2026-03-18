@@ -28,8 +28,8 @@ python3 -m http.server 8080
 | 5 | 결제관리 | `payments.html` | `payment-detail.html`, `refund-detail.html` | ✅ |
 | 6 | 정산관리 | `settlements.html` | `settlement-info-detail.html`, `settlement-detail.html` | ✅ |
 | 7 | 채팅관리 | `chats.html` | `chat-detail.html`, `report-detail.html` | ✅ |
-| 8 | 후기관리 | — | — | ⬜ |
-| 9 | 교육관리 | — | — | ⬜ |
+| 8 | 후기관리 | `reviews.html` | `review-detail.html`, `review-kg-detail.html` | ✅ |
+| 9 | 교육관리 | `educations.html` | `education-detail.html`, `education-create.html`, `education-checklist-detail.html`, `education-checklist-create.html`, `education-pledge-detail.html`, `education-pledge-create.html`, `education-status-detail.html` | ✅ |
 | 10 | 콘텐츠관리 | — | — | ⬜ |
 | 11 | 설정 | — | — | ⬜ |
 
@@ -49,7 +49,9 @@ webapp/
 │   ├── reservations.css    # 돌봄예약관리 전용 배지/모달
 │   ├── payments.css        # 결제관리 전용
 │   ├── settlements.css     # 정산관리 전용 배지/버튼
-│   └── chats.css           # 채팅관리 전용 배지/말풍선 UI
+│   ├── chats.css           # 채팅관리 전용 배지/말풍선 UI
+│   ├── reviews.css         # 후기관리 전용 배지/태그/모달
+│   └── educations.css      # 교육관리 전용 이미지/퀴즈/토글/체크리스트/서약서
 ├── assets/
 │   └── images/
 │       └── logo.png
@@ -71,6 +73,17 @@ webapp/
 ├── chats.html
 ├── chat-detail.html
 ├── report-detail.html
+├── reviews.html
+├── review-detail.html
+├── review-kg-detail.html
+├── educations.html
+├── education-detail.html
+├── education-create.html
+├── education-checklist-detail.html
+├── education-checklist-create.html
+├── education-pledge-detail.html
+├── education-pledge-create.html
+├── education-status-detail.html
 ├── full_spec_with_tables.md   # 전체 기능 명세서
 ├── HANDOVER.md                # 개발 인수인계서 (CSS 구조, 규칙, 작업 프로세스)
 └── README.md
