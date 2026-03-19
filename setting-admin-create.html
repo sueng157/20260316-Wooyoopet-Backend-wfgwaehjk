@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우유펫 관리자 — 새 관리자 등록</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/settings.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ========== 사이드바 ========== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo-area">
+      <img src="assets/images/logo.png" alt="우유펫 로고" class="sidebar__logo-img">
+      <div class="sidebar__brand-ko">우유펫</div>
+      <div class="sidebar__brand-en">WOOYOOPET</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="index.html" class="sidebar__menu-item">대시보드</a>
+      <a href="members.html" class="sidebar__menu-item">회원관리</a>
+      <a href="kindergartens.html" class="sidebar__menu-item">유치원관리</a>
+      <a href="pets.html" class="sidebar__menu-item">반려동물관리</a>
+      <a href="reservations.html" class="sidebar__menu-item">돌봄예약관리</a>
+      <a href="payments.html" class="sidebar__menu-item">결제관리</a>
+      <a href="settlements.html" class="sidebar__menu-item">정산관리</a>
+      <a href="chats.html" class="sidebar__menu-item">채팅관리</a>
+      <a href="reviews.html" class="sidebar__menu-item">후기관리</a>
+      <a href="educations.html" class="sidebar__menu-item">교육관리</a>
+      <a href="contents.html" class="sidebar__menu-item">콘텐츠관리</a>
+      <a href="settings.html" class="sidebar__menu-item active">설정</a>
+    </nav>
+    <div class="sidebar__profile">
+      <div class="sidebar__profile-row">
+        <div class="sidebar__avatar">
+          <svg class="sidebar__avatar-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+        </div>
+        <div class="sidebar__profile-info">
+          <span class="sidebar__admin-name">홍길동</span>
+          <span class="sidebar__admin-role">관리자</span>
+        </div>
+      </div>
+      <div class="sidebar__logout">로그아웃</div>
+    </div>
+  </aside>
+
+  <!-- ========== 메인 콘텐츠 ========== -->
+  <div class="main">
+
+    <header class="header">
+      <h1 class="header__title">설정</h1>
+      <div class="header__right">
+        <span class="header__admin-name">홍길동 관리자</span>
+        <span class="header__logout">로그아웃</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- 상단 액션바 -->
+      <div class="detail-top">
+        <a href="settings.html" class="btn-back">&larr; 목록으로</a>
+        <div class="detail-actions">
+          <button class="btn-action btn-action--primary" onclick="document.getElementById('registerModal').classList.add('active')">등록</button>
+        </div>
+      </div>
+
+      <!-- ========== 영역 ① 관리자 정보 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">관리자 정보</h2>
+        </div>
+        <div class="info-grid">
+          <span class="info-grid__label">관리자 고유번호</span>
+          <span class="info-grid__value" style="color:var(--text-weak);">등록 시 자동 부여</span>
+
+          <span class="info-grid__label">관리자 ID</span>
+          <span class="info-grid__value">
+            <input type="text" class="stg-input stg-input--short" placeholder="로그인에 사용할 ID 입력">
+          </span>
+
+          <span class="info-grid__label">비밀번호</span>
+          <span class="info-grid__value">
+            <input type="password" class="stg-input stg-input--short" placeholder="비밀번호 입력 (필수)">
+          </span>
+
+          <span class="info-grid__label">관리자 이름</span>
+          <span class="info-grid__value">
+            <input type="text" class="stg-input stg-input--short" placeholder="이름 입력">
+          </span>
+
+          <span class="info-grid__label">연락처</span>
+          <span class="info-grid__value">
+            <input type="text" class="stg-input stg-input--short" placeholder="예: 010-1234-5678">
+          </span>
+
+          <span class="info-grid__label">이메일</span>
+          <span class="info-grid__value">
+            <input type="email" class="stg-input stg-input--short" placeholder="예: admin@wooyoo.pet">
+          </span>
+
+          <span class="info-grid__label">권한 등급</span>
+          <span class="info-grid__value">
+            <select class="stg-select">
+              <option>최고관리자</option>
+              <option selected>일반관리자</option>
+              <option>조회전용</option>
+            </select>
+          </span>
+
+          <span class="info-grid__label">계정 상태</span>
+          <span class="info-grid__value">
+            <select class="stg-select">
+              <option selected>활성</option>
+              <option>비활성</option>
+            </select>
+          </span>
+        </div>
+      </div>
+
+      <!-- ========== 영역 ② 권한 상세 ========== -->
+      <div class="detail-card">
+        <div class="detail-card__header">
+          <h2 class="detail-card__title">권한 상세 (메뉴별 접근권한)</h2>
+        </div>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>메뉴명</th>
+              <th>접근권한</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>회원관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>유치원관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>반려동물관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>돌봄예약관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>결제관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>정산관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>채팅관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>후기관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>교육관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>콘텐츠관리</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>설정</td>
+              <td>
+                <select class="stg-permission-select">
+                  <option selected>접근불가</option>
+                  <option>조회만</option>
+                  <option>조회+수정</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+
+<!-- ============================================================ -->
+<!-- 모달: 등록 확인                                               -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal">
+    <div class="modal__title modal__title--primary">등록 확인</div>
+    <div class="modal__message">새 관리자를 등록하시겠습니까?<br>등록 후 즉시 해당 계정으로 로그인할 수 있습니다.</div>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('registerModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-primary" onclick="document.getElementById('registerModal').classList.remove('active')">등록</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

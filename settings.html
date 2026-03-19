@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우유펫 관리자 — 설정</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/settings.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ========== 사이드바 ========== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo-area">
+      <img src="assets/images/logo.png" alt="우유펫 로고" class="sidebar__logo-img">
+      <div class="sidebar__brand-ko">우유펫</div>
+      <div class="sidebar__brand-en">WOOYOOPET</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="index.html" class="sidebar__menu-item">대시보드</a>
+      <a href="members.html" class="sidebar__menu-item">회원관리</a>
+      <a href="kindergartens.html" class="sidebar__menu-item">유치원관리</a>
+      <a href="pets.html" class="sidebar__menu-item">반려동물관리</a>
+      <a href="reservations.html" class="sidebar__menu-item">돌봄예약관리</a>
+      <a href="payments.html" class="sidebar__menu-item">결제관리</a>
+      <a href="settlements.html" class="sidebar__menu-item">정산관리</a>
+      <a href="chats.html" class="sidebar__menu-item">채팅관리</a>
+      <a href="reviews.html" class="sidebar__menu-item">후기관리</a>
+      <a href="educations.html" class="sidebar__menu-item">교육관리</a>
+      <a href="contents.html" class="sidebar__menu-item">콘텐츠관리</a>
+      <a href="settings.html" class="sidebar__menu-item active">설정</a>
+    </nav>
+    <div class="sidebar__profile">
+      <div class="sidebar__profile-row">
+        <div class="sidebar__avatar">
+          <svg class="sidebar__avatar-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+        </div>
+        <div class="sidebar__profile-info">
+          <span class="sidebar__admin-name">홍길동</span>
+          <span class="sidebar__admin-role">관리자</span>
+        </div>
+      </div>
+      <div class="sidebar__logout">로그아웃</div>
+    </div>
+  </aside>
+
+  <!-- ========== 메인 콘텐츠 ========== -->
+  <div class="main">
+
+    <header class="header">
+      <h1 class="header__title">설정</h1>
+      <div class="header__right">
+        <span class="header__admin-name">홍길동 관리자</span>
+        <span class="header__logout">로그아웃</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- 탭 바 -->
+      <div class="tab-bar">
+        <button class="tab-bar__item active" onclick="switchTab('app')">앱설정</button>
+        <button class="tab-bar__item" onclick="switchTab('admin')">관리자 계정</button>
+        <button class="tab-bar__item" onclick="switchTab('feedback')">의견/피드백</button>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- 탭 1: 앱설정                                                 -->
+      <!-- ============================================================ -->
+      <div class="tab-content active" id="tab-app">
+
+        <!-- ========== 영역 ① 앱 버전 관리 ========== -->
+        <div class="detail-card">
+          <div class="detail-card__header">
+            <h2 class="detail-card__title">앱 버전 관리</h2>
+            <button class="btn-action btn-action--primary" onclick="document.getElementById('saveVersionModal').classList.add('active')">저장</button>
+          </div>
+          <div class="info-grid">
+            <span class="info-grid__label">최신 버전 (iOS)</span>
+            <span class="info-grid__value">
+              <input type="text" class="stg-input stg-input--short" value="3.2.1" placeholder="예: 3.2.1">
+            </span>
+
+            <span class="info-grid__label">최신 버전 (Android)</span>
+            <span class="info-grid__value">
+              <input type="text" class="stg-input stg-input--short" value="3.2.0" placeholder="예: 3.2.0">
+            </span>
+
+            <span class="info-grid__label">최소 지원 버전 (iOS)</span>
+            <span class="info-grid__value">
+              <input type="text" class="stg-input stg-input--short" value="2.8.0" placeholder="예: 2.8.0">
+              <div class="stg-hint">※ 이 버전 미만 사용자에게 강제 업데이트 안내</div>
+            </span>
+
+            <span class="info-grid__label">최소 지원 버전 (Android)</span>
+            <span class="info-grid__value">
+              <input type="text" class="stg-input stg-input--short" value="2.7.0" placeholder="예: 2.7.0">
+              <div class="stg-hint">※ 이 버전 미만 사용자에게 강제 업데이트 안내</div>
+            </span>
+
+            <span class="info-grid__label">업데이트 안내 메시지</span>
+            <span class="info-grid__value">
+              <textarea class="stg-textarea stg-textarea--short" placeholder="업데이트 권유 시 표시할 메시지를 입력하세요">새로운 버전이 출시되었습니다. 더 나은 서비스를 위해 업데이트해 주세요.</textarea>
+            </span>
+          </div>
+        </div>
+
+        <!-- ========== 영역 ② 서비스 점검 ========== -->
+        <div class="detail-card">
+          <div class="detail-card__header">
+            <h2 class="detail-card__title">서비스 점검</h2>
+            <button class="btn-action btn-action--primary" onclick="document.getElementById('saveMaintenanceModal').classList.add('active')">저장</button>
+          </div>
+          <div class="info-grid">
+            <span class="info-grid__label">점검 모드</span>
+            <span class="info-grid__value">
+              <label class="stg-radio"><input type="radio" name="maintenance" value="on"> 켜기</label>
+              <label class="stg-radio"><input type="radio" name="maintenance" value="off" checked> 끄기</label>
+            </span>
+
+            <span class="info-grid__label">점검 시작일시</span>
+            <span class="info-grid__value">
+              <div class="stg-datetime-group">
+                <input type="date" class="stg-input stg-input--date" value="2026-03-20">
+                <input type="time" class="stg-input stg-input--time" value="02:00">
+              </div>
+            </span>
+
+            <span class="info-grid__label">점검 종료일시</span>
+            <span class="info-grid__value">
+              <div class="stg-datetime-group">
+                <input type="date" class="stg-input stg-input--date" value="2026-03-20">
+                <input type="time" class="stg-input stg-input--time" value="06:00">
+              </div>
+            </span>
+
+            <span class="info-grid__label">점검 안내 메시지</span>
+            <span class="info-grid__value">
+              <textarea class="stg-textarea stg-textarea--short" placeholder="점검 중 앱에 표시할 안내 메시지를 입력하세요">서비스 점검 중입니다. 점검 시간: 02:00 ~ 06:00. 이용에 불편을 드려 죄송합니다.</textarea>
+            </span>
+          </div>
+
+          <!-- 서비스 점검 이력 -->
+          <div style="margin-top: 20px;">
+            <h3 style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:12px;">점검 이력</h3>
+            <table class="mini-table">
+              <thead>
+                <tr>
+                  <th>변경일</th>
+                  <th>점검 시작일시</th>
+                  <th>점검 종료일시</th>
+                  <th>변경 사유</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-03-10 06:10</td>
+                  <td>2026-03-10 02:00</td>
+                  <td>2026-03-10 06:00</td>
+                  <td>서버 마이그레이션 작업</td>
+                </tr>
+                <tr>
+                  <td>2026-02-14 04:05</td>
+                  <td>2026-02-14 01:00</td>
+                  <td>2026-02-14 04:00</td>
+                  <td>DB 업그레이드</td>
+                </tr>
+                <tr>
+                  <td>2025-12-31 08:30</td>
+                  <td>2025-12-31 00:00</td>
+                  <td>2025-12-31 08:00</td>
+                  <td>연말 대규모 정기 점검</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== 영역 ③ 수수료 설정 =========== -->
+        <div class="detail-card">
+          <div class="detail-card__header">
+            <h2 class="detail-card__title">수수료 설정</h2>
+            <button class="btn-action btn-action--primary" onclick="document.getElementById('saveFeeModal').classList.add('active')">저장</button>
+          </div>
+          <div class="info-grid">
+            <span class="info-grid__label">기본 수수료율</span>
+            <span class="info-grid__value">
+              <div class="stg-input-group">
+                <input type="number" class="stg-input stg-input--xs" value="20" min="0" max="100">
+                <span class="stg-input-suffix">%</span>
+              </div>
+            </span>
+          </div>
+
+          <!-- 수수료 변경 이력 -->
+          <div style="margin-top: 20px;">
+            <h3 style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:12px;">수수료 변경 이력</h3>
+            <table class="mini-table">
+              <thead>
+                <tr>
+                  <th>변경일</th>
+                  <th>이전 비율</th>
+                  <th>변경 비율</th>
+                  <th>변경 사유</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-01-15 10:00</td>
+                  <td>15%</td>
+                  <td>20%</td>
+                  <td>2026년 수수료 정책 변경에 따른 인상</td>
+                </tr>
+                <tr>
+                  <td>2025-06-01 09:00</td>
+                  <td>10%</td>
+                  <td>15%</td>
+                  <td>운영 비용 증가에 따른 수수료율 조정</td>
+                </tr>
+                <tr>
+                  <td>2025-01-01 00:00</td>
+                  <td>—</td>
+                  <td>10%</td>
+                  <td>서비스 오픈 초기 수수료율 설정</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== 영역 ④ 환불 규정 설정 ========== -->
+        <div class="detail-card">
+          <div class="detail-card__header">
+            <h2 class="detail-card__title">환불 규정 설정</h2>
+            <button class="btn-action btn-action--primary" onclick="document.getElementById('saveRefundModal').classList.add('active')">저장</button>
+          </div>
+          <div class="info-grid">
+            <span class="info-grid__label">규정 1: 72시간 이상 전 취소</span>
+            <span class="info-grid__value">
+              <div class="stg-input-group">
+                <span class="stg-input-suffix">환불</span>
+                <input type="number" class="stg-input stg-input--xs" value="100" min="0" max="100">
+                <span class="stg-input-suffix">%</span>
+              </div>
+            </span>
+
+            <span class="info-grid__label">규정 2: 24~72시간 전 취소</span>
+            <span class="info-grid__value">
+              <div class="stg-input-group">
+                <span class="stg-input-suffix">환불</span>
+                <input type="number" class="stg-input stg-input--xs" value="50" min="0" max="100">
+                <span class="stg-input-suffix">%</span>
+              </div>
+            </span>
+
+            <span class="info-grid__label">규정 3: 24시간 미만 전 취소</span>
+            <span class="info-grid__value">
+              <div class="stg-input-group">
+                <span class="stg-input-suffix">환불</span>
+                <input type="number" class="stg-input stg-input--xs" value="0" min="0" max="100">
+                <span class="stg-input-suffix">%</span>
+              </div>
+            </span>
+
+            <span class="info-grid__label">규정 4 (예외): 결제 후 1시간 이내</span>
+            <span class="info-grid__value">
+              <div class="stg-input-group">
+                <span class="stg-input-suffix">환불</span>
+                <input type="number" class="stg-input stg-input--xs" value="100" min="0" max="100">
+                <span class="stg-input-suffix">%</span>
+              </div>
+            </span>
+
+            <span class="info-grid__label">규정 4 제외 조건</span>
+            <span class="info-grid__value">
+              <div class="stg-input-group">
+                <span class="stg-input-suffix">등원까지 남은 시간이</span>
+                <input type="number" class="stg-input stg-input--xs" value="24" min="0">
+                <span class="stg-input-suffix">시간 이하이면 적용 불가</span>
+              </div>
+            </span>
+          </div>
+
+          <!-- 규정 변경 이력 -->
+          <div style="margin-top: 20px;">
+            <h3 style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:12px;">규정 변경 이력</h3>
+            <table class="mini-table">
+              <thead>
+                <tr>
+                  <th>변경일</th>
+                  <th>변경 항목</th>
+                  <th>이전 값</th>
+                  <th>변경 값</th>
+                  <th>변경 사유</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-02-10 14:00</td>
+                  <td>규정 2</td>
+                  <td>환불 70%</td>
+                  <td>환불 50%</td>
+                  <td>환불 정책 개편에 따른 비율 조정</td>
+                </tr>
+                <tr>
+                  <td>2025-09-01 10:00</td>
+                  <td>규정 4 제외 조건</td>
+                  <td>12시간</td>
+                  <td>24시간</td>
+                  <td>노쇼 방지 강화를 위한 조건 변경</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== 영역 ⑤ 노쇼 제재 설정 (보호자 + 유치원 통합) ========== -->
+        <div class="detail-card">
+          <div class="detail-card__header">
+            <h2 class="detail-card__title">노쇼 제재 설정</h2>
+            <button class="btn-action btn-action--primary" onclick="document.getElementById('saveNoshowModal').classList.add('active')">저장</button>
+          </div>
+
+          <!-- 보호자 제재 -->
+          <div style="margin-bottom: 20px;">
+            <h3 style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:12px;">보호자</h3>
+            <div class="info-grid">
+              <span class="info-grid__label">1회 노쇼</span>
+              <span class="info-grid__value">
+                <div class="stg-input-group">
+                  <input type="number" class="stg-input stg-input--xs" value="7" min="1">
+                  <span class="stg-input-suffix">일간 돌봄예약 제한</span>
+                </div>
+              </span>
+
+              <span class="info-grid__label">2회 노쇼</span>
+              <span class="info-grid__value">
+                <div class="stg-input-group">
+                  <input type="number" class="stg-input stg-input--xs" value="1" min="1">
+                  <span class="stg-input-suffix">개월간 돌봄예약 제한</span>
+                </div>
+              </span>
+
+              <span class="info-grid__label">3회 이상 노쇼</span>
+              <span class="info-grid__value">
+                <span class="stg-fixed-text">영구 이용 정지 및 회원 탈퇴</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- 유치원 제재 -->
+          <div style="margin-bottom: 20px;">
+            <h3 style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:12px;">유치원</h3>
+            <div class="info-grid">
+              <span class="info-grid__label">1회 노쇼</span>
+              <span class="info-grid__value">
+                <span class="stg-fixed-text">경고 조치 및 신선도 하향 조정</span>
+              </span>
+
+              <span class="info-grid__label">2회 이상 노쇼</span>
+              <span class="info-grid__value">
+                <span class="stg-fixed-text">영구 이용 정지 및 파트너 자격 박탈</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- 제재 변경 이력 (보호자 + 유치원 통합) -->
+          <div style="margin-top: 4px;">
+            <h3 style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:12px;">제재 변경 이력</h3>
+            <table class="mini-table">
+              <thead>
+                <tr>
+                  <th>변경일</th>
+                  <th>변경 대상</th>
+                  <th>변경 항목</th>
+                  <th>이전 값</th>
+                  <th>변경 값</th>
+                  <th>변경 사유</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-01-20 11:00</td>
+                  <td>보호자</td>
+                  <td>1회 노쇼</td>
+                  <td>3일 제한</td>
+                  <td>7일 제한</td>
+                  <td>노쇼 제재 강화</td>
+                </tr>
+                <tr>
+                  <td>2025-08-15 09:00</td>
+                  <td>보호자</td>
+                  <td>2회 노쇼</td>
+                  <td>2주 제한</td>
+                  <td>1개월 제한</td>
+                  <td>반복 노쇼 방지 강화</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== 영역 ⑥ 자동 처리 설정 ========== -->
+        <div class="detail-card">
+          <div class="detail-card__header">
+            <h2 class="detail-card__title">자동 처리 설정</h2>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-add-new" onclick="/* JS 작업 시 동적 규칙 추가 */">+ 규칙 추가</button>
+              <button class="btn-action btn-action--primary" onclick="document.getElementById('saveAutoModal').classList.add('active')">저장</button>
+            </div>
+          </div>
+          <div class="info-grid">
+            <span class="info-grid__label">하원 후 자동 완료 시간</span>
+            <span class="info-grid__value">
+              <div class="stg-input-group">
+                <input type="number" class="stg-input stg-input--xs" value="24" min="1">
+                <span class="stg-input-suffix">시간</span>
+              </div>
+              <div class="stg-hint">※ 하원 확인 후 이 시간이 지나면 자동으로 돌봄완료 처리</div>
+            </span>
+          </div>
+        </div>
+
+      </div><!-- /tab-app -->
+
+
+      <!-- ============================================================ -->
+      <!-- 탭 2: 관리자 계정                                            -->
+      <!-- ============================================================ -->
+      <div class="tab-content" id="tab-admin">
+
+        <!-- 필터 바 -->
+        <div class="filter-bar">
+          <div class="filter-row">
+            <span class="filter-label">권한등급</span>
+            <select class="filter-select">
+              <option>전체</option>
+              <option>최고관리자</option>
+              <option>일반관리자</option>
+              <option>조회전용</option>
+            </select>
+
+            <span class="filter-label">계정상태</span>
+            <select class="filter-select">
+              <option>전체</option>
+              <option>활성</option>
+              <option>비활성</option>
+            </select>
+
+            <span class="filter-label">키워드</span>
+            <input type="text" class="filter-input filter-input--search" placeholder="관리자 ID, 이름, 이메일 검색">
+            <button class="btn-search">검색</button>
+          </div>
+        </div>
+
+        <!-- 결과 헤더 -->
+        <div class="result-header">
+          <span class="result-header__count">총 <strong>8</strong>건</span>
+          <div class="result-header__actions">
+            <a href="setting-admin-create.html" class="btn-add-new">+ 새 관리자 등록</a>
+          </div>
+        </div>
+
+        <!-- 데이터 테이블 -->
+        <div class="data-table-wrap data-table-wrap--scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>번호</th>
+                <th>관리자 ID</th>
+                <th>이름</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th>권한등급</th>
+                <th>계정상태</th>
+                <th>마지막 로그인</th>
+                <th>등록일</th>
+                <th>편집</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>superadmin</td>
+                <td>홍길동</td>
+                <td class="masked">010-****-1234</td>
+                <td>hong@wooyoo.pet</td>
+                <td><span class="badge badge--stg-super">최고관리자</span></td>
+                <td><span class="badge badge--stg-active">활성</span></td>
+                <td>2026-03-19 09:30</td>
+                <td>2025-01-15</td>
+                <td><a href="setting-admin-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>admin_kim</td>
+                <td>김관리</td>
+                <td class="masked">010-****-5678</td>
+                <td>kim@wooyoo.pet</td>
+                <td><span class="badge badge--stg-normal">일반관리자</span></td>
+                <td><span class="badge badge--stg-active">활성</span></td>
+                <td>2026-03-18 14:22</td>
+                <td>2025-03-01</td>
+                <td><a href="setting-admin-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>admin_park</td>
+                <td>박운영</td>
+                <td class="masked">010-****-3456</td>
+                <td>park@wooyoo.pet</td>
+                <td><span class="badge badge--stg-normal">일반관리자</span></td>
+                <td><span class="badge badge--stg-active">활성</span></td>
+                <td>2026-03-17 16:45</td>
+                <td>2025-04-20</td>
+                <td><a href="setting-admin-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>viewer_lee</td>
+                <td>이조회</td>
+                <td class="masked">010-****-9012</td>
+                <td>lee@wooyoo.pet</td>
+                <td><span class="badge badge--stg-viewer">조회전용</span></td>
+                <td><span class="badge badge--stg-inactive">비활성</span></td>
+                <td>2026-02-28 10:15</td>
+                <td>2025-06-10</td>
+                <td><a href="setting-admin-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>admin_choi</td>
+                <td>최담당</td>
+                <td class="masked">010-****-7890</td>
+                <td>choi@wooyoo.pet</td>
+                <td><span class="badge badge--stg-normal">일반관리자</span></td>
+                <td><span class="badge badge--stg-active">활성</span></td>
+                <td>2026-03-19 08:10</td>
+                <td>2025-07-01</td>
+                <td><a href="setting-admin-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>viewer_jung</td>
+                <td>정열람</td>
+                <td class="masked">010-****-2345</td>
+                <td>jung@wooyoo.pet</td>
+                <td><span class="badge badge--stg-viewer">조회전용</span></td>
+                <td><span class="badge badge--stg-active">활성</span></td>
+                <td>2026-03-16 11:30</td>
+                <td>2025-08-15</td>
+                <td><a href="setting-admin-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>admin_yoon</td>
+                <td>윤매니</td>
+                <td class="masked">010-****-6789</td>
+                <td>yoon@wooyoo.pet</td>
+                <td><span class="badge badge--stg-normal">일반관리자</span></td>
+                <td><span class="badge badge--stg-active">활성</span></td>
+                <td>2026-03-18 17:55</td>
+                <td>2025-10-01</td>
+                <td><a href="setting-admin-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>viewer_han</td>
+                <td>한모니</td>
+                <td class="masked">010-****-0123</td>
+                <td>han@wooyoo.pet</td>
+                <td><span class="badge badge--stg-viewer">조회전용</span></td>
+                <td><span class="badge badge--stg-inactive">비활성</span></td>
+                <td>2026-01-10 09:00</td>
+                <td>2025-11-20</td>
+                <td><a href="setting-admin-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination">
+          <button class="pagination__btn pagination__btn--arrow" disabled>&laquo;</button>
+          <button class="pagination__btn pagination__btn--arrow" disabled>&lsaquo;</button>
+          <button class="pagination__btn active">1</button>
+          <button class="pagination__btn pagination__btn--arrow">&rsaquo;</button>
+          <button class="pagination__btn pagination__btn--arrow">&raquo;</button>
+        </div>
+
+      </div><!-- /tab-admin -->
+
+
+      <!-- ============================================================ -->
+      <!-- 탭 3: 의견/피드백                                            -->
+      <!-- ============================================================ -->
+      <div class="tab-content" id="tab-feedback">
+
+        <!-- 필터 바 -->
+        <div class="filter-bar">
+          <div class="filter-row">
+            <span class="filter-label">유형</span>
+            <select class="filter-select">
+              <option>전체</option>
+              <option>의견제출</option>
+              <option>탈퇴사유</option>
+            </select>
+
+            <span class="filter-label">작성자유형</span>
+            <select class="filter-select">
+              <option>전체</option>
+              <option>보호자</option>
+              <option>유치원</option>
+            </select>
+
+            <span class="filter-label">확인여부</span>
+            <select class="filter-select">
+              <option>전체</option>
+              <option>확인</option>
+              <option>미확인</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <span class="filter-label">기간</span>
+            <input type="date" class="filter-input filter-input--date" value="2026-03-01">
+            <span class="filter-separator">~</span>
+            <input type="date" class="filter-input filter-input--date" value="2026-03-19">
+
+            <span class="filter-label">키워드</span>
+            <input type="text" class="filter-input filter-input--search" placeholder="작성자, 내용 검색">
+            <button class="btn-search">검색</button>
+          </div>
+        </div>
+
+        <!-- 결과 헤더 -->
+        <div class="result-header">
+          <span class="result-header__count">총 <strong>24</strong>건</span>
+          <div class="result-header__actions">
+            <button class="btn-excel">
+              <svg class="btn-excel__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              엑셀 다운로드
+            </button>
+          </div>
+        </div>
+
+        <!-- 데이터 테이블 -->
+        <div class="data-table-wrap data-table-wrap--scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>번호</th>
+                <th>유형</th>
+                <th>작성자</th>
+                <th>닉네임</th>
+                <th>작성자유형</th>
+                <th>제목/요약</th>
+                <th>내용 미리보기</th>
+                <th>작성일시</th>
+                <th>확인여부</th>
+                <th>편집</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td><span class="badge badge--stg-opinion">의견제출</span></td>
+                <td>댕댕이맘</td>
+                <td>댕댕이맘</td>
+                <td><span class="badge badge--guardian">보호자</span></td>
+                <td>유치원 검색 개선 요청</td>
+                <td><span class="stg-preview-cell">지역별 검색이 너무 어렵고 필터 옵션이 부족해서 원하는 유치원을 찾기가...</span></td>
+                <td>2026-03-18 11:30</td>
+                <td><span class="badge badge--stg-unchecked">미확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td><span class="badge badge--stg-withdrawal">탈퇴사유</span></td>
+                <td>뽀삐맘</td>
+                <td>뽀삐맘</td>
+                <td><span class="badge badge--guardian">보호자</span></td>
+                <td>서비스 불만족</td>
+                <td><span class="stg-preview-cell">주변에 유치원이 없어서 이용할 수가 없습니다. 서비스 지역이 확대되면...</span></td>
+                <td>2026-03-17 09:20</td>
+                <td><span class="badge badge--stg-checked">확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td><span class="badge badge--stg-opinion">의견제출</span></td>
+                <td>해피독</td>
+                <td>해피독</td>
+                <td><span class="badge badge--kindergarten">유치원</span></td>
+                <td>정산 주기 변경 요청</td>
+                <td><span class="stg-preview-cell">정산 주기가 너무 길어서 운영에 어려움이 있습니다. 주간 정산이 가능...</span></td>
+                <td>2026-03-15 16:45</td>
+                <td><span class="badge badge--stg-checked">확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><span class="badge badge--stg-opinion">의견제출</span></td>
+                <td>모카사랑</td>
+                <td>모카사랑</td>
+                <td><span class="badge badge--guardian">보호자</span></td>
+                <td>알림 기능 추가 요청</td>
+                <td><span class="stg-preview-cell">예약 확정 알림이 늦게 와서 불편합니다. 실시간 푸시 알림을 추가...</span></td>
+                <td>2026-03-14 10:05</td>
+                <td><span class="badge badge--stg-unchecked">미확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td><span class="badge badge--stg-withdrawal">탈퇴사유</span></td>
+                <td>콩이네</td>
+                <td>콩이네</td>
+                <td><span class="badge badge--kindergarten">유치원</span></td>
+                <td>다른 서비스 이용</td>
+                <td><span class="stg-preview-cell">다른 플랫폼으로 이동합니다. 수수료가 너무 높아서 운영이 어렵습...</span></td>
+                <td>2026-03-12 14:30</td>
+                <td><span class="badge badge--stg-checked">확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td><span class="badge badge--stg-opinion">의견제출</span></td>
+                <td>초코아빠</td>
+                <td>초코아빠</td>
+                <td><span class="badge badge--guardian">보호자</span></td>
+                <td>후기 작성 개선</td>
+                <td><span class="stg-preview-cell">후기 작성할 때 사진 첨부가 안 되는 경우가 있어요. 앱 업데이트...</span></td>
+                <td>2026-03-10 08:50</td>
+                <td><span class="badge badge--stg-unchecked">미확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td><span class="badge badge--stg-withdrawal">탈퇴사유</span></td>
+                <td>두부맘</td>
+                <td>두부맘</td>
+                <td><span class="badge badge--guardian">보호자</span></td>
+                <td>개인 사정</td>
+                <td><span class="stg-preview-cell">이사를 가게 되어 더 이상 이용하기 어렵습니다. 좋은 서비스 감사...</span></td>
+                <td>2026-03-08 15:20</td>
+                <td><span class="badge badge--stg-checked">확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td><span class="badge badge--stg-opinion">의견제출</span></td>
+                <td>밤톨이네</td>
+                <td>밤톨이네</td>
+                <td><span class="badge badge--kindergarten">유치원</span></td>
+                <td>예약 관리 UI 개선</td>
+                <td><span class="stg-preview-cell">예약 목록에서 날짜별 필터링이 불편합니다. 달력 형태로 보여주시면...</span></td>
+                <td>2026-03-06 13:40</td>
+                <td><span class="badge badge--stg-checked">확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td><span class="badge badge--stg-opinion">의견제출</span></td>
+                <td>루이맘</td>
+                <td>루이맘</td>
+                <td><span class="badge badge--guardian">보호자</span></td>
+                <td>채팅 기능 개선 요청</td>
+                <td><span class="stg-preview-cell">채팅에서 사진 전송이 느리고 가끔 실패합니다. 안정적인 파일 전송...</span></td>
+                <td>2026-03-04 09:15</td>
+                <td><span class="badge badge--stg-unchecked">미확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td><span class="badge badge--stg-withdrawal">탈퇴사유</span></td>
+                <td>별이네</td>
+                <td>별이네</td>
+                <td><span class="badge badge--kindergarten">유치원</span></td>
+                <td>서비스 불만족</td>
+                <td><span class="stg-preview-cell">고객 유입이 기대보다 적어서 유지하기 어렵습니다. 마케팅 지원이...</span></td>
+                <td>2026-03-02 11:00</td>
+                <td><span class="badge badge--stg-checked">확인</span></td>
+                <td><a href="setting-feedback-detail.html" class="data-table__link">상세</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination">
+          <button class="pagination__btn pagination__btn--arrow" disabled>&laquo;</button>
+          <button class="pagination__btn pagination__btn--arrow" disabled>&lsaquo;</button>
+          <button class="pagination__btn active">1</button>
+          <button class="pagination__btn">2</button>
+          <button class="pagination__btn">3</button>
+          <button class="pagination__btn pagination__btn--arrow">&rsaquo;</button>
+          <button class="pagination__btn pagination__btn--arrow">&raquo;</button>
+        </div>
+
+      </div><!-- /tab-feedback -->
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+
+<!-- ============================================================ -->
+<!-- 모달: 앱설정 저장 확인 (공통 — 7개 영역별로 동일 구조)         -->
+<!-- ============================================================ -->
+
+<!-- 앱 버전 관리 저장 -->
+<div class="modal-overlay" id="saveVersionModal">
+  <div class="modal">
+    <div class="modal__title modal__title--primary">설정 변경 확인</div>
+    <div class="modal__message">앱 버전 관리 설정을 변경하시겠습니까?<br>변경된 설정은 즉시 적용됩니다.</div>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('saveVersionModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-primary" onclick="document.getElementById('saveVersionModal').classList.remove('active')">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- 서비스 점검 저장 -->
+<div class="modal-overlay" id="saveMaintenanceModal">
+  <div class="modal">
+    <div class="modal__title modal__title--primary">설정 변경 확인</div>
+    <div class="modal__message">서비스 점검 설정을 변경하시겠습니까?<br>변경된 설정은 즉시 적용됩니다.</div>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('saveMaintenanceModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-primary" onclick="document.getElementById('saveMaintenanceModal').classList.remove('active')">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- 수수료 설정 저장 -->
+<div class="modal-overlay" id="saveFeeModal">
+  <div class="modal">
+    <div class="modal__title modal__title--primary">설정 변경 확인</div>
+    <div class="modal__message">수수료 설정을 변경하시겠습니까?<br>변경된 설정은 즉시 적용됩니다.</div>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('saveFeeModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-primary" onclick="document.getElementById('saveFeeModal').classList.remove('active')">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- 환불 규정 저장 -->
+<div class="modal-overlay" id="saveRefundModal">
+  <div class="modal">
+    <div class="modal__title modal__title--primary">설정 변경 확인</div>
+    <div class="modal__message">환불 규정 설정을 변경하시겠습니까?<br>변경된 설정은 즉시 적용됩니다.</div>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('saveRefundModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-primary" onclick="document.getElementById('saveRefundModal').classList.remove('active')">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- 노쇼 제재 설정 저장 (보호자 + 유치원 통합) -->
+<div class="modal-overlay" id="saveNoshowModal">
+  <div class="modal">
+    <div class="modal__title modal__title--primary">설정 변경 확인</div>
+    <div class="modal__message">노쇼 제재 설정을 변경하시겠습니까?<br>변경된 설정은 즉시 적용됩니다.</div>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('saveNoshowModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-primary" onclick="document.getElementById('saveNoshowModal').classList.remove('active')">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- 자동 처리 설정 저장 -->
+<div class="modal-overlay" id="saveAutoModal">
+  <div class="modal">
+    <div class="modal__title modal__title--primary">설정 변경 확인</div>
+    <div class="modal__message">자동 처리 설정을 변경하시겠습니까?<br>변경된 설정은 즉시 적용됩니다.</div>
+    <div class="modal__actions">
+      <button class="modal__btn modal__btn--cancel" onclick="document.getElementById('saveAutoModal').classList.remove('active')">취소</button>
+      <button class="modal__btn modal__btn--confirm-primary" onclick="document.getElementById('saveAutoModal').classList.remove('active')">변경</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-bar__item').forEach(function(btn) { btn.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(tab) { tab.classList.remove('active'); });
+  if (tabName === 'app') {
+    document.querySelector('.tab-bar__item:nth-child(1)').classList.add('active');
+    document.getElementById('tab-app').classList.add('active');
+  } else if (tabName === 'admin') {
+    document.querySelector('.tab-bar__item:nth-child(2)').classList.add('active');
+    document.getElementById('tab-admin').classList.add('active');
+  } else {
+    document.querySelector('.tab-bar__item:nth-child(3)').classList.add('active');
+    document.getElementById('tab-feedback').classList.add('active');
+  }
+}
+</script>
+
+</body>
+</html>

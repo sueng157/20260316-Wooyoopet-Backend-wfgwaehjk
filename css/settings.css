@@ -1,0 +1,245 @@
+/* ============================================
+   설정 (Settings) — 전용 CSS
+   common.css → components.css → settings.css
+   이 파일은 설정 페이지에만 필요한 스타일
+   ============================================ */
+
+/* ── 설정 전용 배지 ── */
+
+/* 권한 등급 */
+.badge--stg-super   { background: rgba(51,157,238,0.10);  color: #339DEE; }  /* 최고관리자 */
+.badge--stg-normal  { background: rgba(46,204,113,0.10);  color: #2ECC71; }  /* 일반관리자 */
+.badge--stg-viewer  { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 조회전용 */
+
+/* 계정 상태 */
+.badge--stg-active   { background: rgba(46,204,113,0.10);  color: #2ECC71; }  /* 활성 */
+.badge--stg-inactive { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 비활성 */
+
+/* 피드백 유형 */
+.badge--stg-opinion    { background: rgba(51,157,238,0.10);  color: #339DEE; }  /* 의견제출 */
+.badge--stg-withdrawal { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 탈퇴사유 */
+
+/* 확인 여부 */
+.badge--stg-checked   { background: rgba(46,204,113,0.10);  color: #2ECC71; }  /* 확인 */
+.badge--stg-unchecked { background: rgba(245,166,35,0.10);  color: #F5A623; }  /* 미확인 */
+
+/* ── 폼 인풋 ── */
+.stg-input {
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--surface-base);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  width: 100%;
+  outline: none;
+  transition: box-shadow 0.15s ease;
+}
+
+.stg-input:focus {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.stg-input--short {
+  width: 200px;
+}
+
+.stg-input--xs {
+  width: 80px;
+  text-align: center;
+}
+
+.stg-input--date {
+  width: 160px;
+}
+
+.stg-input--time {
+  width: 130px;
+}
+
+.stg-input[readonly] {
+  color: var(--text-weak);
+  cursor: default;
+}
+
+/* ── 셀렉트 ── */
+.stg-select {
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--surface-base);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238C9AA5' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  min-width: 140px;
+  transition: box-shadow 0.15s ease;
+}
+
+.stg-select:focus {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* ── 라디오 ── */
+.stg-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-right: 16px;
+  cursor: pointer;
+}
+
+.stg-radio input {
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* ── 텍스트에리어 ── */
+.stg-textarea {
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--surface-base);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  width: 100%;
+  resize: vertical;
+  outline: none;
+  line-height: 1.7;
+  transition: box-shadow 0.15s ease;
+}
+
+.stg-textarea:focus {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.stg-textarea--short {
+  min-height: 80px;
+}
+
+.stg-textarea--tall {
+  min-height: 160px;
+}
+
+/* ── 인풋 그룹 (인풋 + suffix 텍스트) ── */
+.stg-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stg-input-suffix {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── 보조 설명 (hint) ── */
+.stg-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-weak);
+  margin-top: 4px;
+}
+
+/* ── 고정 텍스트 (수정 불가 항목) ── */
+.stg-fixed-text {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+
+/* ── 저장 버튼 행 (카드 외부, 우측 정렬) ── */
+.stg-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+/* ── 내용 미리보기 (테이블 셀 내 말줄임) ── */
+.stg-preview-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── 접속 결과 색상 텍스트 ── */
+.stg-login-success { color: #2ECC71; font-weight: 500; }
+.stg-login-fail    { color: #E05A3A; font-weight: 500; }
+
+/* ── 권한 테이블 select 크기 조정 ── */
+.stg-permission-select {
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--surface-base);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238C9AA5' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+  min-width: 120px;
+  transition: box-shadow 0.15s ease;
+}
+
+.stg-permission-select:focus {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* ── 날짜+시간 인라인 그룹 ── */
+.stg-datetime-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── 삭제불가 경고 모달 ── */
+.modal__message--warning-box {
+  background: rgba(224,90,58,0.06);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #E05A3A;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+/* ── 모달 타이틀 색상 오버라이드 (contents.css에 이미 primary가 있으나 설정에서도 필요) ── */
+.modal__title--primary {
+  color: var(--primary);
+}
+
+.modal__title--warning {
+  color: var(--warning);
+}
+
+/* ── 관리자 메모 카드 하단 버튼 ── */
+.stg-memo-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
