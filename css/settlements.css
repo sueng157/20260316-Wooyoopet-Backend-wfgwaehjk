@@ -8,15 +8,6 @@
    이 파일은 정산관리 페이지에만 필요한 추가 스타일
    ============================================ */
 
-/* ── 정산상태 배지 ── */
-.badge--stl-scheduled { background: rgba(245, 166, 35, 0.10);  color: #F5A623; }
-.badge--stl-completed { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--stl-hold      { background: rgba(224, 90, 58, 0.10);   color: #E05A3A; }
-
-/* ── 거래유형 배지 ── */
-.badge--stl-care    { background: rgba(51, 157, 238, 0.10);  color: #339DEE; }
-.badge--stl-penalty { background: rgba(245, 166, 35, 0.10);  color: #F5A623; }
-
 /* ── 일괄 정산완료 버튼 (result-header 내) ── */
 .btn-batch-settle {
   font-family: var(--font-family);

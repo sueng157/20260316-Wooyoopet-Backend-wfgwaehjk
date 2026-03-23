@@ -1,46 +1,9 @@
 /* ============================================
    반려동물관리 (Pets) — 전용 CSS
    공통 UI 컴포넌트는 components.css 에 정의
+   배지 색상은 components.css 의 7색 시스템 사용
    이 파일은 반려동물관리 페이지 전용 스타일
    ============================================ */
-
-/* ── 성별 배지 ── */
-.badge--male   { background: rgba(51, 157, 238, 0.10);  color: #339DEE; }
-.badge--female { background: rgba(224, 90, 58, 0.10);   color: #E05A3A; }
-
-/* ── 크기 분류 배지 ── */
-.badge--size-s { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--size-m { background: rgba(245, 166, 35, 0.10);  color: #F5A623; }
-.badge--size-l { background: rgba(224, 90, 58, 0.10);   color: #E05A3A; }
-
-/* ── 중성화 / 예방접종 배지 ── */
-.badge--neutered      { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--not-neutered  { background: rgba(0, 0, 0, 0.04);       color: #8C9AA5; }
-.badge--vaccinated    { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--not-vaccinated { background: rgba(0, 0, 0, 0.04);      color: #8C9AA5; }
-
-/* ── 대표 반려동물 배지 ── */
-.badge--rep-yes { background: rgba(51, 157, 238, 0.10);  color: #339DEE; }
-.badge--rep-no  { background: rgba(0, 0, 0, 0.04);       color: #8C9AA5; }
-
-/* ── 예약 상태 배지 (8가지) ── */
-.badge--res-pending   { background: rgba(245, 166, 35, 0.08);  color: #F5A623; }  /* 수락대기 */
-.badge--res-confirmed { background: rgba(51, 157, 238, 0.08);  color: #339DEE; }  /* 예약확정 */
-.badge--res-ongoing   { background: rgba(51, 157, 238, 0.08);  color: #339DEE; }  /* 돌봄진행중 */
-.badge--res-completed { background: rgba(46, 204, 113, 0.08);  color: #2ECC71; }  /* 돌봄완료 */
-.badge--res-cancel-g  { background: rgba(140, 154, 165, 0.08); color: #8C9AA5; }  /* 보호자취소 */
-.badge--res-cancel-k  { background: rgba(140, 154, 165, 0.08); color: #8C9AA5; }  /* 유치원취소 */
-.badge--res-rejected  { background: rgba(224, 90, 58, 0.08);   color: #E05A3A; }  /* 유치원거절 */
-.badge--res-noshow    { background: rgba(224, 90, 58, 0.08);   color: #E05A3A; }  /* 노쇼 */
-
-/* ── 후기 만족도 배지 ── */
-.badge--satis-best  { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }  /* 최고예요 */
-.badge--satis-good  { background: rgba(51, 157, 238, 0.10);  color: #339DEE; }  /* 좋았어요 */
-.badge--satis-bad   { background: rgba(224, 90, 58, 0.10);   color: #E05A3A; }  /* 아쉬워요 */
-
-/* ── 보호자 전용 배지 ── */
-.badge--guardian-only-yes { background: rgba(245, 166, 35, 0.10); color: #F5A623; }
-.badge--guardian-only-no  { background: rgba(0, 0, 0, 0.04);     color: #8C9AA5; }
 
 /* ── 후기 선택 태그 (pill) ── */
 .review-tag-pill {

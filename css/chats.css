@@ -3,19 +3,9 @@
    공통 UI 컴포넌트는 components.css 에 정의
    모달 기본 스타일은 components.css 에 정의
    모달 셀렉트·경고 텍스트는 reservations.css 에 정의
-   badge--guardian / badge--kindergarten 은 components.css 재사용
+   배지 색상은 components.css 의 7색 시스템 사용
    이 파일은 채팅관리 페이지에만 필요한 추가 스타일
    ============================================ */
-
-/* ── 채팅방 상태 배지 ── */
-.badge--chat-active   { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--chat-inactive { background: rgba(0, 0, 0, 0.04);       color: #8C9AA5; }
-
-/* ── 신고 처리상태 배지 ── */
-.badge--rpt-received   { background: rgba(245, 166, 35, 0.10);  color: #F5A623; }
-.badge--rpt-processing { background: rgba(51, 157, 238, 0.10);  color: #339DEE; }
-.badge--rpt-completed  { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--rpt-dismissed  { background: rgba(0, 0, 0, 0.04);       color: #8C9AA5; }
 
 /* ── 신고 여부 색상 텍스트 ── */
 .report-yes { color: #E05A3A; font-weight: 600; }
@@ -127,13 +117,13 @@
 }
 
 .chat-bubble--guardian {
-  background: rgba(51, 157, 238, 0.10);
+  background: var(--badge-brown-bg);
   color: var(--text-primary);
   border-top-left-radius: 4px;
 }
 
 .chat-bubble--kindergarten {
-  background: rgba(245, 166, 35, 0.10);
+  background: var(--badge-pink-bg);
   color: var(--text-primary);
   border-top-right-radius: 4px;
 }
@@ -178,7 +168,7 @@
   color: var(--text-weak);
 }
 
-/* ── 모달 제목 (기본 coral -> primary 오버라이드) ── */
+/* ── 모달 제목 (기본 danger -> primary 오버라이드) ── */
 .modal__title--primary {
   color: var(--primary);
 }

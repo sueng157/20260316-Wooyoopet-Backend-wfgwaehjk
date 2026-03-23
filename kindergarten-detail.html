@@ -66,9 +66,9 @@
       <div class="detail-top">
         <button class="btn-back" onclick="location.href='kindergartens.html'">← 목록으로</button>
         <div class="detail-actions">
-          <button class="btn-action btn-action--outline-coral">영업상태 변경</button>
+          <button class="btn-action btn-action--outline-danger">영업상태 변경</button>
           <button class="btn-action btn-action--outline-warning">신선도 조정</button>
-          <button class="btn-action btn-action--filled-coral">강제 비활성화</button>
+          <button class="btn-action btn-action--filled-danger">강제 비활성화</button>
         </div>
       </div>
 
@@ -113,7 +113,7 @@
           </span>
 
           <span class="info-grid__label">영업 상태</span>
-          <span class="info-grid__value"><span class="badge badge--open">영업중</span></span>
+          <span class="info-grid__value"><span class="badge badge--c-green">영업중</span></span>
 
           <span class="info-grid__label">등록일</span>
           <span class="info-grid__value">2025-11-03 14:23</span>
@@ -173,7 +173,7 @@
           </span>
 
           <span class="info-grid__label">주소 인증 상태</span>
-          <span class="info-grid__value"><span class="badge badge--reviewing">심사중</span></span>
+          <span class="info-grid__value"><span class="badge badge--c-orange">심사중</span></span>
 
           <span class="info-grid__label">인증 완료일</span>
           <span class="info-grid__value" style="color:var(--text-weak);">—</span>
@@ -236,7 +236,7 @@
               <td>수컷</td>
               <td>4살</td>
               <td>5.8kg</td>
-              <td><span class="badge badge--done">했어요</span></td>
+              <td><span class="badge badge--c-green">했어요</span></td>
               <td><span class="mini-table__link">P-00008765</span></td>
             </tr>
             <tr>
@@ -245,7 +245,7 @@
               <td>암컷</td>
               <td>2살</td>
               <td>3.1kg</td>
-              <td><span class="badge badge--notdone">안 했어요</span></td>
+              <td><span class="badge badge--c-gray">안 했어요</span></td>
               <td><span class="mini-table__link">P-00008766</span></td>
             </tr>
             <tr>
@@ -254,7 +254,7 @@
               <td>수컷</td>
               <td>6살</td>
               <td>4.2kg</td>
-              <td><span class="badge badge--done">했어요</span></td>
+              <td><span class="badge badge--c-green">했어요</span></td>
               <td><span class="mini-table__link">P-00008767</span></td>
             </tr>
           </tbody>
@@ -309,7 +309,7 @@
         </div>
         <div class="info-grid">
           <span class="info-grid__label">교육이수 상태</span>
-          <span class="info-grid__value"><span class="badge badge--in-progress">진행중</span></span>
+          <span class="info-grid__value"><span class="badge badge--c-orange">진행중</span></span>
 
           <span class="info-grid__label">진행률</span>
           <span class="info-grid__value">
@@ -325,7 +325,7 @@
           <span class="info-grid__value" style="color:var(--text-weak);">—</span>
 
           <span class="info-grid__label">서약서 동의 여부</span>
-          <span class="info-grid__value"><span class="badge badge--pledge-no">미동의</span></span>
+          <span class="info-grid__value"><span class="badge badge--c-red">미동의</span></span>
 
           <span class="info-grid__label">서약서 동의 일시</span>
           <span class="info-grid__value" style="color:var(--text-weak);">—</span>
@@ -342,10 +342,10 @@
         </div>
         <div class="info-grid">
           <span class="info-grid__label">정산정보 심사 상태</span>
-          <span class="info-grid__value"><span class="badge badge--submitted">제출됨</span></span>
+          <span class="info-grid__value"><span class="badge badge--c-orange">제출됨</span></span>
 
           <span class="info-grid__label">이니시스 서브몰 등록 상태</span>
-          <span class="info-grid__value"><span class="badge badge--registered">등록완료</span></span>
+          <span class="info-grid__value"><span class="badge badge--c-green">등록완료</span></span>
 
           <span class="info-grid__label">이니시스 서브몰 코드</span>
           <span class="info-grid__value">INICIS-WYP-012</span>
@@ -410,7 +410,7 @@
           <span class="info-grid__value" style="color:#E05A3A;font-weight:700;">1회</span>
 
           <span class="info-grid__label">현재 제재 상태</span>
-          <span class="info-grid__value"><span class="badge badge--warning">경고(신선도하락)</span></span>
+          <span class="info-grid__value"><span class="badge badge--c-orange">경고(신선도하락)</span></span>
         </div>
         <table class="mini-table">
           <thead>
@@ -427,7 +427,7 @@
               <td>2026-03-10</td>
               <td><span class="mini-table__link">RES-000789</span></td>
               <td>홍길동</td>
-              <td><span class="badge badge--claim-received">소명접수</span></td>
+              <td><span class="badge badge--c-orange">소명접수</span></td>
               <td>
                 <button class="btn-action btn-action--success" style="padding:4px 10px;font-size:12px;">소명 인정</button>
                 <button class="btn-action btn-action--danger" style="padding:4px 10px;font-size:12px;">소명 거부</button>
@@ -457,8 +457,8 @@
             <tr>
               <td>2026-03-15 10:30</td>
               <td>영업상태</td>
-              <td><span class="badge badge--vacation">방학중</span></td>
-              <td><span class="badge badge--open">영업중</span></td>
+              <td><span class="badge badge--c-orange">방학중</span></td>
+              <td><span class="badge badge--c-green">영업중</span></td>
               <td>유치원(본인)</td>
               <td>방학 종료</td>
             </tr>
@@ -473,16 +473,16 @@
             <tr>
               <td>2026-02-15 14:20</td>
               <td>서브몰등록</td>
-              <td><span class="badge badge--registering">등록요청중</span></td>
-              <td><span class="badge badge--registered">등록완료</span></td>
+              <td><span class="badge badge--c-blue">등록요청중</span></td>
+              <td><span class="badge badge--c-green">등록완료</span></td>
               <td>시스템(자동)</td>
               <td>이니시스 처리 완료</td>
             </tr>
             <tr>
               <td>2026-01-20 11:00</td>
               <td>교육이수</td>
-              <td><span class="badge badge--not-started">미시작</span></td>
-              <td><span class="badge badge--in-progress">진행중</span></td>
+              <td><span class="badge badge--c-gray">미시작</span></td>
+              <td><span class="badge badge--c-orange">진행중</span></td>
               <td>유치원(본인)</td>
               <td>교육 시작</td>
             </tr>

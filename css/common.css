@@ -19,8 +19,28 @@
   /* Colors — Status */
   --success: #2ECC71;
   --warning: #F5A623;
-  --coral: #E05A3A;
+  --danger: #E05A3A;
   --error: #E05A3A;
+
+  /* Colors — Role (모바일 앱 컬러) */
+  --role-guardian: #7B4F32;
+  --role-kindergarten: #FF4F81;
+
+  /* Colors — Badge System (7색) */
+  --badge-blue-fg:    #339DEE;
+  --badge-blue-bg:    rgba(51, 157, 238, 0.10);
+  --badge-green-fg:   #2ECC71;
+  --badge-green-bg:   rgba(46, 204, 113, 0.10);
+  --badge-orange-fg:  #F5A623;
+  --badge-orange-bg:  rgba(245, 166, 35, 0.10);
+  --badge-red-fg:     #E05A3A;
+  --badge-red-bg:     rgba(224, 90, 58, 0.10);
+  --badge-gray-fg:    #8C9AA5;
+  --badge-gray-bg:    rgba(0, 0, 0, 0.04);
+  --badge-brown-fg:   #7B4F32;
+  --badge-brown-bg:   rgba(123, 79, 50, 0.10);
+  --badge-pink-fg:    #FF4F81;
+  --badge-pink-bg:    rgba(255, 79, 129, 0.10);
 
   /* Colors — Surface */
   --surface-base: #f8f9fa;
@@ -228,7 +248,7 @@ ul, ol {
 }
 
 .sidebar__logout:hover {
-  color: var(--coral);
+  color: var(--danger);
 }
 
 /* ── Main Content ── */
@@ -279,7 +299,7 @@ ul, ol {
 }
 
 .header__logout:hover {
-  color: var(--coral);
+  color: var(--danger);
 }
 
 /* ── Content Area ── */
@@ -310,23 +330,13 @@ ul, ol {
   padding: 24px;
 }
 
-/* ── Badge ── */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: var(--radius-badge);
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.badge--reservation { background: rgba(51, 157, 238, 0.10); color: var(--primary); }
-.badge--payment    { background: rgba(46, 204, 113, 0.10); color: var(--success); }
-.badge--cancel     { background: rgba(245, 166, 35, 0.10); color: var(--warning); }
-.badge--signup     { background: rgba(66, 148, 255, 0.10); color: var(--accent); }
-.badge--report     { background: rgba(224, 90, 58, 0.10);  color: var(--coral); }
-.badge--settlement { background: rgba(46, 204, 113, 0.10); color: var(--success); }
+/* ── Badge (기본 정의는 components.css) ── */
+/* 대시보드 전용 배지 (dashboard.html 에서만 사용) */
+.badge--reservation { background: var(--badge-blue-bg);   color: var(--badge-blue-fg); }
+.badge--payment    { background: var(--badge-green-bg);  color: var(--badge-green-fg); }
+.badge--cancel     { background: var(--badge-orange-bg); color: var(--badge-orange-fg); }
+.badge--signup     { background: var(--badge-blue-bg);   color: var(--badge-blue-fg); }
+.badge--report     { background: var(--badge-red-bg);    color: var(--badge-red-fg); }
 
 /* ── Pill (증감 표시) ── */
 .pill {
@@ -340,7 +350,7 @@ ul, ol {
 }
 
 .pill--up   { background: rgba(46, 204, 113, 0.08); color: var(--success); }
-.pill--down { background: rgba(224, 90, 58, 0.08);  color: var(--coral); }
+.pill--down { background: rgba(224, 90, 58, 0.08);  color: var(--danger); }
 .pill--flat { background: rgba(0, 0, 0, 0.04);      color: var(--text-weak); }
 
 /* ── Link ── */
@@ -390,7 +400,7 @@ ul, ol {
 
 /* ── Utility ── */
 .text-weak   { color: var(--text-weak); }
-.text-coral  { color: var(--coral); }
+.text-danger  { color: var(--danger); }
 .text-primary-blue { color: var(--primary); }
 .fw-bold     { font-weight: 700; }
 .fw-medium   { font-weight: 500; }

@@ -128,7 +128,7 @@
 
 .approval-item__count--active {
   font-weight: 700;
-  color: var(--coral);
+  color: var(--danger);
 }
 
 /* ── 영역 3: 이달 매출 요약 ── */
