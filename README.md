@@ -2,7 +2,8 @@
 
 반려동물 돌봄 플랫폼 **우유펫**의 관리자 백오피스 대시보드입니다.  
 **전 메뉴(0~11번) HTML + CSS 정적 UI 구현이 완료**되었으며, JavaScript/백엔드 연동은 이후 작업입니다.  
-총 **HTML 42개**, **CSS 14개** (common + components + 메뉴별 12개).
+총 **HTML 42개**, **CSS 14개** (common + components + 메뉴별 12개).  
+**CSS 리팩터링 Phase 1~6 전체 완료** — 3,453줄 → 2,998줄 (-13.2%), 7색 배지 시스템, 공통 컴포넌트 통합, 색상 변수 체계 확립.
 
 ---
 
@@ -101,7 +102,7 @@ webapp/
 ├── setting-admin-create.html
 ├── setting-feedback-detail.html
 ├── full_spec_with_tables.md   # 전체 기능 명세서
-├── CSS_REFACTORING_PLAN.md    # CSS 리팩터링 계획서 (Phase 1~3 완료, 4~6 예정)
+├── CSS_REFACTORING_PLAN.md    # CSS 리팩터링 계획서 (Phase 1~6 전체 완료)
 ├── HANDOVER.md                # 개발 인수인계서 (CSS 구조, 규칙, 작업 프로세스)
 └── README.md
 ```
@@ -114,11 +115,11 @@ webapp/
 common.css → components.css → [페이지전용].css
 ```
 
-- **common.css**: CSS 변수, 리셋, 사이드바/헤더 레이아웃, Pretendard 폰트
-- **components.css**: 모든 목록+상세 페이지에서 재사용하는 UI 컴포넌트
-- **페이지전용 CSS**: 해당 메뉴에서만 필요한 추가 배지/스타일
+- **common.css** (399줄): CSS 변수(:root), 리셋, 사이드바/헤더 레이아웃, Pretendard 폰트
+- **components.css** (1,238줄): 모든 목록+상세 페이지에서 재사용하는 UI 컴포넌트 (필터바, 데이터테이블, 7색 배지, 모달, 폼 form-*, 페이지네이션, 상세카드, 통계카드, order-arrows 등)
+- **페이지전용 CSS** (12개): 해당 메뉴에서만 필요한 추가 스타일
 
-자세한 CSS 구조, HTML 작성 패턴, 협의된 규칙은 `HANDOVER.md` 참조.
+총 **2,998줄** (리팩터링 전 3,453줄 대비 -13.2%). 자세한 CSS 구조, HTML 작성 패턴, 협의된 규칙은 `HANDOVER.md` 참조.
 
 ---
 
@@ -127,7 +128,21 @@ common.css → components.css → [페이지전용].css
 - **폰트**: Pretendard
 - **Primary**: `#339DEE` / **Accent**: `#4294FF`
 - **Success**: `#2ECC71` / **Warning**: `#F5A623` / **Danger**: `#E05A3A`
-- **카드 라운딩**: 14px / **배지 라운딩**: 6px
+- **카드 라운딩**: 14px / **배지 라운딩**: 20px (`--radius-badge`)
+
+### 7색 배지 시스템
+
+| 색상 | 코드 | CSS 클래스 | 용도 |
+|------|------|-----------|------|
+| blue | `#339DEE` | `badge--c-blue` | 주요, 정보, 진행중 |
+| green | `#2ECC71` | `badge--c-green` | 완료, 정상, 활성, 승인 |
+| orange | `#F5A623` | `badge--c-orange` | 대기, 경고, 심사중 |
+| red | `#E05A3A` | `badge--c-red` | 실패, 거절, 위험, 정지 |
+| gray | `#8C9AA5` | `badge--c-gray` | 비활성, 미완료, 해당없음 |
+| brown | `#7B4F32` | `badge--c-brown` | 보호자 역할 |
+| pink | `#FF4F81` | `badge--c-pink` | 유치원 역할 |
+
+> 모바일 앱 실제 컬러 반영: 메인(`#339DEE`), 보호자(`#7B4F32`), 유치원(`#FF4F81`)
 
 ---
 
