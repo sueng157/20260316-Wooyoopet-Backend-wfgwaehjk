@@ -513,15 +513,4 @@
   line-height: 1.6;
 }
 
-/* ── 모달 확인 버튼 (Primary) ── */
-.modal__btn--confirm-primary {
-  background: var(--primary);
-  color: #ffffff;
-  border: none;
-}
-
-.modal__btn--confirm-primary:disabled {
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--text-weak);
-  cursor: not-allowed;
-}
+/* ── 모달 변형 스타일은 components.css 에 통합 ── */

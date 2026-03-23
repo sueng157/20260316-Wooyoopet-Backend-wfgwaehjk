@@ -68,19 +68,4 @@
   gap: 6px;
 }
 
-/* ── 모달 제목 변형 (숨김 처리 = danger, 숨김 해제 = primary) ── */
-.modal__title--primary {
-  color: var(--primary);
-}
-
-/* ── 모달 확인 버튼 (primary) ── */
-.modal__btn--confirm-primary {
-  background: var(--primary);
-  color: #ffffff;
-  border: none;
-}
-
-.modal__btn--confirm-primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ── 모달 변형 스타일은 components.css 에 통합 ── */

@@ -168,23 +168,4 @@
   color: var(--text-weak);
 }
 
-/* ── 모달 제목 (기본 danger -> primary 오버라이드) ── */
-.modal__title--primary {
-  color: var(--primary);
-}
-
-.modal__title--warning {
-  color: #F5A623;
-}
-
-/* ── 모달 확인 버튼 (primary) ── */
-.modal__btn--confirm-primary {
-  background: var(--primary);
-  color: #ffffff;
-  border: none;
-}
-
-.modal__btn--confirm-primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ── 모달 변형 스타일은 components.css 에 통합 ── */
