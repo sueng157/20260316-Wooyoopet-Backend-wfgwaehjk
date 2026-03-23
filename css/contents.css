@@ -251,38 +251,7 @@
 /* mini-table 은 components.css 에 정의되어 있으므로
    여기서는 약관 전용 간격만 조정 */
 
-/* ── 모달 confirm 색상 변형 ── */
-.modal__btn--confirm-warning {
-  background: var(--warning);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 20px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.modal__btn--confirm-warning:hover {
-  opacity: 0.85;
-}
-
-.modal__btn--confirm-primary {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 20px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.modal__btn--confirm-primary:hover {
-  opacity: 0.85;
-}
+/* ── 모달 변형 스타일은 components.css 에 통합 ── */
 
 /* ── 목록 table scroll wrapper ── */
 .data-table-wrap--scroll {

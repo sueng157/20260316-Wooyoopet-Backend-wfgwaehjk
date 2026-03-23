@@ -209,14 +209,7 @@
   margin-bottom: 20px;
 }
 
-/* ── 모달 타이틀 색상 오버라이드 (contents.css에 이미 primary가 있으나 설정에서도 필요) ── */
-.modal__title--primary {
-  color: var(--primary);
-}
-
-.modal__title--warning {
-  color: var(--warning);
-}
+/* ── 모달 변형 스타일은 components.css 에 통합 ── */
 
 /* ── 관리자 메모 카드 하단 버튼 ── */
 .stg-memo-actions {
