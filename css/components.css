@@ -267,71 +267,14 @@
   white-space: nowrap;
 }
 
-/* 회원 상태 */
-.badge--normal   { background: rgba(46, 204, 113, 0.10); color: #2ECC71; }
-.badge--suspended { background: rgba(224, 90, 58, 0.10); color: #E05A3A; }
-.badge--withdrawn { background: rgba(0, 0, 0, 0.04);     color: #8C9AA5; }
-
-/* 모드 */
-.badge--guardian    { background: rgba(51, 157, 238, 0.10); color: #339DEE; }
-.badge--kindergarten { background: rgba(245, 166, 35, 0.10); color: #F5A623; }
-
-/* 인증 상태 */
-.badge--unverified { background: rgba(0, 0, 0, 0.04);     color: #8C9AA5; }
-.badge--reviewing  { background: rgba(245, 166, 35, 0.10); color: #F5A623; }
-.badge--verified   { background: rgba(46, 204, 113, 0.10); color: #2ECC71; }
-
-/* 완료/미완료 */
-.badge--done    { background: rgba(46, 204, 113, 0.10); color: #2ECC71; }
-.badge--notdone { background: rgba(0, 0, 0, 0.04);     color: #8C9AA5; }
-
-/* 필수/선택 */
-.badge--required { background: rgba(51, 157, 238, 0.10); color: #339DEE; }
-.badge--optional { background: rgba(0, 0, 0, 0.04);     color: #8C9AA5; }
-
-/* 결제 상태 */
-.badge--paid      { background: rgba(46, 204, 113, 0.10); color: #2ECC71; }
-.badge--cancelled { background: rgba(224, 90, 58, 0.10);  color: #E05A3A; }
-.badge--refunded  { background: rgba(245, 166, 35, 0.10); color: #F5A623; }
-
-/* 노쇼 소명 */
-.badge--noshow    { background: rgba(224, 90, 58, 0.10);  color: #E05A3A; }
-.badge--claim-received { background: rgba(245, 166, 35, 0.10); color: #F5A623; }
-.badge--claim-accepted { background: rgba(46, 204, 113, 0.10); color: #2ECC71; }
-.badge--claim-rejected { background: rgba(224, 90, 58, 0.10);  color: #E05A3A; }
-
-/* 영업 상태 */
-.badge--open     { background: rgba(46, 204, 113, 0.10); color: #2ECC71; }
-.badge--vacation { background: rgba(245, 166, 35, 0.10); color: #F5A623; }
-
-/* 대표 */
-.badge--primary-pet { background: rgba(51, 157, 238, 0.10); color: #339DEE; }
-
-/* 정산정보 심사 */
-.badge--drafting   { background: rgba(0, 0, 0, 0.04);       color: #8C9AA5; }
-.badge--submitted  { background: rgba(245, 166, 35, 0.10);  color: #F5A623; }
-.badge--approved   { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--rejected   { background: rgba(224, 90, 58, 0.10);   color: #E05A3A; }
-
-/* 이니시스 서브몰 */
-.badge--unregistered { background: rgba(0, 0, 0, 0.04);       color: #8C9AA5; }
-.badge--registering  { background: rgba(51, 157, 238, 0.10);  color: #339DEE; }
-.badge--registered   { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--reg-failed   { background: rgba(224, 90, 58, 0.10);   color: #E05A3A; }
-
-/* 교육이수 */
-.badge--not-started  { background: rgba(0, 0, 0, 0.04);       color: #8C9AA5; }
-.badge--in-progress  { background: rgba(245, 166, 35, 0.10);  color: #F5A623; }
-.badge--completed    { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-
-/* 서약서 */
-.badge--pledge-yes { background: rgba(46, 204, 113, 0.10);  color: #2ECC71; }
-.badge--pledge-no  { background: rgba(224, 90, 58, 0.10);   color: #E05A3A; }
-
-/* 제재 상태 */
-.badge--no-sanction  { background: rgba(0, 0, 0, 0.04);       color: #8C9AA5; }
-.badge--warning      { background: rgba(245, 166, 35, 0.10);  color: #F5A623; }
-.badge--permanent    { background: rgba(224, 90, 58, 0.10);   color: #E05A3A; }
+/* ── 배지 색상 시스템 (7색) ── */
+.badge--c-blue   { background: var(--badge-blue-bg);   color: var(--badge-blue-fg); }
+.badge--c-green  { background: var(--badge-green-bg);  color: var(--badge-green-fg); }
+.badge--c-orange { background: var(--badge-orange-bg); color: var(--badge-orange-fg); }
+.badge--c-red    { background: var(--badge-red-bg);    color: var(--badge-red-fg); }
+.badge--c-gray   { background: var(--badge-gray-bg);   color: var(--badge-gray-fg); }
+.badge--c-brown  { background: var(--badge-brown-bg);  color: var(--badge-brown-fg); }
+.badge--c-pink   { background: var(--badge-pink-bg);   color: var(--badge-pink-fg); }
 
 /* 신선도 퍼센트 색상 */
 .freshness--good {
@@ -473,10 +416,10 @@
   border: 1px solid var(--primary);
 }
 
-.btn-action--outline-coral {
+.btn-action--outline-danger {
   background: transparent;
-  color: var(--coral);
-  border: 1px solid var(--coral);
+  color: var(--danger);
+  border: 1px solid var(--danger);
 }
 
 .btn-action--outline-warning {
@@ -485,8 +428,8 @@
   border: 1px solid #F5A623;
 }
 
-.btn-action--filled-coral {
-  background: var(--coral);
+.btn-action--filled-danger {
+  background: var(--danger);
   color: #ffffff;
 }
 
@@ -549,7 +492,7 @@
 }
 
 .info-grid__value--danger {
-  color: var(--coral);
+  color: var(--danger);
 }
 
 /* 프로필 이미지 */

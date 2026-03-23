@@ -85,7 +85,7 @@ components.css      → 재사용 UI 컴포넌트 (필터바, 테이블, 배지,
 --gradient: linear-gradient(135deg, #339DEE, #4294FF);
 --success: #2ECC71;
 --warning: #F5A623;
---coral: #E05A3A;
+--danger: #E05A3A;
 --surface-base: #f8f9fa;
 --surface-card: #ffffff;
 --surface-sidebar: #f3f4f5;
@@ -258,15 +258,19 @@ components.css      → 재사용 UI 컴포넌트 (필터바, 테이블, 배지,
 - 예: 채팅관리에서 신고 여부(색상 텍스트), 제재 유형(색상 텍스트) vs 채팅방 상태(뱃지), 처리상태(뱃지)
 - 뱃지가 과도하게 많아지지 않도록 주의 (채팅관리: 신규 6종 + 재사용 2종 = 총 8종)
 
-### 5-5. 배지 컬러 체계
+### 5-5. 배지 컬러 체계 (7색 시스템)
 
-| 의미 | 색상 | 예시 클래스 |
-|------|------|-----------|
-| 긍정/완료/활성 | green `#2ECC71` | badge--done, badge--open, badge--chat-active, badge--rpt-completed |
-| 대기/진행중/경고 | orange `#F5A623` | badge--res-pending, badge--reviewing, badge--rpt-received |
-| 주요/정보 | blue `#339DEE` | badge--guardian, badge--res-confirmed, badge--rpt-processing |
-| 부정/실패/위험 | red `#E05A3A` | badge--res-rejected, badge--res-noshow, badge--suspended |
-| 비활성/해당없음 | gray `#8C9AA5` | badge--withdrawn, badge--chat-inactive, badge--rpt-dismissed |
+| 의미 | 색상 | CSS 클래스 | 변수 |
+|------|------|-----------|------|
+| 긍정/완료/활성 | green `#2ECC71` | `badge--c-green` | `--badge-green-fg/bg` |
+| 대기/진행중/경고 | orange `#F5A623` | `badge--c-orange` | `--badge-orange-fg/bg` |
+| 주요/정보 | blue `#339DEE` | `badge--c-blue` | `--badge-blue-fg/bg` |
+| 부정/실패/위험 | red `#E05A3A` | `badge--c-red` | `--badge-red-fg/bg` |
+| 비활성/해당없음 | gray `#8C9AA5` | `badge--c-gray` | `--badge-gray-fg/bg` |
+| 보호자 역할 | brown `#7B4F32` | `badge--c-brown` | `--badge-brown-fg/bg` |
+| 유치원 역할 | pink `#FF4F81` | `badge--c-pink` | `--badge-pink-fg/bg` |
+
+> 기존 120개 시맨틱 배지 클래스는 7색 시스템으로 통합됨 (Phase 2 리팩터링)
 
 ### 5-6. 정산관리 특이사항
 
@@ -277,7 +281,7 @@ components.css      → 재사용 UI 컴포넌트 (필터바, 테이블, 배지,
 ### 5-7. 채팅관리 특이사항
 
 - **목록화면 닉네임 표시**: 채팅내역 12컬럼 (이름 제외, 닉네임만), 신고접수 11컬럼 (이름→닉네임)
-- **메시지 내역 말풍선 UI**: 보호자(좌측 파랑 bubble), 유치원(우측 주황 bubble), 시스템(중앙 회색 bubble), 날짜 구분선, 닉네임·시간·읽음여부 메타 표시
+- **메시지 내역 말풍선 UI**: 보호자(좌측 갈색 bubble), 유치원(우측 분홍 bubble), 시스템(중앙 회색 bubble), 날짜 구분선, 닉네임·시간·읽음여부 메타 표시
 - **모달**: 채팅방 강제 비활성화(1개), 처리상태 변경/제재 적용/기각 처리(3개)
 
 ### 5-8. CSS 리팩터링 방침

@@ -4,25 +4,6 @@
    이 파일은 설정 페이지에만 필요한 스타일
    ============================================ */
 
-/* ── 설정 전용 배지 ── */
-
-/* 권한 등급 */
-.badge--stg-super   { background: rgba(51,157,238,0.10);  color: #339DEE; }  /* 최고관리자 */
-.badge--stg-normal  { background: rgba(46,204,113,0.10);  color: #2ECC71; }  /* 일반관리자 */
-.badge--stg-viewer  { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 조회전용 */
-
-/* 계정 상태 */
-.badge--stg-active   { background: rgba(46,204,113,0.10);  color: #2ECC71; }  /* 활성 */
-.badge--stg-inactive { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 비활성 */
-
-/* 피드백 유형 */
-.badge--stg-opinion    { background: rgba(51,157,238,0.10);  color: #339DEE; }  /* 의견제출 */
-.badge--stg-withdrawal { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 탈퇴사유 */
-
-/* 확인 여부 */
-.badge--stg-checked   { background: rgba(46,204,113,0.10);  color: #2ECC71; }  /* 확인 */
-.badge--stg-unchecked { background: rgba(245,166,35,0.10);  color: #F5A623; }  /* 미확인 */
-
 /* ── 폼 인풋 ── */
 .stg-input {
   font-family: var(--font-family);

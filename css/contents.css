@@ -4,24 +4,6 @@
    이 파일은 콘텐츠관리 페이지에만 필요한 스타일
    ============================================ */
 
-/* ── 배너 / 콘텐츠 전용 배지 ── */
-
-/* 노출 상태 배지 */
-.badge--cnt-exposing  { background: rgba(46,204,113,0.10);  color: #2ECC71; }  /* 노출중 */
-.badge--cnt-scheduled { background: rgba(51,157,238,0.10);  color: #339DEE; }  /* 예정 */
-.badge--cnt-ended     { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 종료 */
-.badge--cnt-private   { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 비공개 */
-.badge--cnt-public    { background: rgba(46,204,113,0.10);  color: #2ECC71; }  /* 공개 */
-
-/* 필수/선택 배지 */
-.badge--cnt-required  { background: rgba(224,90,58,0.10);   color: #E05A3A; }  /* 필수 */
-.badge--cnt-optional  { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 선택 */
-
-/* 대상 배지 */
-.badge--cnt-target-all      { background: rgba(0,0,0,0.04);       color: #8C9AA5; }  /* 전체 */
-.badge--cnt-target-guardian  { background: rgba(51,157,238,0.10);  color: #339DEE; }  /* 보호자 */
-.badge--cnt-target-kg        { background: rgba(245,166,35,0.10);  color: #F5A623; }  /* 유치원 */
-
 /* ── FAQ 카테고리 라벨 ── */
 .cnt-category {
   display: inline-block;

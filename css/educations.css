@@ -121,8 +121,8 @@
 }
 
 .edu-img-actions__btn--delete:hover {
-  color: var(--coral);
-  border-color: var(--coral);
+  color: var(--danger);
+  border-color: var(--danger);
   background: rgba(224, 90, 58, 0.04);
 }
 
@@ -346,8 +346,8 @@
 }
 
 .edu-delete-btn:hover {
-  color: var(--coral);
-  border-color: var(--coral);
+  color: var(--danger);
+  border-color: var(--danger);
   background: rgba(224, 90, 58, 0.04);
 }
 
@@ -397,7 +397,7 @@
 }
 
 .edu-sub-items__delete:hover {
-  color: var(--coral);
+  color: var(--danger);
 }
 
 .edu-sub-items__add {
@@ -475,28 +475,6 @@
   padding: 16px;
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-/* ── 버전 적용 배지 ── */
-.badge--version-current {
-  background: rgba(46, 204, 113, 0.10);
-  color: #2ECC71;
-}
-
-.badge--version-old {
-  background: rgba(0, 0, 0, 0.04);
-  color: #8C9AA5;
-}
-
-/* ── 버전 일치/불일치 ── */
-.badge--version-match {
-  background: rgba(46, 204, 113, 0.10);
-  color: #2ECC71;
-}
-
-.badge--version-mismatch {
-  background: rgba(224, 90, 58, 0.10);
-  color: #E05A3A;
 }
 
 /* ── 진행률 (이수현황 테이블 내 인라인) ── */
