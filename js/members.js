@@ -1,0 +1,714 @@
+/**
+ * 우유펫 관리자 대시보드 — 회원관리 (members.js)
+ *
+ * 목록 (members.html) + 상세 (member-detail.html) 공통 모듈
+ * 의존: api.js, auth.js, common.js
+ */
+(function () {
+  'use strict';
+
+  var api = window.__api;
+  var auth = window.__auth;
+  if (!api || !auth) return;
+
+  var PAGE = 'members';
+  var PERM_KEY = 'perm_members';
+  var PER_PAGE = 20;
+
+  // ══════════════════════════════════════════
+  // A. 목록 페이지 (members.html)
+  // ══════════════════════════════════════════
+
+  function isListPage() {
+    return !!document.getElementById('memberListBody');
+  }
+
+  // ── 필터 요소 참조 ──
+  var filterDateFrom, filterDateTo, filterStatus, filterMode, filterAddress;
+  var filterSearchField, filterSearchInput, btnSearch, btnExcel;
+  var resultCount, listBody, pagination;
+
+  var currentPage = 1;
+
+  function cacheListDom() {
+    var dates = document.querySelectorAll('.filter-input--date');
+    filterDateFrom = dates[0];
+    filterDateTo   = dates[1];
+
+    var selects = document.querySelectorAll('.filter-select');
+    filterStatus   = selects[0]; // 회원상태
+    filterMode     = selects[1]; // 모드
+    filterAddress  = selects[2]; // 주소인증
+    filterSearchField = selects[3]; // 검색 필드 선택
+    filterSearchInput = document.querySelector('.filter-input--search');
+    btnSearch = document.querySelector('.btn-search');
+    btnExcel  = document.querySelector('.btn-excel');
+
+    resultCount = document.querySelector('.result-header__count strong');
+    listBody    = document.getElementById('memberListBody');
+    pagination  = document.querySelector('.pagination');
+  }
+
+  function buildFilters() {
+    var filters = [];
+
+    // 기간 필터 (가입일)
+    if (filterDateFrom && filterDateFrom.value) {
+      filters.push({ column: 'created_at', op: 'gte', value: filterDateFrom.value + 'T00:00:00' });
+    }
+    if (filterDateTo && filterDateTo.value) {
+      filters.push({ column: 'created_at', op: 'lte', value: filterDateTo.value + 'T23:59:59' });
+    }
+
+    // 회원상태
+    if (filterStatus) {
+      var statusVal = filterStatus.value;
+      if (statusVal && statusVal !== '회원상태: 전체') {
+        filters.push({ column: 'status', op: 'eq', value: statusVal });
+      }
+    }
+
+    // 모드
+    if (filterMode) {
+      var modeVal = filterMode.value;
+      if (modeVal && modeVal !== '모드: 전체') {
+        filters.push({ column: 'role', op: 'eq', value: modeVal });
+      }
+    }
+
+    // 주소인증
+    if (filterAddress) {
+      var addrVal = filterAddress.value;
+      if (addrVal && addrVal !== '주소인증: 전체') {
+        filters.push({ column: 'address_verified', op: 'eq', value: addrVal });
+      }
+    }
+
+    return filters;
+  }
+
+  function buildSearchOr() {
+    if (!filterSearchInput || !filterSearchInput.value.trim()) return [];
+    var keyword = '%' + filterSearchInput.value.trim() + '%';
+    var fieldMap = {
+      '이름':       'name.ilike.' + keyword,
+      '닉네임':     'nickname.ilike.' + keyword,
+      '휴대폰번호': 'phone.ilike.' + keyword
+    };
+    var fieldLabel = filterSearchField ? filterSearchField.value : '이름';
+    var filter = fieldMap[fieldLabel] || fieldMap['이름'];
+    return [filter];
+  }
+
+  async function loadMemberList(page) {
+    currentPage = page || 1;
+    api.showTableLoading(listBody, 15);
+
+    var result = await api.fetchList('members', {
+      select: '*',
+      filters: buildFilters(),
+      orFilters: buildSearchOr(),
+      orderBy: 'created_at',
+      ascending: false,
+      page: currentPage,
+      perPage: PER_PAGE
+    });
+
+    if (result.error) {
+      api.showTableEmpty(listBody, 15, '데이터를 불러오지 못했습니다: ' + (result.error.message || ''));
+      return;
+    }
+
+    if (resultCount) resultCount.textContent = result.count;
+
+    if (!result.data || result.data.length === 0) {
+      api.showTableEmpty(listBody, 15);
+      renderListPagination(0);
+      return;
+    }
+
+    var rows = result.data;
+    var startIdx = (currentPage - 1) * PER_PAGE;
+    var html = '';
+
+    for (var i = 0; i < rows.length; i++) {
+      var m = rows[i];
+      var idx = startIdx + i + 1;
+      var addrShort = (m.complex_name || '') + ' ' + (m.building || '');
+      addrShort = addrShort.trim() || '-';
+
+      html += '<tr>' +
+        '<td>' + idx + '</td>' +
+        '<td>' + api.escapeHtml(m.name) + '</td>' +
+        '<td>' + api.escapeHtml(m.nickname || '-') + '</td>' +
+        '<td>' + api.formatBirthShort(m.birth_date) + '</td>' +
+        '<td>' + api.escapeHtml(m.carrier || '-') + '</td>' +
+        '<td class="masked">' + api.maskPhone(m.phone) + '</td>' +
+        '<td>' + api.escapeHtml(addrShort) + '</td>' +
+        '<td>' + api.autoBadge(m.address_verified || '미인증') + '</td>' +
+        '<td>' + api.autoBadge(m.identity_verified ? '완료' : '미완료') + '</td>' +
+        '<td>' + api.autoBadge(m.role || '-') + '</td>' +
+        '<td>' + api.autoBadge(m.status) + '</td>' +
+        '<td class="text-right">' + api.formatNumber(m.payment_count || 0) + '</td>' +
+        '<td class="text-right">' + api.formatMoney(m.payment_amount || 0, false) + '</td>' +
+        '<td>' + api.formatDate(m.created_at, true) + '</td>' +
+        '<td>' + api.renderDetailLink('member-detail.html', m.id) + '</td>' +
+        '</tr>';
+    }
+
+    listBody.innerHTML = html;
+    renderListPagination(result.count);
+  }
+
+  function renderListPagination(totalCount) {
+    api.renderPagination(pagination, currentPage, totalCount, PER_PAGE, function (page) {
+      loadMemberList(page);
+    });
+  }
+
+  // ── 엑셀 다운로드 ──
+  async function exportMemberExcel() {
+    var result = await api.fetchAll('members', {
+      filters: buildFilters(),
+      orFilters: buildSearchOr(),
+      orderBy: 'created_at',
+      ascending: false
+    });
+
+    if (!result.data || result.data.length === 0) {
+      alert('다운로드할 데이터가 없습니다.');
+      return;
+    }
+
+    var headers = [
+      { key: 'name', label: '이름' },
+      { key: 'nickname', label: '닉네임' },
+      { key: 'birth_date', label: '생년월일' },
+      { key: 'carrier', label: '통신사' },
+      { key: 'phone_masked', label: '휴대폰번호' },
+      { key: 'address_short', label: '등록 주소' },
+      { key: 'address_verified', label: '주소인증' },
+      { key: 'identity_status', label: '본인인증' },
+      { key: 'role', label: '모드' },
+      { key: 'status', label: '상태' },
+      { key: 'payment_count', label: '결제건수' },
+      { key: 'payment_amount', label: '결제금액' },
+      { key: 'created_date', label: '가입일' }
+    ];
+
+    var rows = result.data.map(function (m) {
+      return {
+        name: m.name,
+        nickname: m.nickname || '',
+        birth_date: api.formatBirthShort(m.birth_date),
+        carrier: m.carrier || '',
+        phone_masked: api.maskPhone(m.phone),
+        address_short: ((m.complex_name || '') + ' ' + (m.building || '')).trim() || '-',
+        address_verified: m.address_verified || '미인증',
+        identity_status: m.identity_verified ? '완료' : '미완료',
+        role: m.role || '',
+        status: m.status || '',
+        payment_count: m.payment_count || 0,
+        payment_amount: m.payment_amount || 0,
+        created_date: api.formatDate(m.created_at, true)
+      };
+    });
+
+    api.exportExcel(rows, headers, '회원관리');
+  }
+
+  function initListPage() {
+    cacheListDom();
+
+    // 초기 날짜 설정
+    if (filterDateFrom) filterDateFrom.value = api.getMonthStart().slice(0, 4) + '-01-01';
+    if (filterDateTo) filterDateTo.value = api.getToday();
+
+    // URL 파라미터에서 필터 값 받기 (대시보드에서 클릭)
+    var paramStatus = api.getParam('status');
+    if (paramStatus && filterStatus) {
+      filterStatus.value = paramStatus;
+    }
+
+    if (btnSearch) {
+      btnSearch.addEventListener('click', function () { loadMemberList(1); });
+    }
+    if (filterSearchInput) {
+      filterSearchInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') loadMemberList(1);
+      });
+    }
+    if (btnExcel) {
+      btnExcel.addEventListener('click', exportMemberExcel);
+    }
+
+    // 수정 권한 없으면 액션 숨기기
+    api.hideIfReadOnly(PERM_KEY, ['.btn-action']);
+
+    loadMemberList(1);
+  }
+
+  // ══════════════════════════════════════════
+  // B. 상세 페이지 (member-detail.html)
+  // ══════════════════════════════════════════
+
+  function isDetailPage() {
+    return !!document.getElementById('detailBasicInfo');
+  }
+
+  async function initDetailPage() {
+    var memberId = api.getParam('id');
+    if (!memberId) {
+      alert('회원 ID가 없습니다.');
+      return;
+    }
+
+    // ── ① 기본정보 ──
+    var res = await api.fetchDetail('members', memberId);
+    if (res.error || !res.data) {
+      alert('회원 정보를 불러올 수 없습니다.');
+      return;
+    }
+    var m = res.data;
+
+    api.setTextById('memberIdText', m.id ? m.id.slice(0, 8).toUpperCase() : '-');
+    api.setTextById('memberName', m.name || '-');
+    api.setTextById('memberNickname', (m.nickname || '-'));
+    api.setTextById('memberBirth', api.formatDate(m.birth_date, true));
+    api.setTextById('memberGender', m.gender || '-');
+    api.setTextById('memberCarrier', m.carrier || '-');
+    api.setHtmlById('memberPhone', api.renderMaskedField(
+      api.maskPhone(m.phone), api.formatPhone(m.phone), 'members', memberId, 'phone'
+    ));
+    api.setHtmlById('memberMode', api.autoBadge(m.role));
+    api.setHtmlById('memberStatus', api.autoBadge(m.status));
+    api.setTextById('memberCreated', api.formatDate(m.created_at));
+
+    // 프로필 이미지
+    if (m.profile_image_url) {
+      var imgEl = document.getElementById('memberProfileImg');
+      if (imgEl) imgEl.innerHTML = '<img src="' + api.escapeHtml(m.profile_image_url) + '" style="width:64px;height:64px;object-fit:cover;border-radius:8px;">';
+    }
+
+    // ── ② 본인인증 정보 ──
+    api.setHtmlById('identityStatus', api.autoBadge(m.identity_verified ? '완료' : '미완료'));
+    api.setTextById('identityMethod', m.identity_method || '-');
+    api.setTextById('identityDate', api.formatDate(m.identity_verified_at));
+    api.setTextById('identityCarrier', m.carrier || '-');
+
+    // ── ③ 주소 정보 ──
+    api.setTextById('addressRoad', m.road_address || '-');
+    api.setTextById('addressComplex', m.complex_name || '-');
+    api.setTextById('addressBuilding', m.building || '-');
+    api.setHtmlById('addressHo', api.renderMaskedField(
+      api.maskHo(m.unit_number), (m.unit_number || '-') + '호', 'members', memberId, 'unit_number'
+    ));
+    api.setHtmlById('addressVerified', api.autoBadge(m.address_verified || '미인증'));
+    api.setTextById('addressVerifiedDate', m.address_verified_at ? api.formatDate(m.address_verified_at) : '\u2014');
+
+    // 유치원 모드 전용 섹션 표시/숨김
+    var kgSection = document.getElementById('sectionKindergarten');
+    if (kgSection) {
+      if (m.role === '유치원') {
+        kgSection.style.display = '';
+        loadMemberKindergarten(memberId);
+      } else {
+        kgSection.style.display = 'none';
+      }
+    }
+
+    // ── ④ 약관 동의 내역 ──
+    loadTermAgreements(memberId);
+
+    // ── ⑤ 반려동물 목록 ──
+    loadMemberPets(memberId);
+
+    // ── ⑥⑦ 결제 이력 ──
+    loadPaymentSummary(memberId);
+    loadRecentPayments(memberId);
+
+    // ── ⑧⑨ 노쇼 이력 ──
+    loadNoshowHistory(memberId);
+
+    // ── ⑩ 차단 이력 ──
+    loadBlockHistory(memberId);
+
+    // ── ⑫ 상태 변경 이력 ──
+    loadStatusLogs(memberId);
+
+    // ── 액션 버튼 바인딩 ──
+    bindDetailActions(memberId, m);
+
+    // 권한 체크 → 수정 불가 시 액션 숨김
+    api.hideIfReadOnly(PERM_KEY, ['.detail-actions', '.btn-action']);
+
+    // 개인정보 조회 감사 로그
+    api.insertAuditLog('개인정보조회', 'members', memberId, { name: m.name });
+  }
+
+  // ── 약관 동의 내역 ──
+  async function loadTermAgreements(memberId) {
+    var tbody = document.getElementById('termAgreementsBody');
+    if (!tbody) return;
+
+    var res = await api.fetchList('member_term_agreements', {
+      select: '*, terms(title, is_required)',
+      filters: [{ column: 'member_id', op: 'eq', value: memberId }],
+      orderBy: 'created_at',
+      ascending: true,
+      perPage: 50
+    });
+
+    if (!res.data || res.data.length === 0) {
+      api.showTableEmpty(tbody, 4, '약관 동의 내역이 없습니다.');
+      return;
+    }
+
+    var html = '';
+    res.data.forEach(function (a) {
+      var term = a.terms || {};
+      var isRequired = term.is_required;
+      var agreed = a.agreed_at ? true : false;
+      html += '<tr>' +
+        '<td>' + api.escapeHtml(term.title || '-') + '</td>' +
+        '<td>' + (isRequired ? api.renderBadge('필수', 'blue') : api.renderBadge('선택', 'gray')) + '</td>' +
+        '<td>' + (agreed ? '<span class="text-agreed">동의</span>' : '<span class="text-disagreed">미동의</span>') + '</td>' +
+        '<td>' + (a.agreed_at ? api.formatDate(a.agreed_at) : '<span style="color:var(--text-weak);">\u2014</span>') + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── 반려동물 목록 ──
+  async function loadMemberPets(memberId) {
+    var tbody = document.getElementById('petListBody');
+    if (!tbody) return;
+
+    var res = await api.fetchList('pets', {
+      filters: [{ column: 'member_id', op: 'eq', value: memberId }],
+      orderBy: 'created_at',
+      ascending: true,
+      perPage: 50
+    });
+
+    if (!res.data || res.data.length === 0) {
+      api.showTableEmpty(tbody, 8, '등록된 반려동물이 없습니다.');
+      return;
+    }
+
+    var html = '';
+    res.data.forEach(function (p) {
+      html += '<tr>' +
+        '<td>' + api.escapeHtml(p.name) + '</td>' +
+        '<td>' + api.escapeHtml(p.breed || '-') + '</td>' +
+        '<td>' + api.escapeHtml(p.gender || '-') + '</td>' +
+        '<td>' + api.calcPetAge(p.birth_date) + '</td>' +
+        '<td>' + (p.weight ? p.weight + 'kg' : '-') + '</td>' +
+        '<td>' + api.autoBadge(p.is_neutered ? '했어요' : '안 했어요') + '</td>' +
+        '<td>' + (p.is_representative ? api.renderBadge('★ 대표', 'blue') : '<span style="color:var(--text-weak);">일반</span>') + '</td>' +
+        '<td>' + api.renderDetailLink('pet-detail.html', p.id, p.id.slice(0, 8).toUpperCase()) + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── 결제 이력 요약 ──
+  async function loadPaymentSummary(memberId) {
+    var sb = window.__supabase;
+
+    // 총 결제 건수/금액
+    var payRes = await sb.from('payments')
+      .select('amount', { count: 'exact' })
+      .eq('member_id', memberId)
+      .eq('status', '결제완료');
+
+    var payCount = payRes.count || 0;
+    var payTotal = 0;
+    if (payRes.data) payRes.data.forEach(function (r) { payTotal += (r.amount || 0); });
+
+    // 환불 건수/금액
+    var refRes = await sb.from('refunds')
+      .select('refund_amount', { count: 'exact' })
+      .eq('member_id', memberId);
+
+    var refCount = refRes.count || 0;
+    var refTotal = 0;
+    if (refRes.data) refRes.data.forEach(function (r) { refTotal += (r.refund_amount || 0); });
+
+    // 위약금 금액
+    var penRes = await sb.from('payments')
+      .select('amount')
+      .eq('member_id', memberId)
+      .eq('payment_type', '위약금');
+
+    var penTotal = 0;
+    if (penRes.data) penRes.data.forEach(function (r) { penTotal += (r.amount || 0); });
+
+    api.setTextById('statPayCount', payCount);
+    api.setTextById('statPayAmount', api.formatNumber(payTotal));
+    api.setTextById('statRefundCount', refCount);
+    api.setTextById('statRefundAmount', api.formatNumber(refTotal));
+    api.setTextById('statPenaltyAmount', api.formatNumber(penTotal));
+  }
+
+  // ── 최근 결제 내역 ──
+  async function loadRecentPayments(memberId) {
+    var tbody = document.getElementById('recentPaymentsBody');
+    if (!tbody) return;
+
+    var res = await api.fetchList('payments', {
+      select: '*, kindergartens(name)',
+      filters: [{ column: 'member_id', op: 'eq', value: memberId }],
+      orderBy: 'created_at',
+      ascending: false,
+      page: 1,
+      perPage: 5
+    });
+
+    if (!res.data || res.data.length === 0) {
+      api.showTableEmpty(tbody, 5, '결제 내역이 없습니다.');
+      return;
+    }
+
+    var html = '';
+    res.data.forEach(function (p) {
+      var kgName = (p.kindergartens && p.kindergartens.name) || '-';
+      html += '<tr>' +
+        '<td>' + api.formatDate(p.created_at) + '</td>' +
+        '<td>' + api.escapeHtml(kgName) + '</td>' +
+        '<td class="text-right">' + api.formatMoney(p.amount) + '</td>' +
+        '<td>' + api.autoBadge(p.status) + '</td>' +
+        '<td>' + api.renderDetailLink('payment-detail.html', p.id, p.id.slice(0, 8).toUpperCase()) + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── 노쇼 이력 ──
+  async function loadNoshowHistory(memberId) {
+    // 노쇼 요약
+    var sb = window.__supabase;
+    var noshowRes = await sb.from('noshow_records')
+      .select('*', { count: 'exact' })
+      .eq('member_id', memberId);
+
+    var noshowCount = noshowRes.count || 0;
+    api.setHtmlById('noshowCount', '<span style="color:#E05A3A;font-weight:700;">' + noshowCount + '회</span>');
+
+    // 현재 제재 상태
+    var memberRes = await api.fetchDetail('members', memberId, 'noshow_count, noshow_sanction, noshow_sanction_end');
+    if (memberRes.data) {
+      var d = memberRes.data;
+      api.setHtmlById('noshowSanction', d.noshow_sanction ? api.autoBadge(d.noshow_sanction) : api.renderBadge('제재없음', 'gray'));
+      api.setTextById('noshowSanctionEnd', d.noshow_sanction_end ? api.formatDate(d.noshow_sanction_end, true) : '\u2014');
+    }
+
+    // 노쇼 상세 기록
+    var tbody = document.getElementById('noshowDetailBody');
+    if (!tbody) return;
+
+    if (!noshowRes.data || noshowRes.data.length === 0) {
+      api.showTableEmpty(tbody, 8, '노쇼 기록이 없습니다.');
+      return;
+    }
+
+    var html = '';
+    noshowRes.data.forEach(function (n) {
+      var hasAppeal = n.appeal_status && n.appeal_status !== '미소명';
+      html += '<tr>' +
+        '<td>' + api.formatDate(n.created_at, true) + '</td>' +
+        '<td>' + (n.reservation_id ? api.renderDetailLink('reservation-detail.html', n.reservation_id, n.reservation_id.slice(0, 8).toUpperCase()) : '-') + '</td>' +
+        '<td>' + api.escapeHtml(n.counterpart_name || '-') + '</td>' +
+        '<td>' + api.autoBadge(n.sanction_type || '-') + '</td>' +
+        '<td>' + api.autoBadge(n.appeal_status || '미소명') + '</td>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">' + api.escapeHtml(n.appeal_content || '-') + '</td>' +
+        '<td>' + (n.appeal_document_url ? '<span class="mini-table__link">서류 확인</span>' : '<span style="color:var(--text-weak);">\u2014</span>') + '</td>' +
+        '<td>' + (hasAppeal && n.appeal_status === '소명접수' ?
+          '<button class="btn-action btn-action--success btn-noshow-approve" data-id="' + n.id + '" style="padding:4px 10px;font-size:12px;">소명 인정</button> ' +
+          '<button class="btn-action btn-action--danger btn-noshow-reject" data-id="' + n.id + '" style="padding:4px 10px;font-size:12px;">소명 거부</button>' :
+          '<span style="color:var(--text-weak);font-size:12px;">처리 완료</span>') + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── 차단 이력 ──
+  async function loadBlockHistory(memberId) {
+    var tbody = document.getElementById('blockHistoryBody');
+    if (!tbody) return;
+
+    var res = await api.fetchList('member_blocks', {
+      filters: [{ column: 'blocker_id', op: 'eq', value: memberId }],
+      orderBy: 'created_at',
+      ascending: false,
+      perPage: 50
+    });
+
+    if (!res.data || res.data.length === 0) {
+      api.showTableEmpty(tbody, 3, '차단 이력이 없습니다.');
+      return;
+    }
+
+    var html = '';
+    res.data.forEach(function (b) {
+      html += '<tr>' +
+        '<td>' + api.escapeHtml(b.blocked_name || '-') + '</td>' +
+        '<td>' + api.formatDate(b.created_at) + '</td>' +
+        '<td>' + (b.unblocked_at ?
+          api.formatDate(b.unblocked_at) :
+          '<span style="color:#E05A3A;font-weight:500;">차단 중</span>') + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── 유치원 정보 (유치원 모드 전용) ──
+  async function loadMemberKindergarten(memberId) {
+    var sb = window.__supabase;
+    var res = await sb.from('kindergartens')
+      .select('id, name, status, inicis_status')
+      .eq('member_id', memberId)
+      .limit(1)
+      .single();
+
+    if (res.data) {
+      var kg = res.data;
+      api.setTextById('kgName', kg.name || '-');
+      api.setHtmlById('kgNumber', api.renderDetailLink('kindergarten-detail.html', kg.id, kg.id.slice(0, 8).toUpperCase()));
+      api.setHtmlById('kgStatus', api.autoBadge(kg.status || '-'));
+      api.setHtmlById('kgInicis', api.autoBadge(kg.inicis_status || '미등록'));
+    }
+  }
+
+  // ── 상태 변경 이력 ──
+  async function loadStatusLogs(memberId) {
+    var tbody = document.getElementById('statusLogBody');
+    if (!tbody) return;
+
+    var res = await api.fetchList('member_status_logs', {
+      filters: [{ column: 'member_id', op: 'eq', value: memberId }],
+      orderBy: 'created_at',
+      ascending: false,
+      perPage: 20
+    });
+
+    if (!res.data || res.data.length === 0) {
+      api.showTableEmpty(tbody, 5, '상태 변경 이력이 없습니다.');
+      return;
+    }
+
+    var html = '';
+    res.data.forEach(function (log) {
+      html += '<tr>' +
+        '<td>' + api.formatDate(log.created_at) + '</td>' +
+        '<td>' + api.autoBadge(log.prev_status) + '</td>' +
+        '<td>' + api.autoBadge(log.new_status) + '</td>' +
+        '<td>' + api.escapeHtml(log.changed_by || '-') + '</td>' +
+        '<td>' + api.escapeHtml(log.note || '-') + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── 액션 버튼 ──
+  function bindDetailActions(memberId, member) {
+    var btnSuspend = document.getElementById('btnSuspend');
+    var btnRelease = document.getElementById('btnRelease');
+
+    if (btnSuspend) {
+      // 이미 정지 상태면 숨기기
+      if (member.status === '이용정지') btnSuspend.style.display = 'none';
+
+      btnSuspend.addEventListener('click', async function () {
+        if (!confirm('이 회원을 이용정지하시겠습니까?')) return;
+        var reason = prompt('정지 사유를 입력하세요:');
+        if (!reason) return;
+
+        await api.updateRecord('members', memberId, { status: '이용정지' });
+
+        // 상태 변경 로그 기록
+        var admin = auth.getAdmin();
+        await api.insertRecord('member_status_logs', {
+          member_id: memberId,
+          prev_status: member.status,
+          new_status: '이용정지',
+          changed_by: admin ? '관리자 (' + admin.name + ')' : '관리자',
+          note: reason
+        });
+
+        api.insertAuditLog('상태변경', 'members', memberId, { from: member.status, to: '이용정지', reason: reason });
+        alert('이용정지 처리되었습니다.');
+        location.reload();
+      });
+    }
+
+    if (btnRelease) {
+      // 정상 상태면 숨기기
+      if (member.status !== '이용정지') btnRelease.style.display = 'none';
+
+      btnRelease.addEventListener('click', async function () {
+        if (!confirm('이 회원의 이용정지를 해제하시겠습니까?')) return;
+
+        await api.updateRecord('members', memberId, { status: '정상' });
+
+        var admin = auth.getAdmin();
+        await api.insertRecord('member_status_logs', {
+          member_id: memberId,
+          prev_status: '이용정지',
+          new_status: '정상',
+          changed_by: admin ? '관리자 (' + admin.name + ')' : '관리자',
+          note: '관리자 수동 해제'
+        });
+
+        api.insertAuditLog('상태변경', 'members', memberId, { from: '이용정지', to: '정상' });
+        alert('정지가 해제되었습니다.');
+        location.reload();
+      });
+    }
+
+    // 주소 인증 승인/거절
+    var btnAddrApprove = document.getElementById('btnAddrApprove');
+    var btnAddrReject  = document.getElementById('btnAddrReject');
+
+    if (btnAddrApprove) {
+      btnAddrApprove.addEventListener('click', async function () {
+        if (!confirm('주소 인증을 승인하시겠습니까?')) return;
+        await api.updateRecord('members', memberId, {
+          address_verified: '인증완료',
+          address_verified_at: new Date().toISOString()
+        });
+        api.insertAuditLog('주소인증승인', 'members', memberId, {});
+        alert('주소 인증이 승인되었습니다.');
+        location.reload();
+      });
+    }
+    if (btnAddrReject) {
+      btnAddrReject.addEventListener('click', async function () {
+        if (!confirm('주소 인증을 거절하시겠습니까?')) return;
+        await api.updateRecord('members', memberId, { address_verified: '미인증' });
+        api.insertAuditLog('주소인증거절', 'members', memberId, {});
+        alert('주소 인증이 거절되었습니다.');
+        location.reload();
+      });
+    }
+  }
+
+  // ══════════════════════════════════════════
+  // C. 초기화
+  // ══════════════════════════════════════════
+
+  function init() {
+    if (isListPage()) {
+      initListPage();
+    } else if (isDetailPage()) {
+      initDetailPage();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();

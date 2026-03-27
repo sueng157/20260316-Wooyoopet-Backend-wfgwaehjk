@@ -60,14 +60,14 @@
       </div>
     </header>
 
-    <div class="content">
+    <div class="content" id="detailBasicInfo">
 
       <!-- 상단: 뒤로가기 + 액션 버튼 -->
       <div class="detail-top">
         <a href="members.html" class="btn-back">← 회원관리 목록으로</a>
         <div class="detail-actions">
-          <button class="btn-action btn-action--danger">이용정지</button>
-          <button class="btn-action btn-action--success">정지해제</button>
+          <button class="btn-action btn-action--danger" id="btnSuspend">이용정지</button>
+          <button class="btn-action btn-action--success" id="btnRelease">정지해제</button>
         </div>
       </div>
 
@@ -78,46 +78,43 @@
         </div>
         <div class="info-grid">
           <span class="info-grid__label">회원 고유번호</span>
-          <span class="info-grid__value">M-00001234</span>
+          <span class="info-grid__value" id="memberIdText">불러오는 중...</span>
 
           <span class="info-grid__label">이름</span>
-          <span class="info-grid__value">홍길동</span>
+          <span class="info-grid__value" id="memberName">불러오는 중...</span>
 
           <span class="info-grid__label">닉네임</span>
-          <span class="info-grid__value">신길동최수종#1241</span>
+          <span class="info-grid__value" id="memberNickname">불러오는 중...</span>
 
           <span class="info-grid__label">프로필 이미지</span>
-          <span class="info-grid__value">
+          <span class="info-grid__value" id="memberProfileImg">
             <div class="profile-img" style="background:#e8f4fd;display:flex;align-items:center;justify-content:center;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="#339DEE"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
             </div>
           </span>
 
           <span class="info-grid__label">생년월일</span>
-          <span class="info-grid__value">1990-05-12</span>
+          <span class="info-grid__value" id="memberBirth">불러오는 중...</span>
 
           <span class="info-grid__label">성별</span>
-          <span class="info-grid__value">남성</span>
+          <span class="info-grid__value" id="memberGender">불러오는 중...</span>
 
           <span class="info-grid__label">통신사</span>
-          <span class="info-grid__value">SKT</span>
+          <span class="info-grid__value" id="memberCarrier">불러오는 중...</span>
 
           <span class="info-grid__label">휴대폰번호</span>
           <span class="info-grid__value">
-            <span class="masked-field">
-              <span class="masked-field__value" data-masked="010-****-5678" data-raw="010-1234-5678">010-****-5678</span>
-              <button class="masked-field__toggle">전체보기</button>
-            </span>
+            <span class="masked-field" id="memberPhone">불러오는 중...</span>
           </span>
 
           <span class="info-grid__label">현재 모드</span>
-          <span class="info-grid__value"><span class="badge badge--c-brown">보호자</span></span>
+          <span class="info-grid__value" id="memberMode">불러오는 중...</span>
 
           <span class="info-grid__label">회원 상태</span>
-          <span class="info-grid__value"><span class="badge badge--c-green">정상</span></span>
+          <span class="info-grid__value" id="memberStatus">불러오는 중...</span>
 
           <span class="info-grid__label">가입일</span>
-          <span class="info-grid__value">2025-11-03 14:23</span>
+          <span class="info-grid__value" id="memberCreated">불러오는 중...</span>
         </div>
       </div>
 
@@ -128,16 +125,16 @@
         </div>
         <div class="info-grid">
           <span class="info-grid__label">본인인증 완료 여부</span>
-          <span class="info-grid__value"><span class="badge badge--c-green">완료</span></span>
+          <span class="info-grid__value" id="identityStatus">불러오는 중...</span>
 
           <span class="info-grid__label">인증 수단</span>
-          <span class="info-grid__value">휴대폰 본인인증</span>
+          <span class="info-grid__value" id="identityMethod">불러오는 중...</span>
 
           <span class="info-grid__label">인증 일시</span>
-          <span class="info-grid__value">2025-11-03 14:20</span>
+          <span class="info-grid__value" id="identityDate">불러오는 중...</span>
 
           <span class="info-grid__label">인증 통신사</span>
-          <span class="info-grid__value">SKT</span>
+          <span class="info-grid__value" id="identityCarrier">불러오는 중...</span>
         </div>
       </div>
 
@@ -146,33 +143,30 @@
         <div class="detail-card__header">
           <span class="detail-card__title">③ 주소 정보</span>
           <div class="detail-actions">
-            <button class="btn-action btn-action--success">승인</button>
-            <button class="btn-action btn-action--danger">거절</button>
+            <button class="btn-action btn-action--success" id="btnAddrApprove">승인</button>
+            <button class="btn-action btn-action--danger" id="btnAddrReject">거절</button>
           </div>
         </div>
         <div class="info-grid">
           <span class="info-grid__label">도로명 주소</span>
-          <span class="info-grid__value">서울특별시 강남구 삼성로 123</span>
+          <span class="info-grid__value" id="addressRoad">불러오는 중...</span>
 
           <span class="info-grid__label">단지명</span>
-          <span class="info-grid__value">래미안래미안아파트</span>
+          <span class="info-grid__value" id="addressComplex">불러오는 중...</span>
 
           <span class="info-grid__label">동</span>
-          <span class="info-grid__value">101동</span>
+          <span class="info-grid__value" id="addressBuilding">불러오는 중...</span>
 
           <span class="info-grid__label">호수</span>
           <span class="info-grid__value">
-            <span class="masked-field">
-              <span class="masked-field__value" data-masked="****호" data-raw="1234호">****호</span>
-              <button class="masked-field__toggle">전체보기</button>
-            </span>
+            <span class="masked-field" id="addressHo">불러오는 중...</span>
           </span>
 
           <span class="info-grid__label">주소 인증 상태</span>
-          <span class="info-grid__value"><span class="badge badge--c-orange">심사중</span></span>
+          <span class="info-grid__value" id="addressVerified">불러오는 중...</span>
 
           <span class="info-grid__label">인증 완료일</span>
-          <span class="info-grid__value" style="color:var(--text-weak);">—</span>
+          <span class="info-grid__value" id="addressVerifiedDate">불러오는 중...</span>
 
           <span class="info-grid__label">제출 서류 보기</span>
           <span class="info-grid__value"><span class="info-grid__value--link">서류 확인</span></span>
@@ -193,49 +187,8 @@
               <th style="width:140px">동의일시</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>서비스 이용약관</td>
-              <td><span class="badge badge--c-blue">필수</span></td>
-              <td><span class="text-agreed">동의</span></td>
-              <td>2025-11-03 14:18</td>
-            </tr>
-            <tr>
-              <td>개인정보 수집·이용 동의서</td>
-              <td><span class="badge badge--c-blue">필수</span></td>
-              <td><span class="text-agreed">동의</span></td>
-              <td>2025-11-03 14:18</td>
-            </tr>
-            <tr>
-              <td>위치기반서비스 이용 약관</td>
-              <td><span class="badge badge--c-blue">필수</span></td>
-              <td><span class="text-agreed">동의</span></td>
-              <td>2025-11-03 14:18</td>
-            </tr>
-            <tr>
-              <td>만 14세 이상</td>
-              <td><span class="badge badge--c-blue">필수</span></td>
-              <td><span class="text-agreed">동의</span></td>
-              <td>2025-11-03 14:18</td>
-            </tr>
-            <tr>
-              <td>본인확인서비스 동의사항</td>
-              <td><span class="badge badge--c-blue">필수</span></td>
-              <td><span class="text-agreed">동의</span></td>
-              <td>2025-11-03 14:18</td>
-            </tr>
-            <tr>
-              <td>마케팅 정보 수신동의</td>
-              <td><span class="badge badge--c-gray">선택</span></td>
-              <td><span class="text-disagreed">미동의</span></td>
-              <td style="color:var(--text-weak);">—</td>
-            </tr>
-            <tr>
-              <td>맞춤형 광고 목적 개인정보 수집 및 이용</td>
-              <td><span class="badge badge--c-gray">선택</span></td>
-              <td><span class="text-disagreed">미동의</span></td>
-              <td style="color:var(--text-weak);">—</td>
-            </tr>
+          <tbody id="termAgreementsBody">
+            <tr><td colspan="4" style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -258,27 +211,8 @@
               <th>번호</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>뽀삐</td>
-              <td>말티즈</td>
-              <td>암컷</td>
-              <td>3살</td>
-              <td>3.2kg</td>
-              <td><span class="badge badge--c-green">했어요</span></td>
-              <td><span class="badge badge--c-blue">★ 대표</span></td>
-              <td><span class="mini-table__link">P-00005678</span></td>
-            </tr>
-            <tr>
-              <td>초코</td>
-              <td>푸들</td>
-              <td>수컷</td>
-              <td>5살</td>
-              <td>6.1kg</td>
-              <td><span class="badge badge--c-green">했어요</span></td>
-              <td><span style="color:var(--text-weak);">일반</span></td>
-              <td><span class="mini-table__link">P-00005679</span></td>
-            </tr>
+          <tbody id="petListBody">
+            <tr><td colspan="8" style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -291,27 +225,27 @@
         <div class="stat-cards">
           <div class="stat-card">
             <div class="stat-card__label">총 결제 건수</div>
-            <div class="stat-card__value">15</div>
+            <div class="stat-card__value" id="statPayCount">-</div>
             <div class="stat-card__unit">건</div>
           </div>
           <div class="stat-card">
             <div class="stat-card__label">총 결제 금액</div>
-            <div class="stat-card__value">4,500,000</div>
+            <div class="stat-card__value" id="statPayAmount">-</div>
             <div class="stat-card__unit">원</div>
           </div>
           <div class="stat-card">
             <div class="stat-card__label">총 환불 건수</div>
-            <div class="stat-card__value">2</div>
+            <div class="stat-card__value" id="statRefundCount">-</div>
             <div class="stat-card__unit">건</div>
           </div>
           <div class="stat-card">
             <div class="stat-card__label">총 환불 금액</div>
-            <div class="stat-card__value">250,000</div>
+            <div class="stat-card__value" id="statRefundAmount">-</div>
             <div class="stat-card__unit">원</div>
           </div>
           <div class="stat-card">
             <div class="stat-card__label">총 위약금 금액</div>
-            <div class="stat-card__value">150,000</div>
+            <div class="stat-card__value" id="statPenaltyAmount">-</div>
             <div class="stat-card__unit">원</div>
           </div>
         </div>
@@ -333,42 +267,8 @@
               <th>결제 번호</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>2026-03-14 09:30</td>
-              <td>행복한유치원</td>
-              <td class="text-right">85,000원</td>
-              <td><span class="badge badge--c-green">결제완료</span></td>
-              <td><span class="mini-table__link">PAY-000123</span></td>
-            </tr>
-            <tr>
-              <td>2026-03-10 14:15</td>
-              <td>사랑이유치원</td>
-              <td class="text-right">120,000원</td>
-              <td><span class="badge badge--c-green">결제완료</span></td>
-              <td><span class="mini-table__link">PAY-000118</span></td>
-            </tr>
-            <tr>
-              <td>2026-03-05 11:00</td>
-              <td>행복한유치원</td>
-              <td class="text-right">95,000원</td>
-              <td><span class="badge badge--c-red">취소됨</span></td>
-              <td><span class="mini-table__link">PAY-000105</span></td>
-            </tr>
-            <tr>
-              <td>2026-02-28 16:45</td>
-              <td>행복한유치원</td>
-              <td class="text-right">85,000원</td>
-              <td><span class="badge badge--c-green">결제완료</span></td>
-              <td><span class="mini-table__link">PAY-000098</span></td>
-            </tr>
-            <tr>
-              <td>2026-02-20 10:20</td>
-              <td>사랑이유치원</td>
-              <td class="text-right">150,000원</td>
-              <td><span class="badge badge--c-orange">환불됨</span></td>
-              <td><span class="mini-table__link">PAY-000085</span></td>
-            </tr>
+          <tbody id="recentPaymentsBody">
+            <tr><td colspan="5" style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -380,13 +280,13 @@
         </div>
         <div class="info-grid">
           <span class="info-grid__label">누적 노쇼 횟수</span>
-          <span class="info-grid__value" style="color:#E05A3A;font-weight:700;">2회</span>
+          <span class="info-grid__value" id="noshowCount">불러오는 중...</span>
 
           <span class="info-grid__label">현재 제재 상태</span>
-          <span class="info-grid__value"><span class="badge badge--c-red">1개월 예약제한</span></span>
+          <span class="info-grid__value" id="noshowSanction">불러오는 중...</span>
 
           <span class="info-grid__label">제재 종료일</span>
-          <span class="info-grid__value">2026-04-16</span>
+          <span class="info-grid__value" id="noshowSanctionEnd">불러오는 중...</span>
         </div>
       </div>
 
@@ -408,30 +308,8 @@
               <th style="width:140px">액션</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>2026-03-16</td>
-              <td><span class="mini-table__link">RES-000456</span></td>
-              <td>행복한유치원</td>
-              <td><span class="badge badge--c-red">1개월 예약제한</span></td>
-              <td><span class="badge badge--c-orange">소명접수</span></td>
-              <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">차량 사고로 인해 등원이 불가능했습니다.</td>
-              <td><span class="mini-table__link">서류 확인</span></td>
-              <td>
-                <button class="btn-action btn-action--success" style="padding:4px 10px;font-size:12px;">소명 인정</button>
-                <button class="btn-action btn-action--danger" style="padding:4px 10px;font-size:12px;">소명 거부</button>
-              </td>
-            </tr>
-            <tr>
-              <td>2026-02-10</td>
-              <td><span class="mini-table__link">RES-000312</span></td>
-              <td>사랑이유치원</td>
-              <td><span class="badge badge--c-red">7일 예약제한</span></td>
-              <td><span class="badge badge--c-red">소명거부</span></td>
-              <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">개인 사정</td>
-              <td style="color:var(--text-weak);">—</td>
-              <td style="color:var(--text-weak);font-size:12px;">처리 완료</td>
-            </tr>
+          <tbody id="noshowDetailBody">
+            <tr><td colspan="8" style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -449,38 +327,29 @@
               <th>해제 일시</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>김유치원 (행복한강아지#0001)</td>
-              <td>2026-02-15 08:30</td>
-              <td style="color:#E05A3A;font-weight:500;">차단 중</td>
-            </tr>
-            <tr>
-              <td>박사장 (귀여운멍멍#0055)</td>
-              <td>2025-12-20 15:10</td>
-              <td>2026-01-05 09:00</td>
-            </tr>
+          <tbody id="blockHistoryBody">
+            <tr><td colspan="3" style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
 
       <!-- ── ⑪ 유치원 정보 (유치원 모드 전용) ── -->
-      <div class="detail-card conditional-section">
+      <div class="detail-card conditional-section" id="sectionKindergarten" style="display:none;">
         <div class="detail-card__header">
           <span class="detail-card__title">⑪ 유치원 정보 <span class="conditional-section__badge">유치원 모드 전용</span></span>
         </div>
         <div class="info-grid">
           <span class="info-grid__label">유치원명</span>
-          <span class="info-grid__value">홍길동의유치원</span>
+          <span class="info-grid__value" id="kgName">불러오는 중...</span>
 
           <span class="info-grid__label">유치원 번호</span>
-          <span class="info-grid__value"><span class="info-grid__value--link">KG-000012</span></span>
+          <span class="info-grid__value" id="kgNumber">불러오는 중...</span>
 
           <span class="info-grid__label">영업 상태</span>
-          <span class="info-grid__value"><span class="badge badge--c-green">영업중</span></span>
+          <span class="info-grid__value" id="kgStatus">불러오는 중...</span>
 
           <span class="info-grid__label">이니시스 서브몰 등록 상태</span>
-          <span class="info-grid__value"><span class="badge badge--c-green">등록완료</span></span>
+          <span class="info-grid__value" id="kgInicis">불러오는 중...</span>
         </div>
       </div>
 
@@ -499,28 +368,8 @@
               <th>비고</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>2026-03-16 10:30</td>
-              <td><span class="badge badge--c-green">정상</span></td>
-              <td><span class="badge badge--c-red">이용정지</span></td>
-              <td>관리자 (홍길동)</td>
-              <td>부적절한 채팅 반복</td>
-            </tr>
-            <tr>
-              <td>2026-02-01 09:00</td>
-              <td><span class="badge badge--c-red">이용정지</span></td>
-              <td><span class="badge badge--c-green">정상</span></td>
-              <td>시스템 (자동)</td>
-              <td>정지 기간 만료</td>
-            </tr>
-            <tr>
-              <td>2026-01-25 14:20</td>
-              <td><span class="badge badge--c-green">정상</span></td>
-              <td><span class="badge badge--c-red">이용정지</span></td>
-              <td>관리자 (홍길동)</td>
-              <td>노쇼 2회 누적</td>
-            </tr>
+          <tbody id="statusLogBody">
+            <tr><td colspan="5" style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -537,5 +386,6 @@
 <script src="js/common.js"></script>
 <script src="js/components.js"></script>
 <script src="js/api.js"></script>
+<script src="js/members.js"></script>
 </body>
 </html>

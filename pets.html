@@ -98,7 +98,7 @@
 
       <!-- 결과 헤더 -->
       <div class="result-header">
-        <span class="result-header__count">검색 결과 <strong>256</strong>건</span>
+        <span class="result-header__count">검색 결과 <strong id="resultCount">0</strong>건</span>
         <button class="btn-excel">
           <svg class="btn-excel__icon" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 12l-4-4h2.5V3h3v5H12L8 12zm-6 2h12v1.5H2V14z"/>
@@ -130,7 +130,9 @@
               <th>상세</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="petListBody">
+            <tr><td colspan="16" style="text-align:center;padding:40px 0;color:var(--text-weak);">데이터를 불러오는 중입니다.</td></tr>
+<!--
             <!-- 1행 -->
             <tr>
               <td>1</td>
@@ -264,6 +266,7 @@
               <td>2025-12-10</td>
               <td><a href="pet-detail.html" class="data-table__link">상세</a></td>
             </tr>
+-->
           </tbody>
         </table>
       </div>
@@ -292,5 +295,6 @@
 <script src="js/common.js"></script>
 <script src="js/components.js"></script>
 <script src="js/api.js"></script>
+<script src="js/pets.js"></script>
 </body>
 </html>
