@@ -62,7 +62,7 @@
     </header>
 
     <!-- 콘텐츠 영역 -->
-    <div class="content">
+    <div class="content" id="detailPetInfo">
 
       <!-- 상단 액션바 -->
       <div class="detail-top">
@@ -80,30 +80,14 @@
         </div>
         <div class="info-grid">
           <span class="info-grid__label">반려동물 고유번호</span>
-          <span class="info-grid__value">PT-000045</span>
+          <span class="info-grid__value" id="petIdText">불러오는 중...</span>
 
           <span class="info-grid__label">이름</span>
-          <span class="info-grid__value">코코</span>
+          <span class="info-grid__value" id="petName">불러오는 중...</span>
 
           <span class="info-grid__label">사진</span>
           <span class="info-grid__value">
-            <div class="photo-gallery">
-              <div class="photo-gallery__item">
-                <div class="photo-gallery__img" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#bbb"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                </div>
-                <span class="photo-gallery__badge">대표</span>
-              </div>
-              <div class="photo-gallery__item">
-                <div class="photo-gallery__img" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#bbb"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                </div>
-              </div>
-              <div class="photo-gallery__item">
-                <div class="photo-gallery__img" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#bbb"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                </div>
-              </div>
+            <div class="photo-gallery" id="petPhotoGallery">
               <div class="photo-gallery__item">
                 <div class="photo-gallery__img" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="#bbb"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
@@ -113,40 +97,40 @@
           </span>
 
           <span class="info-grid__label">견종</span>
-          <span class="info-grid__value">비숑프리제</span>
+          <span class="info-grid__value" id="petBreed">불러오는 중...</span>
 
           <span class="info-grid__label">성별</span>
-          <span class="info-grid__value"><span class="badge badge--c-blue">수컷</span></span>
+          <span class="info-grid__value" id="petGender">불러오는 중...</span>
 
           <span class="info-grid__label">생년월일</span>
-          <span class="info-grid__value">2021-03-15</span>
+          <span class="info-grid__value" id="petBirth">불러오는 중...</span>
 
           <span class="info-grid__label">나이</span>
-          <span class="info-grid__value">4세</span>
+          <span class="info-grid__value" id="petAge">불러오는 중...</span>
 
           <span class="info-grid__label">몸무게</span>
-          <span class="info-grid__value">5.8 kg</span>
+          <span class="info-grid__value" id="petWeight">불러오는 중...</span>
 
           <span class="info-grid__label">크기 분류</span>
-          <span class="info-grid__value"><span class="badge badge--c-green">소형</span></span>
+          <span class="info-grid__value" id="petSize">불러오는 중...</span>
 
           <span class="info-grid__label">중성화 여부</span>
-          <span class="info-grid__value"><span class="badge badge--c-green">했어요</span></span>
+          <span class="info-grid__value" id="petNeutered">불러오는 중...</span>
 
           <span class="info-grid__label">예방접종 여부</span>
-          <span class="info-grid__value"><span class="badge badge--c-green">했어요</span></span>
+          <span class="info-grid__value" id="petVaccinated">불러오는 중...</span>
 
           <span class="info-grid__label">대표 반려동물</span>
-          <span class="info-grid__value"><span class="badge badge--c-blue">대표</span></span>
+          <span class="info-grid__value" id="petRepresentative">불러오는 중...</span>
 
           <span class="info-grid__label">소개글</span>
           <span class="info-grid__value">
-            <div class="intro-text" id="introText">사람을 좋아하고 애교가 많은 비숑프리제 코코입니다. 유치원에서도 다른 강아지들과 잘 어울리고 사회성이 좋습니다. 산책을 매우 좋아하며 활동적인 성격입니다. 사료도 잘 먹고 편식이 없어요.</div>
+            <div class="intro-text" id="introText">불러오는 중...</div>
             <button class="intro-toggle">더보기</button>
           </span>
 
           <span class="info-grid__label">등록일</span>
-          <span class="info-grid__value">2025-11-03 14:23</span>
+          <span class="info-grid__value" id="petCreated">불러오는 중...</span>
         </div>
       </div>
 
@@ -157,24 +141,21 @@
         </div>
         <div class="info-grid">
           <span class="info-grid__label">보호자 이름</span>
-          <span class="info-grid__value">김민수</span>
+          <span class="info-grid__value" id="ownerName">불러오는 중...</span>
 
           <span class="info-grid__label">보호자 닉네임</span>
-          <span class="info-grid__value">코코맘</span>
+          <span class="info-grid__value" id="ownerNickname">불러오는 중...</span>
 
           <span class="info-grid__label">보호자 연락처</span>
           <span class="info-grid__value">
-            <span class="masked-field">
-              <span class="masked-field__value" data-masked="010-****-1234" data-raw="010-5678-1234">010-****-1234</span>
-              <button class="masked-field__toggle">전체보기</button>
-            </span>
+            <span class="masked-field" id="ownerPhone">불러오는 중...</span>
           </span>
 
           <span class="info-grid__label">보호자 주소</span>
-          <span class="info-grid__value">래미안아파트 101동</span>
+          <span class="info-grid__value" id="ownerAddress">불러오는 중...</span>
 
           <span class="info-grid__label">보호자 회원번호</span>
-          <span class="info-grid__value"><a href="member-detail.html" class="info-grid__value--link">M-00002345</a></span>
+          <span class="info-grid__value" id="ownerMemberId">불러오는 중...</span>
         </div>
       </div>
 
@@ -193,42 +174,8 @@
               <th>예약번호</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>2025-12-10 09:00 ~ 2025-12-11 18:00 (2일)</td>
-              <td>밤톨이네</td>
-              <td><span class="badge badge--c-green">돌봄완료</span></td>
-              <td class="text-right">45,000원</td>
-              <td><a href="#" class="mini-table__link">R-00001234</a></td>
-            </tr>
-            <tr>
-              <td>2025-12-05 09:00 ~ 2025-12-05 18:00 (1일)</td>
-              <td>사랑이네</td>
-              <td><span class="badge badge--c-green">돌봄완료</span></td>
-              <td class="text-right">15,000원</td>
-              <td><a href="#" class="mini-table__link">R-00001198</a></td>
-            </tr>
-            <tr>
-              <td>2025-11-28 09:00 ~ 2025-11-30 18:00 (3일)</td>
-              <td>밤톨이네</td>
-              <td><span class="badge badge--c-green">돌봄완료</span></td>
-              <td class="text-right">90,000원</td>
-              <td><a href="#" class="mini-table__link">R-00001150</a></td>
-            </tr>
-            <tr>
-              <td>2025-11-20 09:00 ~ 2025-11-20 18:00 (1일)</td>
-              <td>행복한강아지</td>
-              <td><span class="badge badge--c-gray">보호자취소</span></td>
-              <td class="text-right">15,000원</td>
-              <td><a href="#" class="mini-table__link">R-00001102</a></td>
-            </tr>
-            <tr>
-              <td>2025-11-15 09:00 ~ 2025-11-16 18:00 (2일)</td>
-              <td>밤톨이네</td>
-              <td><span class="badge badge--c-blue">예약확정</span></td>
-              <td class="text-right">45,000원</td>
-              <td><a href="#" class="mini-table__link">R-00001078</a></td>
-            </tr>
+          <tbody id="careHistoryBody">
+            <tr><td colspan="5" style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</td></tr>
           </tbody>
         </table>
         <a href="#" class="view-all-link">전체 보기 →</a>
@@ -251,65 +198,8 @@
               <th>후기번호</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>2025-12-11</td>
-              <td>밤톨이네</td>
-              <td><span class="badge badge--c-green">최고예요</span></td>
-              <td>
-                <span class="review-tag-pill">애교가 많아요</span>
-                <span class="review-tag-pill">잘 먹어요</span>
-              </td>
-              <td><span class="review-content">코코가 오늘 유치원에서 다른 강아지들과 아주 잘...</span></td>
-              <td><span class="badge badge--c-gray">아니오</span></td>
-              <td><a href="#" class="mini-table__link">RV-00000567</a></td>
-            </tr>
-            <tr>
-              <td>2025-12-05</td>
-              <td>사랑이네</td>
-              <td><span class="badge badge--c-blue">좋았어요</span></td>
-              <td>
-                <span class="review-tag-pill">안정적이에요</span>
-              </td>
-              <td><span class="review-content">처음 온 유치원인데 잘 적응했습니다. 밥도 잘 먹...</span></td>
-              <td><span class="badge badge--c-gray">아니오</span></td>
-              <td><a href="#" class="mini-table__link">RV-00000534</a></td>
-            </tr>
-            <tr>
-              <td>2025-11-30</td>
-              <td>밤톨이네</td>
-              <td><span class="badge badge--c-green">최고예요</span></td>
-              <td>
-                <span class="review-tag-pill">애교가 많아요</span>
-                <span class="review-tag-pill">짖지 않아요</span>
-                <span class="review-tag-pill">청결해요</span>
-              </td>
-              <td><span class="review-content">3일 동안 맡겼는데 정말 잘 지냈어요. 사진도 많...</span></td>
-              <td><span class="badge badge--c-orange">예</span></td>
-              <td><a href="#" class="mini-table__link">RV-00000498</a></td>
-            </tr>
-            <tr>
-              <td>2025-11-16</td>
-              <td>밤톨이네</td>
-              <td><span class="badge badge--c-blue">좋았어요</span></td>
-              <td>
-                <span class="review-tag-pill">잘 먹어요</span>
-              </td>
-              <td><span class="review-content">평소처럼 잘 지냈습니다. 산책도 즐거워했어요.</span></td>
-              <td><span class="badge badge--c-gray">아니오</span></td>
-              <td><a href="#" class="mini-table__link">RV-00000456</a></td>
-            </tr>
-            <tr>
-              <td>2025-11-02</td>
-              <td>행복한강아지</td>
-              <td><span class="badge badge--c-red">아쉬워요</span></td>
-              <td>
-                <span class="review-tag-pill">공격성 없어요</span>
-              </td>
-              <td><span class="review-content">다른 강아지에게 조금 긴장한 모습이 있었지만 전...</span></td>
-              <td><span class="badge badge--c-orange">예</span></td>
-              <td><a href="#" class="mini-table__link">RV-00000412</a></td>
-            </tr>
+          <tbody id="petReviewsBody">
+            <tr><td colspan="7" style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</td></tr>
           </tbody>
         </table>
         <a href="#" class="view-all-link">전체 보기 →</a>
@@ -320,31 +210,8 @@
         <div class="detail-card__header">
           <h2 class="detail-card__title">돌봄 후기 태그 집계</h2>
         </div>
-        <div class="stat-cards--3col">
-          <div class="stat-card">
-            <div class="stat-card__label">사람을 좋아하고 애교가 많아요</div>
-            <div class="stat-card__value">12건</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card__label">거의 짖지 않았어요</div>
-            <div class="stat-card__value">8건</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card__label">낯선 강아지/사람에게 공격성이 없어요</div>
-            <div class="stat-card__value">6건</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card__label">아이 청결상태가 좋아요</div>
-            <div class="stat-card__value">15건</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card__label">유치원에서 안정적으로 잘 있어요</div>
-            <div class="stat-card__value">9건</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card__label">편식이나 남기는것 없이 사료 잘 먹어요</div>
-            <div class="stat-card__value">11건</div>
-          </div>
+        <div class="stat-cards--3col" id="tagSummary">
+          <div style="text-align:center;padding:20px 0;color:var(--text-weak);">불러오는 중...</div>
         </div>
       </div>
 
@@ -375,5 +242,6 @@
 <script src="js/common.js"></script>
 <script src="js/components.js"></script>
 <script src="js/api.js"></script>
+<script src="js/pets.js"></script>
 </body>
 </html>
