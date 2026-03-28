@@ -128,11 +128,31 @@
     }
 
     var rows = result.data;
+
+    // 해당 페이지 회원들의 결제 건수/금액 집계
+    var memberIds = rows.map(function (r) { return r.id; });
+    var payMap = {};
+    if (memberIds.length > 0) {
+      var sb = window.__supabase;
+      var payRes = await sb.from('payments')
+        .select('member_id, amount')
+        .in('member_id', memberIds)
+        .eq('status', '결제완료');
+      if (payRes.data) {
+        payRes.data.forEach(function (p) {
+          if (!payMap[p.member_id]) payMap[p.member_id] = { count: 0, amount: 0 };
+          payMap[p.member_id].count += 1;
+          payMap[p.member_id].amount += (p.amount || 0);
+        });
+      }
+    }
+
     var startIdx = (currentPage - 1) * PER_PAGE;
     var html = '';
 
     for (var i = 0; i < rows.length; i++) {
       var m = rows[i];
+      var pay = payMap[m.id] || { count: 0, amount: 0 };
       var idx = startIdx + i + 1;
       var addrShort = (m.address_complex || '') + ' ' + (m.address_building_dong ? m.address_building_dong + '동' : '');
       addrShort = addrShort.trim() || '-';
@@ -149,8 +169,8 @@
         '<td>' + api.autoBadge(m.identity_verified ? '완료' : '미완료') + '</td>' +
         '<td>' + api.autoBadge(m.current_mode || '-') + '</td>' +
         '<td>' + api.autoBadge(m.status) + '</td>' +
-        '<td class="text-right">' + api.formatNumber(m.payment_count || 0) + '</td>' +
-        '<td class="text-right">' + api.formatMoney(m.payment_amount || 0, false) + '</td>' +
+        '<td class="text-right">' + api.formatNumber(pay.count) + '</td>' +
+        '<td class="text-right">' + api.formatMoney(pay.amount, false) + '</td>' +
         '<td>' + api.formatDate(m.created_at, true) + '</td>' +
         '<td>' + api.renderDetailLink('member-detail.html', m.id) + '</td>' +
         '</tr>';
@@ -180,6 +200,24 @@
       return;
     }
 
+    // 전체 회원의 결제 건수/금액 집계
+    var allIds = result.data.map(function (r) { return r.id; });
+    var payMap = {};
+    if (allIds.length > 0) {
+      var sb = window.__supabase;
+      var payRes = await sb.from('payments')
+        .select('member_id, amount')
+        .in('member_id', allIds)
+        .eq('status', '결제완료');
+      if (payRes.data) {
+        payRes.data.forEach(function (p) {
+          if (!payMap[p.member_id]) payMap[p.member_id] = { count: 0, amount: 0 };
+          payMap[p.member_id].count += 1;
+          payMap[p.member_id].amount += (p.amount || 0);
+        });
+      }
+    }
+
     var headers = [
       { key: 'name', label: '이름' },
       { key: 'nickname', label: '닉네임' },
@@ -197,6 +235,7 @@
     ];
 
     var rows = result.data.map(function (m) {
+      var pay = payMap[m.id] || { count: 0, amount: 0 };
       return {
         name: m.name,
         nickname: m.nickname || '',
@@ -208,8 +247,8 @@
         identity_status: m.identity_verified ? '완료' : '미완료',
         role: m.current_mode || '',
         status: m.status || '',
-        payment_count: m.payment_count || 0,
-        payment_amount: m.payment_amount || 0,
+        payment_count: pay.count,
+        payment_amount: pay.amount,
         created_date: api.formatDate(m.created_at, true)
       };
     });
