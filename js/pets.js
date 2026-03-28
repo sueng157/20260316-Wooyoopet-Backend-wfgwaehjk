@@ -142,7 +142,7 @@
         '<td>' + api.escapeHtml(p.name) + '</td>' +
         '<td>' + api.escapeHtml(owner.name || p.owner_name || '-') + '</td>' +
         '<td class="masked">' + api.maskPhone(owner.phone || p.owner_phone) + '</td>' +
-        '<td>' + thumbHtml(p.main_image_url) + '</td>' +
+        '<td>' + thumbHtml(Array.isArray(p.photo_urls) && p.photo_urls.length > 0 ? p.photo_urls[0] : null) + '</td>' +
         '<td>' + api.escapeHtml(p.breed || '-') + '</td>' +
         '<td>' + api.renderBadge(p.gender || '-', genderColor) + '</td>' +
         '<td>' + api.calcPetAge(p.birth_date) + '</td>' +
@@ -236,7 +236,7 @@
     var petId = api.getParam('id');
     if (!petId) { alert('반려동물 ID가 없습니다.'); return; }
 
-    var res = await api.fetchDetail('pets', petId, '*, members(id, name, nickname, phone, road_address, complex_name, building)');
+    var res = await api.fetchDetail('pets', petId, '*, members(id, name, nickname, phone, address_road, address_complex, address_building_dong, address_building_ho)');
     if (res.error || !res.data) { alert('반려동물 정보를 불러올 수 없습니다.'); return; }
     var p = res.data;
     var owner = p.members || {};
@@ -265,9 +265,9 @@
 
     // 사진 갤러리
     var gallery = document.getElementById('petPhotoGallery');
-    if (gallery && p.image_urls) {
+    if (gallery && p.photo_urls) {
       var imgs = [];
-      try { imgs = typeof p.image_urls === 'string' ? JSON.parse(p.image_urls) : p.image_urls; } catch (e) {}
+      try { imgs = typeof p.photo_urls === 'string' ? JSON.parse(p.photo_urls) : (Array.isArray(p.photo_urls) ? p.photo_urls : []); } catch (e) {}
       if (Array.isArray(imgs) && imgs.length > 0) {
         var gHtml = '';
         imgs.forEach(function (url, idx) {
@@ -284,7 +284,7 @@
     api.setHtmlById('ownerPhone', api.renderMaskedField(
       api.maskPhone(owner.phone), api.formatPhone(owner.phone), 'pets', petId, 'owner_phone'
     ));
-    api.setTextById('ownerAddress', ((owner.complex_name || '') + ' ' + (owner.building || '')).trim() || '-');
+    api.setTextById('ownerAddress', ((owner.address_road || '') + ' ' + (owner.address_complex || '') + ' ' + (owner.address_building_dong || '') + ' ' + (owner.address_building_ho || '')).trim() || '-');
     if (owner.id) {
       api.setHtmlById('ownerMemberId', api.renderDetailLink('member-detail.html', owner.id, owner.id.slice(0, 8).toUpperCase()));
     }
@@ -309,9 +309,9 @@
     if (!tbody) return;
 
     var res = await api.fetchList('reservations', {
-      select: '*, kindergartens(name)',
+      select: '*, kindergartens(name), payments(amount)',
       filters: [{ column: 'pet_id', op: 'eq', value: petId }],
-      orderBy: 'checkin_at',
+      orderBy: 'checkin_scheduled',
       ascending: false,
       page: 1,
       perPage: 5
@@ -325,11 +325,12 @@
     var html = '';
     res.data.forEach(function (r) {
       var kgName = (r.kindergartens && r.kindergartens.name) || '-';
+      var paymentAmount = (r.payments && r.payments.length > 0) ? r.payments[0].amount : 0;
       html += '<tr>' +
-        '<td>' + api.formatCareRange(r.checkin_at, r.checkout_at) + '</td>' +
+        '<td>' + api.formatCareRange(r.checkin_scheduled, r.checkout_scheduled) + '</td>' +
         '<td>' + api.escapeHtml(kgName) + '</td>' +
         '<td>' + api.autoBadge(r.status) + '</td>' +
-        '<td class="text-right">' + api.formatMoney(r.amount || 0) + '</td>' +
+        '<td class="text-right">' + api.formatMoney(paymentAmount) + '</td>' +
         '<td>' + api.renderDetailLink('reservation-detail.html', r.id, r.id.slice(0, 8).toUpperCase()) + '</td>' +
         '</tr>';
     });
