@@ -15,6 +15,47 @@
   margin-bottom: 16px;
 }
 
+/* ── 유치원 필터 배너 (kindergarten_id로 진입 시) ── */
+.kg-filter-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #EBF5FF;
+  border: 1px solid #B3D9FF;
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #1A6CB5;
+}
+
+.kg-filter-banner__icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.kg-filter-banner__text {
+  flex: 1;
+}
+
+.kg-filter-banner__text strong {
+  font-weight: 700;
+}
+
+.kg-filter-banner__clear {
+  flex-shrink: 0;
+  color: #1A6CB5;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.kg-filter-banner__clear:hover {
+  background: rgba(26, 108, 181, 0.1);
+}
+
 .filter-row {
   display: flex;
   align-items: center;
@@ -964,6 +1005,47 @@
   background: var(--danger);
   color: #ffffff;
   border: none;
+}
+
+/* ── 모달 헤더 / 바디 / 푸터 / 닫기 ── */
+.modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal__header .modal__title {
+  margin-bottom: 0;
+  color: var(--text-primary);
+}
+
+.modal__close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-weak);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.modal__close:hover {
+  color: var(--text-primary);
+}
+
+.modal__body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .modal__btn--delete:disabled {
