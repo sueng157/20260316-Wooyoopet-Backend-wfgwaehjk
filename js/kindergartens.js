@@ -3,6 +3,13 @@
  *
  * 목록 (kindergartens.html) + 상세 (kindergarten-detail.html) 공통 모듈
  * 의존: api.js, auth.js, common.js
+ *
+ * DB 컬럼 매핑 (kindergartens 테이블):
+ *   business_status, address_road, address_jibun, address_complex,
+ *   address_building_dong, address_building_ho, address_auth_status,
+ *   address_auth_date, freshness_current, freshness_initial, photo_urls,
+ *   price_small_1h ~ price_large_pickup (12개), inicis_submall_code,
+ *   noshow_count, noshow_sanction, member_id(FK→members)
  */
 (function () {
   'use strict';
@@ -46,6 +53,7 @@
     pagination  = document.querySelector('.pagination');
   }
 
+  // [C] 필터 — business_status 로 수정
   function buildFilters() {
     var filters = [];
 
@@ -58,7 +66,7 @@
 
     if (filterBizStatus) {
       var v = filterBizStatus.value;
-      if (v && v !== '영업상태: 전체') filters.push({ column: 'status', op: 'eq', value: v });
+      if (v && v !== '영업상태: 전체') filters.push({ column: 'business_status', op: 'eq', value: v });
     }
     if (filterInicis) {
       var v2 = filterInicis.value;
@@ -68,15 +76,20 @@
     return filters;
   }
 
+  // [D] 검색 — 유치원명은 직접 ilike, 운영자 성명은 members 테이블 검색 불가(or 지원 안됨)
+  //     → 유치원명만 or 필터로, 운영자 검색은 별도 2단계 조회로 처리
   function buildSearchOr() {
     if (!filterSearchInput || !filterSearchInput.value.trim()) return [];
     var keyword = '%' + filterSearchInput.value.trim() + '%';
-    var fieldMap = {
-      '유치원명':   'name.ilike.' + keyword,
-      '운영자 성명': 'operator_name.ilike.' + keyword
-    };
     var label = filterSearchField ? filterSearchField.value : '유치원명';
-    return [fieldMap[label] || fieldMap['유치원명']];
+
+    // 유치원명 검색: 직접 ilike
+    if (label === '유치원명') {
+      return ['name.ilike.' + keyword];
+    }
+    // 운영자 성명 검색: Supabase or 필터로 조인 컬럼 검색 불가
+    // → 빈 배열 반환, loadKgList에서 별도 처리
+    return [];
   }
 
   /** 신선도 CSS 클래스 */
@@ -93,21 +106,55 @@
     return api.renderBadge('진행중(' + completed + '/' + total + ')', 'orange');
   }
 
-  /** 이미지 썸네일 */
-  function thumbHtml(url) {
+  /** 이미지 썸네일 — photo_urls 배열에서 첫번째 URL */
+  function thumbHtml(photoUrls) {
+    var url = null;
+    if (Array.isArray(photoUrls) && photoUrls.length > 0) url = photoUrls[0];
     if (url) {
       return '<div class="thumb"><img src="' + api.escapeHtml(url) + '" alt="" style="width:100%;height:100%;object-fit:cover;"></div>';
     }
     return '<div class="thumb thumb--placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>';
   }
 
+  // [A] select 쿼리 + [B] 목록 렌더링 — DB 실제 컬럼명으로 전체 수정
   async function loadKgList(page) {
     currentPage = page || 1;
     api.showTableLoading(listBody, 16);
 
+    // 운영자 성명 검색인 경우 2단계 조회
+    var operatorFilter = null;
+    if (filterSearchField && filterSearchField.value === '운영자 성명' &&
+        filterSearchInput && filterSearchInput.value.trim()) {
+      operatorFilter = filterSearchInput.value.trim();
+    }
+
+    // 운영자 성명 검색: members에서 먼저 member_id 목록 확보
+    var memberIdFilter = null;
+    if (operatorFilter) {
+      var sb = window.__supabase;
+      // kindergartens의 member_id와 매칭되는 members 검색
+      var memberRes = await sb.from('members')
+        .select('id')
+        .ilike('name', '%' + operatorFilter + '%');
+      if (memberRes.data && memberRes.data.length > 0) {
+        memberIdFilter = memberRes.data.map(function (m) { return m.id; });
+      } else {
+        // 검색 결과 없음
+        if (resultCount) resultCount.textContent = 0;
+        api.showTableEmpty(listBody, 16);
+        renderListPagination(0);
+        return;
+      }
+    }
+
+    var filters = buildFilters();
+    if (memberIdFilter) {
+      filters.push({ column: 'member_id', op: 'in', value: memberIdFilter });
+    }
+
     var result = await api.fetchList('kindergartens', {
-      select: '*, education_completions(completed_count, total_count)',
-      filters: buildFilters(),
+      select: '*, members!member_id(name, phone), education_completions(completed_topics, total_topics)',
+      filters: filters,
       orFilters: buildSearchOr(),
       orderBy: 'created_at',
       ascending: false,
@@ -128,37 +175,72 @@
       return;
     }
 
+    // 후기 수 / 상주동물 수 집계 (kgId 목록으로 일괄 조회)
+    var kgIds = result.data.map(function (kg) { return kg.id; });
+    var reviewCounts = {};
+    var residentCounts = {};
+
+    var sbClient = window.__supabase;
+    // 후기 수 집계
+    var revRes = await sbClient.from('kindergarten_reviews')
+      .select('kindergarten_id')
+      .in('kindergarten_id', kgIds);
+    if (revRes.data) {
+      revRes.data.forEach(function (r) {
+        reviewCounts[r.kindergarten_id] = (reviewCounts[r.kindergarten_id] || 0) + 1;
+      });
+    }
+    // 상주동물 수 집계
+    var rpRes = await sbClient.from('kindergarten_resident_pets')
+      .select('kindergarten_id')
+      .in('kindergarten_id', kgIds);
+    if (rpRes.data) {
+      rpRes.data.forEach(function (r) {
+        residentCounts[r.kindergarten_id] = (residentCounts[r.kindergarten_id] || 0) + 1;
+      });
+    }
+
     var startIdx = (currentPage - 1) * PER_PAGE;
     var html = '';
 
     for (var i = 0; i < result.data.length; i++) {
       var kg = result.data[i];
       var idx = startIdx + i + 1;
-      var loc = ((kg.complex_name || '') + ' ' + (kg.building || '')).trim() || '-';
-      var freshVal = kg.freshness != null ? kg.freshness + '%' : '-';
-      var freshCls = freshnessClass(kg.freshness);
 
-      // 교육이수
+      // [B] DB 실제 컬럼명 사용
+      var memberInfo = kg.members || {};
+      var operatorName = memberInfo.name || '-';
+      var operatorPhone = memberInfo.phone || '';
+
+      var loc = ((kg.address_complex || '') + ' ' + (kg.address_building_dong || '')).trim() || '-';
+      var freshVal = kg.freshness_current != null ? kg.freshness_current + '%' : '-';
+      var freshCls = freshnessClass(kg.freshness_current);
+
+      // 교육이수 — DB 컬럼: completed_topics / total_topics
       var eduComp = kg.education_completions;
       var compCount = 0, totalCount = 0;
       if (Array.isArray(eduComp) && eduComp.length > 0) {
-        compCount = eduComp[0].completed_count || 0;
-        totalCount = eduComp[0].total_count || 0;
+        compCount = eduComp[0].completed_topics || 0;
+        totalCount = eduComp[0].total_topics || 0;
       }
+
+      // 후기 수 / 상주동물 수 (집계 결과)
+      var revCount = reviewCounts[kg.id] || 0;
+      var rpCount = residentCounts[kg.id] || 0;
 
       html += '<tr>' +
         '<td>' + idx + '</td>' +
         '<td style="font-weight:700;color:var(--text-primary);">' + api.escapeHtml(kg.name) + '</td>' +
-        '<td>' + api.escapeHtml(kg.operator_name || '-') + '</td>' +
-        '<td class="masked">' + api.maskPhone(kg.operator_phone) + '</td>' +
-        '<td>' + thumbHtml(kg.main_image_url) + '</td>' +
+        '<td>' + api.escapeHtml(operatorName) + '</td>' +
+        '<td class="masked">' + api.maskPhone(operatorPhone) + '</td>' +
+        '<td>' + thumbHtml(kg.photo_urls) + '</td>' +
         '<td>' + api.escapeHtml(loc) + '</td>' +
-        '<td>' + api.autoBadge(kg.status || '-') + '</td>' +
+        '<td>' + api.autoBadge(kg.business_status || '-') + '</td>' +
         '<td class="' + freshCls + '">' + freshVal + '</td>' +
-        '<td class="text-right">' + api.formatNumber(kg.review_count || 0) + '</td>' +
-        '<td class="text-right">' + api.formatNumber(kg.resident_pet_count || 0) + '</td>' +
+        '<td class="text-right">' + api.formatNumber(revCount) + '</td>' +
+        '<td class="text-right">' + api.formatNumber(rpCount) + '</td>' +
         '<td>' + eduBadge(compCount, totalCount) + '</td>' +
-        '<td>' + api.autoBadge(kg.address_verified || '미인증') + '</td>' +
+        '<td>' + api.autoBadge(kg.address_auth_status || '미인증') + '</td>' +
         '<td>' + api.autoBadge(kg.settlement_status || '작성중') + '</td>' +
         '<td>' + api.autoBadge(kg.inicis_status || '미등록') + '</td>' +
         '<td style="color:var(--text-weak);">' + api.formatDate(kg.created_at, true) + '</td>' +
@@ -174,8 +256,10 @@
     api.renderPagination(pagination, currentPage, total, PER_PAGE, function (p) { loadKgList(p); });
   }
 
+  // [J] 엑셀 내보내기 — DB 컬럼명 반영
   async function exportKgExcel() {
     var result = await api.fetchAll('kindergartens', {
+      select: '*, members!member_id(name, phone)',
       filters: buildFilters(),
       orFilters: buildSearchOr(),
       orderBy: 'created_at',
@@ -188,26 +272,23 @@
       { key: 'operator_name', label: '운영자' },
       { key: 'phone_masked', label: '운영자 연락처' },
       { key: 'location', label: '위치' },
-      { key: 'status', label: '영업' },
+      { key: 'business_status', label: '영업' },
       { key: 'freshness', label: '신선도' },
-      { key: 'review_count', label: '후기' },
-      { key: 'resident_pet_count', label: '상주동물' },
-      { key: 'address_verified', label: '주소인증' },
+      { key: 'address_auth_status', label: '주소인증' },
       { key: 'settlement_status', label: '정산정보' },
       { key: 'inicis_status', label: '이니시스' },
       { key: 'created_date', label: '등록일' }
     ];
     var rows = result.data.map(function (kg) {
+      var memberInfo = kg.members || {};
       return {
         name: kg.name,
-        operator_name: kg.operator_name || '',
-        phone_masked: api.maskPhone(kg.operator_phone),
-        location: ((kg.complex_name || '') + ' ' + (kg.building || '')).trim() || '-',
-        status: kg.status || '',
-        freshness: kg.freshness != null ? kg.freshness + '%' : '-',
-        review_count: kg.review_count || 0,
-        resident_pet_count: kg.resident_pet_count || 0,
-        address_verified: kg.address_verified || '미인증',
+        operator_name: memberInfo.name || '',
+        phone_masked: api.maskPhone(memberInfo.phone),
+        location: ((kg.address_complex || '') + ' ' + (kg.address_building_dong || '')).trim() || '-',
+        business_status: kg.business_status || '',
+        freshness: kg.freshness_current != null ? kg.freshness_current + '%' : '-',
+        address_auth_status: kg.address_auth_status || '미인증',
         settlement_status: kg.settlement_status || '작성중',
         inicis_status: kg.inicis_status || '미등록',
         created_date: api.formatDate(kg.created_at, true)
@@ -237,29 +318,37 @@
     return !!document.getElementById('detailKgInfo');
   }
 
+  // [E] 상세 기본정보 — DB 컬럼 매핑 전체 수정
   async function initDetailPage() {
     var kgId = api.getParam('id');
     if (!kgId) { alert('유치원 ID가 없습니다.'); return; }
 
-    var res = await api.fetchDetail('kindergartens', kgId);
-    if (res.error || !res.data) { alert('유치원 정보를 불러올 수 없습니다.'); return; }
-    var kg = res.data;
+    // 상세 조회 + 운영자 정보 조인
+    var sb = window.__supabase;
+    var detailRes = await sb.from('kindergartens')
+      .select('*, members!member_id(name, phone)')
+      .eq('id', kgId)
+      .single();
+
+    if (detailRes.error || !detailRes.data) { alert('유치원 정보를 불러올 수 없습니다.'); return; }
+    var kg = detailRes.data;
+    var memberInfo = kg.members || {};
 
     // ① 기본정보
     api.setTextById('kgIdText', kg.id ? kg.id.slice(0, 8).toUpperCase() : '-');
     api.setTextById('kgName', kg.name || '-');
-    api.setHtmlById('kgBizStatus', api.autoBadge(kg.status || '-'));
+    api.setHtmlById('kgBizStatus', api.autoBadge(kg.business_status || '-'));
     api.setTextById('kgCreated', api.formatDate(kg.created_at));
 
     // 소개글
     var introEl = document.getElementById('introText');
     if (introEl && kg.description) introEl.textContent = kg.description;
 
-    // 사진
+    // 사진 — photo_urls (text 배열)
     var gallery = document.getElementById('kgPhotoGallery');
-    if (gallery && kg.image_urls) {
-      var imgs = [];
-      try { imgs = typeof kg.image_urls === 'string' ? JSON.parse(kg.image_urls) : kg.image_urls; } catch (e) {}
+    if (gallery && kg.photo_urls) {
+      var imgs = kg.photo_urls;
+      if (typeof imgs === 'string') { try { imgs = JSON.parse(imgs); } catch (e) { imgs = []; } }
       if (Array.isArray(imgs) && imgs.length > 0) {
         var gHtml = '';
         imgs.forEach(function (url, idx) {
@@ -270,36 +359,66 @@
       }
     }
 
-    // ② 운영자 정보
-    api.setTextById('opName', kg.operator_name || '-');
+    // ② 운영자 정보 — members 조인 결과
+    api.setTextById('opName', memberInfo.name || '-');
     api.setHtmlById('opPhone', api.renderMaskedField(
-      api.maskPhone(kg.operator_phone), api.formatPhone(kg.operator_phone), 'kindergartens', kgId, 'operator_phone'
+      api.maskPhone(memberInfo.phone), api.formatPhone(memberInfo.phone), 'kindergartens', kgId, 'operator_phone'
     ));
     if (kg.member_id) {
       api.setHtmlById('opMemberId', api.renderDetailLink('member-detail.html', kg.member_id, kg.member_id.slice(0, 8).toUpperCase()));
     }
 
-    // ③ 주소 정보
-    api.setTextById('kgAddrRoad', kg.road_address || '-');
-    api.setTextById('kgAddrJibun', kg.jibun_address || '-');
-    api.setTextById('kgAddrComplex', kg.complex_name || '-');
-    api.setTextById('kgAddrBuilding', kg.building || '-');
+    // ③ 주소 정보 — DB 컬럼명: address_road, address_jibun, address_complex, address_building_dong, address_building_ho
+    api.setTextById('kgAddrRoad', kg.address_road || '-');
+    api.setTextById('kgAddrJibun', kg.address_jibun || '-');
+    api.setTextById('kgAddrComplex', kg.address_complex || '-');
+    api.setTextById('kgAddrBuilding', kg.address_building_dong || '-');
     api.setHtmlById('kgAddrHo', api.renderMaskedField(
-      api.maskHo(kg.unit_number), (kg.unit_number || '-') + '호', 'kindergartens', kgId, 'unit_number'
+      api.maskHo(kg.address_building_ho), (kg.address_building_ho || '-'), 'kindergartens', kgId, 'address_building_ho'
     ));
-    api.setHtmlById('kgAddrVerified', api.autoBadge(kg.address_verified || '미인증'));
-    api.setTextById('kgAddrVerifiedDate', kg.address_verified_at ? api.formatDate(kg.address_verified_at) : '\u2014');
+    api.setHtmlById('kgAddrVerified', api.autoBadge(kg.address_auth_status || '미인증'));
+    api.setTextById('kgAddrVerifiedDate', kg.address_auth_date ? api.formatDate(kg.address_auth_date) : '\u2014');
 
-    // ④ 신선도 정보
-    var freshVal = kg.freshness != null ? kg.freshness : 100;
+    // ④ 신선도 정보 — freshness_current / freshness_initial
+    var freshVal = kg.freshness_current != null ? kg.freshness_current : 100;
     var freshColor = freshVal >= 100 ? '#2ECC71' : '#E05A3A';
     api.setHtmlById('freshCurrent', '<span style="font-size:28px;font-weight:700;color:' + freshColor + ';">' + freshVal + '%</span>');
-    api.setTextById('freshInitial', '100%');
-    api.setTextById('freshCareCount', (kg.care_count || 0) + '건');
-    api.setTextById('freshReviewCount', (kg.review_count || 0) + '건');
-    api.setTextById('freshPositiveRate', (kg.positive_rate || 0) + '%');
-    api.setTextById('freshKgNoshow', (kg.kg_noshow_count || 0) + '회');
-    api.setTextById('freshKgCancel', (kg.kg_cancel_count || 0) + '회');
+    api.setTextById('freshInitial', (kg.freshness_initial || 100) + '%');
+
+    // 돌봄 건수, 후기 수, 긍정률 — DB에 직접 컬럼 없으므로 집계 조회
+    var careCountRes = await sb.from('reservations')
+      .select('id', { count: 'exact', head: true })
+      .eq('kindergarten_id', kgId)
+      .eq('status', '돌봄완료');
+    api.setTextById('freshCareCount', (careCountRes.count || 0) + '건');
+
+    var revCountRes = await sb.from('kindergarten_reviews')
+      .select('id', { count: 'exact', head: true })
+      .eq('kindergarten_id', kgId);
+    api.setTextById('freshReviewCount', (revCountRes.count || 0) + '건');
+
+    // 긍정률: '최고예요!' 또는 '좋았어요' 비율
+    var revAllRes = await sb.from('kindergarten_reviews')
+      .select('satisfaction')
+      .eq('kindergarten_id', kgId);
+    var positiveRate = 0;
+    if (revAllRes.data && revAllRes.data.length > 0) {
+      var positiveCount = revAllRes.data.filter(function (r) {
+        return r.satisfaction === '최고예요!' || r.satisfaction === '좋았어요';
+      }).length;
+      positiveRate = Math.round((positiveCount / revAllRes.data.length) * 100);
+    }
+    api.setTextById('freshPositiveRate', positiveRate + '%');
+
+    // 노쇼 횟수 — noshow_count
+    api.setTextById('freshKgNoshow', (kg.noshow_count || 0) + '회');
+
+    // 취소 횟수 — reservations에서 유치원취소 집계
+    var cancelRes = await sb.from('reservations')
+      .select('id', { count: 'exact', head: true })
+      .eq('kindergarten_id', kgId)
+      .eq('status', '유치원취소');
+    api.setTextById('freshKgCancel', (cancelRes.count || 0) + '회');
 
     // ⑤ 상주 반려동물
     loadResidentPets(kgId);
@@ -322,7 +441,7 @@
     // ⑪ 상태 변경 이력
     loadKgStatusLogs(kgId);
 
-    // 액션 버튼 바인딩
+    // [K] 액션 버튼 바인딩 — business_status / address_auth_status
     bindKgActions(kgId, kg);
     api.hideIfReadOnly(PERM_KEY, ['.detail-actions', '.btn-action']);
     api.insertAuditLog('유치원조회', 'kindergartens', kgId, { name: kg.name });
@@ -333,7 +452,7 @@
     if (!tbody) return;
 
     var res = await api.fetchList('kindergarten_resident_pets', {
-      select: '*, pets(name, breed, gender, birth_date, weight, is_neutered, id)',
+      select: '*, pets!pet_id(name, breed, gender, birth_date, weight, is_neutered, id)',
       filters: [{ column: 'kindergarten_id', op: 'eq', value: kgId }],
       perPage: 50
     });
@@ -359,32 +478,45 @@
     tbody.innerHTML = html;
   }
 
+  // [F] 가격표 — 개별 12컬럼에서 직접 접근
   function loadPriceTable(kg) {
-    // 가격 정보가 JSON으로 저장되어 있는 경우
     var tbody = document.getElementById('priceTableBody');
     if (!tbody) return;
 
-    var prices = kg.prices;
-    if (!prices) return; // 더미 HTML 유지
+    var naSpan = '<span class="na">\u2014</span>';
+    var html = '';
 
-    try {
-      var p = typeof prices === 'string' ? JSON.parse(prices) : prices;
-      var html = '';
-      var sizes = ['소형', '중형', '대형'];
-      sizes.forEach(function (size) {
-        var row = p[size] || {};
-        html += '<tr>' +
-          '<td>' + size + '</td>' +
-          '<td>' + (row.hour_1 ? api.formatMoney(row.hour_1) : '<span class="na">\u2014</span>') + '</td>' +
-          '<td>' + (row.hour_24 ? api.formatMoney(row.hour_24) : '<span class="na">\u2014</span>') + '</td>' +
-          '<td>' + (row.walk ? api.formatMoney(row.walk) : '<span class="na">\u2014</span>') + '</td>' +
-          '<td>' + (row.pickup ? api.formatMoney(row.pickup) : '<span class="na">\u2014</span>') + '</td>' +
-          '</tr>';
-      });
-      tbody.innerHTML = html;
-    } catch (e) { /* keep static */ }
+    // 소형
+    html += '<tr>' +
+      '<td>소형</td>' +
+      '<td>' + (kg.price_small_1h != null ? api.formatMoney(kg.price_small_1h) : naSpan) + '</td>' +
+      '<td>' + (kg.price_small_24h != null ? api.formatMoney(kg.price_small_24h) : naSpan) + '</td>' +
+      '<td>' + (kg.price_small_walk != null ? api.formatMoney(kg.price_small_walk) : naSpan) + '</td>' +
+      '<td>' + (kg.price_small_pickup != null ? api.formatMoney(kg.price_small_pickup) : naSpan) + '</td>' +
+      '</tr>';
+
+    // 중형
+    html += '<tr>' +
+      '<td>중형</td>' +
+      '<td>' + (kg.price_medium_1h != null ? api.formatMoney(kg.price_medium_1h) : naSpan) + '</td>' +
+      '<td>' + (kg.price_medium_24h != null ? api.formatMoney(kg.price_medium_24h) : naSpan) + '</td>' +
+      '<td>' + (kg.price_medium_walk != null ? api.formatMoney(kg.price_medium_walk) : naSpan) + '</td>' +
+      '<td>' + (kg.price_medium_pickup != null ? api.formatMoney(kg.price_medium_pickup) : naSpan) + '</td>' +
+      '</tr>';
+
+    // 대형
+    html += '<tr>' +
+      '<td>대형</td>' +
+      '<td>' + (kg.price_large_1h != null ? api.formatMoney(kg.price_large_1h) : naSpan) + '</td>' +
+      '<td>' + (kg.price_large_24h != null ? api.formatMoney(kg.price_large_24h) : naSpan) + '</td>' +
+      '<td>' + (kg.price_large_walk != null ? api.formatMoney(kg.price_large_walk) : naSpan) + '</td>' +
+      '<td>' + (kg.price_large_pickup != null ? api.formatMoney(kg.price_large_pickup) : naSpan) + '</td>' +
+      '</tr>';
+
+    tbody.innerHTML = html;
   }
 
+  // [G] 교육이수 — completed_topics / total_topics / all_completed_at
   async function loadEducationInfo(kgId) {
     var sb = window.__supabase;
     var res = await sb.from('education_completions')
@@ -395,59 +527,66 @@
 
     var edu = res.data;
     if (edu) {
-      var isComplete = edu.completed_count >= edu.total_count;
+      var isComplete = edu.completed_topics >= edu.total_topics;
       api.setHtmlById('eduStatus', isComplete ? api.renderBadge('이수완료', 'green') : api.renderBadge('진행중', 'orange'));
 
-      var pct = edu.total_count ? Math.round((edu.completed_count / edu.total_count) * 100) : 0;
+      var pct = edu.total_topics ? Math.round((edu.completed_topics / edu.total_topics) * 100) : 0;
       api.setHtmlById('eduProgress',
         '<div class="progress-bar"><div class="progress-bar__track"><div class="progress-bar__fill" style="width:' + pct + '%;"></div></div>' +
-        '<span class="progress-bar__text">' + edu.completed_count + ' / ' + edu.total_count + '</span></div>');
+        '<span class="progress-bar__text">' + edu.completed_topics + ' / ' + edu.total_topics + '</span></div>');
 
-      api.setTextById('eduCompletedDate', edu.completed_at ? api.formatDate(edu.completed_at) : '\u2014');
+      api.setTextById('eduCompletedDate', edu.all_completed_at ? api.formatDate(edu.all_completed_at) : '\u2014');
     } else {
       api.setHtmlById('eduStatus', api.renderBadge('미시작', 'gray'));
       api.setHtmlById('eduProgress', '<div class="progress-bar"><div class="progress-bar__track"><div class="progress-bar__fill" style="width:0%;"></div></div><span class="progress-bar__text">0 / 0</span></div>');
       api.setTextById('eduCompletedDate', '\u2014');
     }
 
-    // 서약서 동의
+    // [I] 서약서 동의 — apply_status = '현재 적용중'
     var pledgeRes = await sb.from('pledges')
       .select('id')
-      .eq('is_current', true)
+      .eq('apply_status', '현재 적용중')
       .limit(1)
       .maybeSingle();
 
-    // TODO: 서약서 동의 여부 체크 (pledge_agreements 테이블)
-    api.setHtmlById('pledgeStatus', api.renderBadge('미확인', 'gray'));
-    api.setTextById('pledgeDate', '\u2014');
+    // 서약서 동의 여부: education_completions에 pledge_agreed 컬럼 확인
+    if (edu && edu.pledge_agreed) {
+      api.setHtmlById('pledgeStatus', api.renderBadge('동의완료', 'green'));
+      api.setTextById('pledgeDate', edu.pledge_agreed_at ? api.formatDate(edu.pledge_agreed_at) : '\u2014');
+    } else {
+      api.setHtmlById('pledgeStatus', api.renderBadge('미동의', 'gray'));
+      api.setTextById('pledgeDate', '\u2014');
+    }
   }
 
+  // 정산정보 — inicis_submall_code
   async function loadSettlementInfo(kgId, kg) {
     api.setHtmlById('settlementReview', api.autoBadge(kg.settlement_status || '작성중'));
     api.setHtmlById('settlementInicis', api.autoBadge(kg.inicis_status || '미등록'));
-    api.setTextById('settlementInicisCode', kg.inicis_code || '-');
+    api.setTextById('settlementInicisCode', kg.inicis_submall_code || '-');
     api.setTextById('settlementSellerId', kg.seller_id || '-');
   }
 
+  // 정산 요약 — payments 테이블에 kindergarten_id 컬럼 존재 확인됨
+  // payments에는 payment_type 컬럼 없음 → settlements의 transaction_type으로 집계
   async function loadSettlementSummary(kgId) {
     var sb = window.__supabase;
 
-    // 누적 돌봄 결제금액
+    // 누적 돌봄 결제금액 — payments에서 status='결제완료'인 것
     var careRes = await sb.from('payments')
       .select('amount')
       .eq('kindergarten_id', kgId)
-      .eq('status', '결제완료')
-      .eq('payment_type', '돌봄');
+      .eq('status', '결제완료');
     var careTotal = 0;
     if (careRes.data) careRes.data.forEach(function (r) { careTotal += (r.amount || 0); });
 
-    // 누적 위약금
-    var penRes = await sb.from('payments')
-      .select('amount')
+    // 위약금은 settlements의 transaction_type='위약금' 으로 집계
+    var penRes = await sb.from('settlements')
+      .select('payment_amount')
       .eq('kindergarten_id', kgId)
-      .eq('payment_type', '위약금');
+      .eq('transaction_type', '위약금');
     var penTotal = 0;
-    if (penRes.data) penRes.data.forEach(function (r) { penTotal += (r.amount || 0); });
+    if (penRes.data) penRes.data.forEach(function (r) { penTotal += (r.payment_amount || 0); });
 
     var totalValid = careTotal + penTotal;
     var platformFee = Math.round(totalValid * 0.2);
@@ -471,11 +610,28 @@
     api.setTextById('sumPending', api.formatNumber(pending > 0 ? pending : 0));
   }
 
+  // [H] 노쇼 이력 — noshow_records에 kindergarten_id 없음
+  //     → reservation_id → reservations.kindergarten_id 경유 조회
   async function loadKgNoshows(kgId) {
     var sb = window.__supabase;
+
+    // 1단계: 이 유치원의 reservation_id 목록 확보
+    var resRes = await sb.from('reservations')
+      .select('id')
+      .eq('kindergarten_id', kgId);
+    var reservationIds = (resRes.data || []).map(function (r) { return r.id; });
+
+    if (reservationIds.length === 0) {
+      api.setHtmlById('kgNoshowCount', '<span style="color:#E05A3A;font-weight:700;">0회</span>');
+      var tbody = document.getElementById('kgNoshowBody');
+      if (tbody) api.showTableEmpty(tbody, 5, '노쇼 기록이 없습니다.');
+      return;
+    }
+
+    // 2단계: noshow_records에서 해당 reservation_id로 조회
     var res = await sb.from('noshow_records')
       .select('*', { count: 'exact' })
-      .eq('kindergarten_id', kgId);
+      .in('reservation_id', reservationIds);
 
     var count = res.count || 0;
     api.setHtmlById('kgNoshowCount', '<span style="color:#E05A3A;font-weight:700;">' + count + '회</span>');
@@ -534,24 +690,25 @@
     tbody.innerHTML = html;
   }
 
+  // [K] 액션 버튼 — business_status / address_auth_status
   function bindKgActions(kgId, kg) {
     // 영업상태 변경
     var btnBizStatus = document.getElementById('btnBizStatus');
     if (btnBizStatus) {
       btnBizStatus.addEventListener('click', async function () {
-        var newStatus = kg.status === '영업중' ? '방학중' : '영업중';
+        var newStatus = kg.business_status === '영업중' ? '방학중' : '영업중';
         if (!confirm('영업 상태를 "' + newStatus + '"로 변경하시겠습니까?')) return;
-        await api.updateRecord('kindergartens', kgId, { status: newStatus });
+        await api.updateRecord('kindergartens', kgId, { business_status: newStatus });
         var admin = auth.getAdmin();
         await api.insertRecord('kindergarten_status_logs', {
           kindergarten_id: kgId,
           changed_field: '영업상태',
-          prev_value: kg.status,
+          prev_value: kg.business_status,
           new_value: newStatus,
           changed_by: admin ? '관리자 (' + admin.name + ')' : '관리자',
           note: '관리자 수동 변경'
         });
-        api.insertAuditLog('상태변경', 'kindergartens', kgId, { field: '영업상태', from: kg.status, to: newStatus });
+        api.insertAuditLog('상태변경', 'kindergartens', kgId, { field: '영업상태', from: kg.business_status, to: newStatus });
         alert('영업 상태가 변경되었습니다.');
         location.reload();
       });
@@ -563,7 +720,7 @@
     if (btnAddrApprove) {
       btnAddrApprove.addEventListener('click', async function () {
         if (!confirm('주소 인증을 승인하시겠습니까?')) return;
-        await api.updateRecord('kindergartens', kgId, { address_verified: '인증완료', address_verified_at: new Date().toISOString() });
+        await api.updateRecord('kindergartens', kgId, { address_auth_status: '인증완료', address_auth_date: new Date().toISOString() });
         api.insertAuditLog('주소인증승인', 'kindergartens', kgId, {});
         alert('승인되었습니다.');
         location.reload();
@@ -572,10 +729,134 @@
     if (btnAddrReject) {
       btnAddrReject.addEventListener('click', async function () {
         if (!confirm('주소 인증을 거절하시겠습니까?')) return;
-        await api.updateRecord('kindergartens', kgId, { address_verified: '미인증' });
+        await api.updateRecord('kindergartens', kgId, { address_auth_status: '미인증' });
         api.insertAuditLog('주소인증거절', 'kindergartens', kgId, {});
         alert('거절되었습니다.');
         location.reload();
+      });
+    }
+
+    // ──── 서류 확인 버튼 ────
+    var btnDocView = document.getElementById('btnDocView');
+    if (btnDocView) {
+      btnDocView.addEventListener('click', async function (e) {
+        e.preventDefault();
+        var overlay = document.getElementById('modalDocOverlay');
+        var body = document.getElementById('modalDocBody');
+        if (!overlay || !body) return;
+
+        // 모달 열기
+        overlay.classList.add('active');
+        body.innerHTML = '<p style="text-align:center;color:var(--text-weak);padding:40px 0;">불러오는 중...</p>';
+
+        // address_doc_urls 조회 (select에 포함되지 않았을 수 있으므로 별도 조회)
+        var sb = window.__supabase;
+        var docRes = await sb.from('kindergartens')
+          .select('address_doc_urls')
+          .eq('id', kgId)
+          .single();
+
+        var docUrls = (docRes.data && docRes.data.address_doc_urls) || [];
+        if (typeof docUrls === 'string') { try { docUrls = JSON.parse(docUrls); } catch (ex) { docUrls = []; } }
+
+        if (!Array.isArray(docUrls) || docUrls.length === 0) {
+          body.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--text-weak);">' +
+            '<svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>' +
+            '<p style="margin-top:12px;font-size:14px;">제출된 서류가 없습니다.</p></div>';
+          return;
+        }
+
+        var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">';
+        docUrls.forEach(function (url, idx) {
+          var ext = url.split('.').pop().toLowerCase();
+          var isPdf = ext === 'pdf';
+          if (isPdf) {
+            html += '<a href="' + api.escapeHtml(url) + '" target="_blank" class="doc-item" style="display:flex;align-items:center;justify-content:center;border:1px solid #e0e0e0;border-radius:8px;padding:20px;text-decoration:none;color:var(--text-primary);">' +
+              '<svg width="32" height="32" viewBox="0 0 24 24" fill="#E05A3A"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2H9v-2H7v-2h2v-2H7V9h2V7h2v2h2v2zm-1-5V3.5L17.5 9H13z"/></svg>' +
+              '<span style="margin-left:8px;">서류 ' + (idx + 1) + ' (PDF)</span></a>';
+          } else {
+            html += '<div style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">' +
+              '<a href="' + api.escapeHtml(url) + '" target="_blank">' +
+              '<img src="' + api.escapeHtml(url) + '" alt="서류 ' + (idx + 1) + '" style="width:100%;height:auto;display:block;">' +
+              '</a></div>';
+          }
+        });
+        html += '</div>';
+        body.innerHTML = html;
+
+        api.insertAuditLog('서류확인', 'kindergartens', kgId, { doc_count: docUrls.length });
+      });
+    }
+
+    // 모달 닫기 핸들러 (서류 확인 모달)
+    var modalOverlay = document.getElementById('modalDocOverlay');
+    if (modalOverlay) {
+      // 닫기 버튼
+      modalOverlay.querySelectorAll('[data-modal-close]').forEach(function (btn) {
+        btn.addEventListener('click', function () { modalOverlay.classList.remove('active'); });
+      });
+      // 오버레이 클릭으로 닫기
+      modalOverlay.addEventListener('click', function (e) {
+        if (e.target === modalOverlay) modalOverlay.classList.remove('active');
+      });
+    }
+
+    // ──── 서브몰 재등록 요청 버튼 ────
+    var btnSubmallReregister = document.getElementById('btnSubmallReregister');
+    if (btnSubmallReregister) {
+      btnSubmallReregister.addEventListener('click', async function () {
+        if (kg.inicis_status === '등록요청') {
+          alert('이미 서브몰 등록 요청 상태입니다.');
+          return;
+        }
+        if (!confirm('이니시스 서브몰 재등록을 요청하시겠습니까?\n현재 상태: ' + (kg.inicis_status || '미등록'))) return;
+
+        var prevStatus = kg.inicis_status || '미등록';
+        await api.updateRecord('kindergartens', kgId, { inicis_status: '등록요청' });
+
+        // 상태 변경 이력 기록
+        var admin = auth.getAdmin();
+        await api.insertRecord('kindergarten_status_logs', {
+          kindergarten_id: kgId,
+          changed_field: '이니시스 상태',
+          prev_value: prevStatus,
+          new_value: '등록요청',
+          changed_by: admin ? '관리자 (' + admin.name + ')' : '관리자',
+          note: '서브몰 재등록 요청'
+        });
+        api.insertAuditLog('서브몰재등록요청', 'kindergartens', kgId, { from: prevStatus, to: '등록요청' });
+        alert('서브몰 재등록이 요청되었습니다.');
+        location.reload();
+      });
+    }
+
+    // ──── 정산정보 보기 버튼 ────
+    // settlement_infos 테이블에서 해당 유치원의 정산정보 레코드를 찾아 상세 페이지로 이동
+    var btnGoSettlement = document.getElementById('btnGoSettlement');
+    if (btnGoSettlement) {
+      btnGoSettlement.addEventListener('click', async function (e) {
+        e.preventDefault();
+        var sb = window.__supabase;
+        var siRes = await sb.from('settlement_infos')
+          .select('id')
+          .eq('kindergarten_id', kgId)
+          .limit(1)
+          .maybeSingle();
+
+        if (siRes.data && siRes.data.id) {
+          window.location.href = 'settlement-info-detail.html?id=' + encodeURIComponent(siRes.data.id);
+        } else {
+          alert('해당 유치원의 정산정보가 아직 등록되지 않았습니다.');
+        }
+      });
+    }
+
+    // ──── 정산내역 전체 보기 버튼 ────
+    // settlements는 유치원당 N건이므로 정산관리 목록(정산내역 탭)에서 유치원으로 필터링하여 표시
+    var btnGoSettlementHistory = document.getElementById('btnGoSettlementHistory');
+    if (btnGoSettlementHistory) {
+      btnGoSettlementHistory.addEventListener('click', function () {
+        window.location.href = 'settlements.html?kindergarten_id=' + encodeURIComponent(kgId) + '&tab=history';
       });
     }
   }

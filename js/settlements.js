@@ -53,6 +53,9 @@
     if (infoDateFrom && infoDateFrom.value) f.push({ column: 'created_at', op: 'gte', value: infoDateFrom.value + 'T00:00:00' });
     if (infoDateTo && infoDateTo.value) f.push({ column: 'created_at', op: 'lte', value: infoDateTo.value + 'T23:59:59' });
     if (infoStatus && infoStatus.value !== '전체') f.push({ column: 'inicis_status', op: 'eq', value: infoStatus.value });
+    // URL 파라미터로 유치원 필터
+    var kgIdParam = api.getParam('kindergarten_id');
+    if (kgIdParam) f.push({ column: 'kindergarten_id', op: 'eq', value: kgIdParam });
     return f;
   }
 
@@ -148,6 +151,9 @@
     if (histDateFrom && histDateFrom.value) f.push({ column: 'scheduled_date', op: 'gte', value: histDateFrom.value });
     if (histDateTo && histDateTo.value) f.push({ column: 'scheduled_date', op: 'lte', value: histDateTo.value });
     if (histStatus && histStatus.value !== '전체') f.push({ column: 'status', op: 'eq', value: histStatus.value });
+    // URL 파라미터로 유치원 필터
+    var kgIdParam = api.getParam('kindergarten_id');
+    if (kgIdParam) f.push({ column: 'kindergarten_id', op: 'eq', value: kgIdParam });
     return f;
   }
 
@@ -265,6 +271,46 @@
     }).catch(function () { /* summary stays as static HTML */ });
   }
 
+  // kindergarten_id 필터 배너 삽입
+  async function renderKgFilterBanner() {
+    var kgId = api.getParam('kindergarten_id');
+    if (!kgId) return;
+
+    // 유치원명 조회
+    var sb = window.__supabase;
+    var res = await sb.from('kindergartens').select('name').eq('id', kgId).maybeSingle();
+    var kgName = (res.data && res.data.name) || kgId.slice(0, 8).toUpperCase();
+
+    // 배너 HTML
+    var bannerHtml =
+      '<div class="kg-filter-banner">' +
+        '<span class="kg-filter-banner__icon">&#9432;</span>' +
+        '<span class="kg-filter-banner__text">' +
+          '<strong>' + api.escapeHtml(kgName) + '</strong> 유치원의 정산 데이터만 표시 중입니다.' +
+        '</span>' +
+        '<a href="#" class="kg-filter-banner__clear">필터 해제 &times;</a>' +
+      '</div>';
+
+    // 정산정보 탭, 정산내역 탭 필터바 바로 아래에 삽입
+    ['tab-info', 'tab-history'].forEach(function (tabId) {
+      var tab = document.getElementById(tabId);
+      if (!tab) return;
+      var filterBar = tab.querySelector('.filter-bar');
+      if (!filterBar) return;
+      filterBar.insertAdjacentHTML('afterend', bannerHtml);
+    });
+
+    // 필터 해제 클릭 → kindergarten_id 파라미터만 제거하고 리로드
+    document.querySelectorAll('.kg-filter-banner__clear').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var url = new URL(window.location.href);
+        url.searchParams.delete('kindergarten_id');
+        window.location.href = url.toString();
+      });
+    });
+  }
+
   function initList() {
     cacheInfoDom();
     cacheHistDom();
@@ -273,6 +319,15 @@
     loadInfoList(1);
     loadHistList(1);
     loadSummary();
+    renderKgFilterBanner();
+
+    // URL 파라미터로 탭 자동 전환 (예: ?tab=history)
+    var tabParam = api.getParam('tab');
+    if (tabParam) {
+      var targetId = 'tab-' + tabParam;  // tab=history → tab-history
+      var targetBtn = document.querySelector('[data-tab-target="' + targetId + '"]');
+      if (targetBtn) targetBtn.click();
+    }
   }
 
   /* ══════════════════════════════════════════

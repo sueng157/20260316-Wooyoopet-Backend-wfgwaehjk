@@ -162,7 +162,7 @@
           <span class="info-grid__value" id="kgAddrVerifiedDate">불러오는 중...</span>
 
           <span class="info-grid__label">제출 서류 보기</span>
-          <span class="info-grid__value"><span class="info-grid__value--link">서류 확인</span></span>
+          <span class="info-grid__value"><a href="#" class="info-grid__value--link" id="btnDocView">서류 확인</a></span>
         </div>
       </div>
 
@@ -278,7 +278,7 @@
         <div class="detail-card__header">
           <span class="detail-card__title">⑧ 정산정보 및 서브몰 등록</span>
           <div class="detail-actions">
-            <button class="btn-action btn-action--outline-primary">서브몰 재등록 요청</button>
+            <button class="btn-action btn-action--outline-primary" id="btnSubmallReregister">서브몰 재등록 요청</button>
           </div>
         </div>
         <div class="info-grid">
@@ -295,7 +295,7 @@
           <span class="info-grid__value" id="settlementSellerId">불러오는 중...</span>
 
           <span class="info-grid__label">정산정보 상세 링크</span>
-          <span class="info-grid__value"><span class="info-grid__value--link">정산관리로 이동</span></span>
+          <span class="info-grid__value"><a href="#" class="info-grid__value--link" id="btnGoSettlement">정산정보 보기</a></span>
         </div>
       </div>
 
@@ -335,7 +335,7 @@
             <div class="stat-card__value" id="sumPending">-</div>
             <div class="stat-card__unit">원</div>
           </div>
-          <div class="stat-card stat-card--link">
+          <div class="stat-card stat-card--link" id="btnGoSettlementHistory" style="cursor:pointer;">
             <div class="stat-card__value">정산내역 전체 보기 →</div>
           </div>
         </div>
@@ -395,6 +395,22 @@
   </main>
 
 </div><!-- .layout -->
+
+<!-- ========== 서류 확인 모달 ========== -->
+<div class="modal-overlay" id="modalDocOverlay">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal__header">
+      <span class="modal__title">제출 서류 확인</span>
+      <button class="modal__close" data-modal-close>&times;</button>
+    </div>
+    <div class="modal__body" id="modalDocBody">
+      <p style="text-align:center;color:var(--text-weak);padding:40px 0;">불러오는 중...</p>
+    </div>
+    <div class="modal__footer">
+      <button class="btn-action btn-action--outline-primary" data-modal-close>닫기</button>
+    </div>
+  </div>
+</div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
