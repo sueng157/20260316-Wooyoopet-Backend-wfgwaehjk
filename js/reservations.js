@@ -96,7 +96,7 @@
     var statusBadge = api.autoBadge(r.status || '', {
       '수락대기': 'orange', '예약확정': 'blue', '돌봄진행중': 'blue',
       '돌봄완료': 'green', '보호자취소': 'gray', '유치원취소': 'gray',
-      '유치원거절': 'red', '노쇼': 'red'
+      '유치원거절': 'red', '노쇼': 'red', '관리자취소': 'red'
     });
 
     return '<tr>' +
@@ -383,10 +383,12 @@
         api.setHtml(payEl, paymentItems);
       }
 
-      // 영역 6: 환불 정보 (조건부)
+      // 영역 6: 환불 정보 (취소 계열 상태일 때만 표시)
+      var cancelStatuses = ['보호자취소', '유치원취소', '관리자취소', '유치원거절'];
+      var isCancelled = cancelStatuses.indexOf(r.status) !== -1;
       var refundEl = document.getElementById('detailResRefund');
       if (refundEl) {
-        if (ref && ref.status) {
+        if (isCancelled && ref && ref.status) {
           refundEl.closest('.detail-card').style.display = '';
           api.setHtml(refundEl, [
             ['취소 요청자', api.autoBadge(ref.requester || '', { '보호자': 'brown', '유치원': 'pink', '관리자': 'red' })],
