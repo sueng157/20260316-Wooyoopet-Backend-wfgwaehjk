@@ -88,3 +88,4 @@
 | 2026-03-29 | `set_pet_size_class` 트리거 함수 추가 | `sql/14_pets_size_class_sync.sql` |
 | 2026-03-29 | `search_reservations` 유치원 주소 반환 필드 변경 (`address_road` → `address_complex` + `address_building_dong`) | `sql/13_search_reservations.sql` |
 | 2026-03-29 | payments 테이블에 금액 내역 컬럼 3개 추가 (`care_fee`, `walk_fee`, `pickup_fee`) | `sql/15_payments_fee_columns.sql` |
+| 2026-03-29 | reservations 테이블 상태 CHECK 제약조건에 `'관리자취소'` 추가 (8→9개 상태) | `sql/16_add_admin_cancel_status.sql` |
