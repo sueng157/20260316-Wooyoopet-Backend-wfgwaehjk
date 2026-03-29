@@ -23,19 +23,21 @@
     return !!document.getElementById('resListBody');
   }
 
-  var filterDateFrom, filterDateTo, filterStatus;
+  var filterDateType, filterDateFrom, filterDateTo, filterStatus, filterSize;
   var filterSearchField, filterSearchInput, btnSearch, btnExcel;
   var resultCount, listBody, pagination;
   var currentPage = 1;
 
   function cacheListDom() {
+    filterDateType = document.getElementById('filterDateType');
+
     var dates = document.querySelectorAll('.filter-input--date');
     filterDateFrom = dates[0];
     filterDateTo   = dates[1];
 
-    var selects = document.querySelectorAll('.filter-select');
-    filterStatus      = selects[0]; // 예약 상태
-    filterSearchField = selects[1]; // 검색 기준
+    filterStatus      = document.getElementById('filterStatus');
+    filterSize        = document.getElementById('filterSize');
+    filterSearchField = document.querySelector('.filter-row:last-child .filter-select');
     filterSearchInput = document.querySelector('.filter-input--search');
     btnSearch = document.querySelector('.btn-search');
     btnExcel  = document.querySelector('.btn-excel');
@@ -48,15 +50,29 @@
   function buildFilters() {
     var filters = [];
 
+    // 기간 유형: 신청일(requested_at/created_at) 또는 등원일(checkin_scheduled)
+    var dateCol = (filterDateType && filterDateType.value === 'checkin')
+      ? 'checkin_scheduled'
+      : 'created_at';
+
     if (filterDateFrom && filterDateFrom.value) {
-      filters.push({ column: 'created_at', op: 'gte', value: filterDateFrom.value + 'T00:00:00' });
+      filters.push({ column: dateCol, op: 'gte', value: filterDateFrom.value + 'T00:00:00' });
     }
     if (filterDateTo && filterDateTo.value) {
-      filters.push({ column: 'created_at', op: 'lte', value: filterDateTo.value + 'T23:59:59' });
+      filters.push({ column: dateCol, op: 'lte', value: filterDateTo.value + 'T23:59:59' });
     }
 
-    if (filterStatus && filterStatus.value !== '전체') {
+    // 예약상태 필터
+    if (filterStatus && filterStatus.value !== '예약상태: 전체') {
       filters.push({ column: 'status', op: 'eq', value: filterStatus.value });
+    }
+
+    // 크기 필터 (pets 조인 컬럼)
+    if (filterSize) {
+      var sizeVal = filterSize.value;
+      if (sizeVal === '소형' || sizeVal === '중형' || sizeVal === '대형') {
+        filters.push({ column: 'pets.size_class', op: 'eq', value: sizeVal });
+      }
     }
 
     return filters;
@@ -77,7 +93,7 @@
 
   function renderRow(r, idx, offset) {
     var no = offset + idx + 1;
-    var memberName = jv(r.members, 'name');
+    var memberNickname = jv(r.members, 'nickname');
     var memberPhone = jv(r.members, 'phone');
     var petName = jv(r.pets, 'name');
     var petSize = jv(r.pets, 'size_class') || '소형';
@@ -102,7 +118,7 @@
     return '<tr>' +
       '<td>' + no + '</td>' +
       '<td>' + api.formatDate(r.requested_at || r.created_at) + '</td>' +
-      '<td>' + api.escapeHtml(memberName) + '</td>' +
+      '<td>' + api.escapeHtml(memberNickname) + '</td>' +
       '<td class="masked">' + api.maskPhone(memberPhone) + '</td>' +
       '<td>' + api.escapeHtml(petName) + '</td>' +
       '<td>' + sizeBadge + '</td>' +
@@ -176,7 +192,7 @@
     if (btnExcel) {
       btnExcel.addEventListener('click', function () {
         api.fetchAll('reservations', {
-          select: '*, members:member_id(name, phone), pets:pet_id(name, size_class), kindergartens:kindergarten_id(name)',
+          select: '*, members:member_id(name, nickname, phone), pets:pet_id(name, size_class), kindergartens:kindergarten_id(name)',
           filters: buildFilters(),
           search: buildSearch(),
           orderBy: 'created_at',
@@ -186,7 +202,7 @@
             return {
               '예약번호': r.id || '',
               '신청일시': r.requested_at || r.created_at || '',
-              '보호자': jv(r.members, 'name'),
+              '보호자 닉네임': jv(r.members, 'nickname'),
               '연락처': jv(r.members, 'phone'),
               '반려동물': jv(r.pets, 'name'),
               '크기': jv(r.pets, 'size_class'),
@@ -200,7 +216,7 @@
           });
           api.exportExcel(data, [
             { key: '예약번호', label: '예약번호' }, { key: '신청일시', label: '신청일시' },
-            { key: '보호자', label: '보호자' }, { key: '연락처', label: '연락처' },
+            { key: '보호자 닉네임', label: '보호자 닉네임' }, { key: '연락처', label: '연락처' },
             { key: '반려동물', label: '반려동물' }, { key: '크기', label: '크기' },
             { key: '유치원명', label: '유치원명' }, { key: '등원일시', label: '등원일시' },
             { key: '하원일시', label: '하원일시' }, { key: '산책', label: '산책' },

@@ -70,15 +70,19 @@
         <!-- 1행: 기간 -->
         <div class="filter-row">
           <span class="filter-label">기간</span>
+          <select id="filterDateType" class="filter-select">
+            <option value="requested">신청일</option>
+            <option value="checkin">등원일</option>
+          </select>
           <input type="date" class="filter-input filter-input--date" value="2025-01-01">
           <span class="filter-separator">~</span>
           <input type="date" class="filter-input filter-input--date" value="2026-12-31">
         </div>
-        <!-- 2행: 예약 상태 -->
+        <!-- 2행: 필터 -->
         <div class="filter-row">
-          <span class="filter-label">상태</span>
-          <select class="filter-select">
-            <option>전체</option>
+          <span class="filter-label">필터</span>
+          <select id="filterStatus" class="filter-select">
+            <option>예약상태: 전체</option>
             <option>수락대기</option>
             <option>예약확정</option>
             <option>돌봄진행중</option>
@@ -88,12 +92,18 @@
             <option>유치원거절</option>
             <option>노쇼</option>
           </select>
+          <select id="filterSize" class="filter-select">
+            <option>크기: 전체</option>
+            <option>소형</option>
+            <option>중형</option>
+            <option>대형</option>
+          </select>
         </div>
         <!-- 3행: 검색 -->
         <div class="filter-row">
           <span class="filter-label">검색</span>
           <select class="filter-select">
-            <option>보호자 이름</option>
+            <option>보호자 닉네임</option>
             <option>반려동물 이름</option>
             <option>유치원명</option>
             <option>예약번호</option>
@@ -121,7 +131,7 @@
             <tr>
               <th>번호</th>
               <th>신청일시</th>
-              <th>보호자 이름</th>
+              <th>보호자 닉네임</th>
               <th>보호자 연락처</th>
               <th>반려동물 이름</th>
               <th>크기</th>
@@ -142,7 +152,7 @@
             <tr>
               <td>1</td>
               <td>2026-03-15 09:12</td>
-              <td>김민수</td>
+              <td>강아지사랑꾼</td>
               <td class="masked">010-****-1234</td>
               <td>코코</td>
               <td><span class="badge badge--c-green">소형</span></td>
@@ -161,7 +171,7 @@
             <tr>
               <td>2</td>
               <td>2026-03-14 14:30</td>
-              <td>이영희</td>
+              <td>뽀삐맘</td>
               <td class="masked">010-****-5678</td>
               <td>몽이</td>
               <td><span class="badge badge--c-green">소형</span></td>
@@ -180,7 +190,7 @@
             <tr>
               <td>3</td>
               <td>2026-03-10 11:45</td>
-              <td>박서연</td>
+              <td>초코아빠</td>
               <td class="masked">010-****-9012</td>
               <td>초코</td>
               <td><span class="badge badge--c-orange">중형</span></td>
@@ -199,7 +209,7 @@
             <tr>
               <td>4</td>
               <td>2026-03-08 08:20</td>
-              <td>최지훈</td>
+              <td>몽이엄마</td>
               <td class="masked">010-****-3456</td>
               <td>뽀삐</td>
               <td><span class="badge badge--c-red">대형</span></td>
@@ -218,7 +228,7 @@
             <tr>
               <td>5</td>
               <td>2026-03-05 16:50</td>
-              <td>정하늘</td>
+              <td>댕댕파파</td>
               <td class="masked">010-****-7890</td>
               <td>보리</td>
               <td><span class="badge badge--c-green">소형</span></td>
@@ -237,7 +247,7 @@
             <tr>
               <td>6</td>
               <td>2026-03-03 10:15</td>
-              <td>한수정</td>
+              <td>강아지사랑꾼</td>
               <td class="masked">010-****-2345</td>
               <td>루이</td>
               <td><span class="badge badge--c-green">소형</span></td>
@@ -256,7 +266,7 @@
             <tr>
               <td>7</td>
               <td>2026-03-01 13:40</td>
-              <td>김민수</td>
+              <td>강아지사랑꾼</td>
               <td class="masked">010-****-1234</td>
               <td>두부</td>
               <td><span class="badge badge--c-green">소형</span></td>
@@ -275,7 +285,7 @@
             <tr>
               <td>8</td>
               <td>2026-02-28 09:55</td>
-              <td>이영희</td>
+              <td>뽀삐맘</td>
               <td class="masked">010-****-5678</td>
               <td>몽이</td>
               <td><span class="badge badge--c-green">소형</span></td>
