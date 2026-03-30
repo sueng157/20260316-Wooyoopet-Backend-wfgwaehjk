@@ -178,39 +178,40 @@
 
         <!-- 필터 바 -->
         <div class="filter-bar">
-          <!-- 1행: 기간 -->
+          <!-- 1행: 요청일 -->
           <div class="filter-row">
-            <span class="filter-label">기간</span>
+            <span class="filter-label">요청일</span>
             <input type="date" class="filter-input filter-input--date" value="2025-01-01">
             <span class="filter-separator">~</span>
-            <input type="date" class="filter-input filter-input--date" value="2026-03-17">
+            <input type="date" class="filter-input filter-input--date" value="2026-03-30">
           </div>
-          <!-- 2행: 처리상태 + 요청자 -->
+          <!-- 2행: 필터 (처리상태 + 요청자) -->
           <div class="filter-row">
-            <span class="filter-label">상태</span>
+            <span class="filter-label">필터</span>
             <select class="filter-select">
-              <option>전체</option>
-              <option>환불대기</option>
-              <option>환불완료</option>
-              <option>환불실패</option>
+              <option value="">처리상태: 전체</option>
+              <option value="환불대기">환불대기</option>
+              <option value="환불완료">환불완료</option>
+              <option value="환불실패">환불실패</option>
             </select>
-            <span class="filter-label">요청자</span>
             <select class="filter-select">
-              <option>전체</option>
-              <option>보호자</option>
-              <option>유치원</option>
-              <option>관리자</option>
+              <option value="">요청자: 전체</option>
+              <option value="보호자">보호자</option>
+              <option value="유치원">유치원</option>
+              <option value="관리자">관리자</option>
             </select>
           </div>
           <!-- 3행: 검색 -->
           <div class="filter-row">
             <span class="filter-label">검색</span>
             <select class="filter-select">
-              <option>보호자 이름</option>
+              <option>보호자 닉네임</option>
+              <option>보호자 연락처</option>
               <option>유치원명</option>
-              <option>결제번호</option>
+              <option>위약금 결제번호</option>
             </select>
             <input type="text" class="filter-input filter-input--search" placeholder="검색어를 입력하세요">
+            <button class="btn-reset">초기화</button>
             <button class="btn-search">검색</button>
           </div>
         </div>
@@ -232,145 +233,23 @@
             <thead>
               <tr>
                 <th>번호</th>
-                <th>취소 요청일시</th>
+                <th>위약금 결제번호</th>
+                <th>환불요청일시</th>
                 <th>요청자</th>
-                <th>보호자 이름</th>
+                <th>보호자 닉네임</th>
+                <th>보호자 연락처</th>
                 <th>유치원명</th>
-                <th>반려동물명</th>
-                <th>원 결제금액</th>
-                <th>환불 금액</th>
-                <th>환불 비율</th>
-                <th>위약금 금액</th>
-                <th>위약금 비율</th>
-                <th>남은시간</th>
+                <th>반려동물 이름</th>
+                <th>환불금액</th>
+                <th>위약금 결제금액</th>
                 <th>처리상태</th>
-                <th>완료일시</th>
-                <th>결제번호</th>
-                <th>예약번호</th>
+                <th>환불완료일시</th>
+                <th>원 결제번호</th>
                 <th>상세</th>
               </tr>
             </thead>
             <tbody id="refListBody">
-              <!-- 1행: 환불대기, 보호자 요청 -->
-              <tr>
-                <td>1</td>
-                <td>2026-03-16 14:30</td>
-                <td><span class="badge badge--c-brown">보호자</span></td>
-                <td>김민수</td>
-                <td>밤톨이네</td>
-                <td>코코</td>
-                <td class="text-right">55,000원</td>
-                <td class="text-right">55,000원</td>
-                <td>100%</td>
-                <td class="text-right">0원</td>
-                <td>0%</td>
-                <td>96시간</td>
-                <td><span class="badge badge--c-orange">환불대기</span></td>
-                <td>—</td>
-                <td><a href="payment-detail.html" class="data-table__link">PAY-00001234</a></td>
-                <td><a href="reservation-detail.html" class="data-table__link">R-00001234</a></td>
-                <td><a href="refund-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <!-- 2행: 환불완료, 유치원 요청, 50% 위약금 -->
-              <tr>
-                <td>2</td>
-                <td>2026-03-14 10:15</td>
-                <td><span class="badge badge--c-pink">유치원</span></td>
-                <td>이영희</td>
-                <td>사랑이네</td>
-                <td>몽이</td>
-                <td class="text-right">90,000원</td>
-                <td class="text-right">90,000원</td>
-                <td>100%</td>
-                <td class="text-right">45,000원</td>
-                <td><span class="refund-penalty-rate--highlighted">50%</span></td>
-                <td>42시간</td>
-                <td><span class="badge badge--c-green">환불완료</span></td>
-                <td>2026-03-14 10:20</td>
-                <td><a href="payment-detail.html" class="data-table__link">PAY-00001230</a></td>
-                <td><a href="reservation-detail.html" class="data-table__link">R-00001230</a></td>
-                <td><a href="refund-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <!-- 3행: 환불완료, 보호자 요청, 100% 위약금 -->
-              <tr>
-                <td>3</td>
-                <td>2026-03-12 16:45</td>
-                <td><span class="badge badge--c-brown">보호자</span></td>
-                <td>박서연</td>
-                <td>행복한강아지</td>
-                <td>초코</td>
-                <td class="text-right">35,000원</td>
-                <td class="text-right">35,000원</td>
-                <td>100%</td>
-                <td class="text-right">35,000원</td>
-                <td><span class="refund-penalty-rate--highlighted">100%</span></td>
-                <td>12시간</td>
-                <td><span class="badge badge--c-green">환불완료</span></td>
-                <td>2026-03-12 16:50</td>
-                <td><a href="payment-detail.html" class="data-table__link">PAY-00001225</a></td>
-                <td><a href="reservation-detail.html" class="data-table__link">R-00001225</a></td>
-                <td><a href="refund-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <!-- 4행: 환불실패, 관리자 요청 -->
-              <tr>
-                <td>4</td>
-                <td>2026-03-10 09:30</td>
-                <td><span class="badge badge--c-red">관리자</span></td>
-                <td>한수정</td>
-                <td>행복한강아지</td>
-                <td>루이</td>
-                <td class="text-right">70,000원</td>
-                <td class="text-right">70,000원</td>
-                <td>100%</td>
-                <td class="text-right">0원</td>
-                <td>0%</td>
-                <td>120시간</td>
-                <td><span class="badge badge--c-red">환불실패</span></td>
-                <td>—</td>
-                <td><a href="payment-detail.html" class="data-table__link">PAY-00001198</a></td>
-                <td><a href="reservation-detail.html" class="data-table__link">R-00001198</a></td>
-                <td><a href="refund-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <!-- 5행: 환불완료, 보호자 요청, 위약금 없음 -->
-              <tr>
-                <td>5</td>
-                <td>2026-03-08 11:00</td>
-                <td><span class="badge badge--c-brown">보호자</span></td>
-                <td>최지훈</td>
-                <td>밤톨이네</td>
-                <td>뽀삐</td>
-                <td class="text-right">120,000원</td>
-                <td class="text-right">120,000원</td>
-                <td>100%</td>
-                <td class="text-right">0원</td>
-                <td>0%</td>
-                <td>168시간</td>
-                <td><span class="badge badge--c-green">환불완료</span></td>
-                <td>2026-03-08 11:05</td>
-                <td><a href="payment-detail.html" class="data-table__link">PAY-00001218</a></td>
-                <td><a href="reservation-detail.html" class="data-table__link">R-00001218</a></td>
-                <td><a href="refund-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <!-- 6행: 환불대기, 유치원 요청 -->
-              <tr>
-                <td>6</td>
-                <td>2026-03-06 15:20</td>
-                <td><span class="badge badge--c-pink">유치원</span></td>
-                <td>정하늘</td>
-                <td>사랑이네</td>
-                <td>보리</td>
-                <td class="text-right">25,000원</td>
-                <td class="text-right">25,000원</td>
-                <td>100%</td>
-                <td class="text-right">12,500원</td>
-                <td><span class="refund-penalty-rate--highlighted">50%</span></td>
-                <td>36시간</td>
-                <td><span class="badge badge--c-orange">환불대기</span></td>
-                <td>—</td>
-                <td><a href="payment-detail.html" class="data-table__link">PAY-00001210</a></td>
-                <td><a href="reservation-detail.html" class="data-table__link">R-00001210</a></td>
-                <td><a href="refund-detail.html" class="data-table__link">상세</a></td>
-              </tr>
+              <!-- JS 로드 후 RPC 데이터로 대체됨 -->
             </tbody>
           </table>
         </div>

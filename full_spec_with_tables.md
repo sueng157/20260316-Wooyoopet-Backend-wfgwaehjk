@@ -1408,4 +1408,17 @@
 |  | 상세 사유 | 직접 작성한 상세 내용 |
 |  | 탈퇴 처리일시 | 실제 탈퇴가 처리된 일시 |
 상세 기능: 확인 처리(미확인→확인으로 변경), 관리자 메모 작성(내부용 메모 기록).
+
+---
+
+## 구현 가이드: RPC 검색 표준 패턴
+
+다른 테이블의 데이터를 조인하여 검색하는 필터가 필요한 경우, **Supabase RPC 함수 방식을 표준 구현 패턴으로 사용**합니다.
+
+현재 적용된 RPC 함수:
+- `search_reservations` — 돌봄예약관리 (reservations → members, pets, kindergartens, payments)
+- `search_payments` — 결제관리 > 결제내역 (payments → members, pets, kindergartens)
+- `search_refunds` — 결제관리 > 환불/위약금 (refunds → members, kindergartens, reservations → pets)
+
+신규 메뉴 개발 시 위 함수들의 구조를 참고하여 동일한 패턴(파라미터 설계, SECURITY DEFINER + is_admin() 권한 체크, json_build_object 반환, ILIKE 검색 매핑, 페이지네이션)으로 RPC 함수를 생성합니다. 상세 가이드는 HANDOVER.md의 5-12 섹션을 참조하세요.
 ---
