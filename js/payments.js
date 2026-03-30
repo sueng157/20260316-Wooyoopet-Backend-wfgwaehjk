@@ -197,12 +197,14 @@
 
   /* ── A-2: 환불/위약금 탭 ── */
   var refDateFrom, refDateTo, refStatus, refRequester, refSearchField, refSearchInput;
-  var refBtnSearch, refBtnExcel, refResultCount, refListBody, refPagination;
+  var refBtnSearch, refBtnReset, refBtnExcel, refResultCount, refListBody, refPagination;
+  var refFilterBar;
   var refPage = 1;
 
   function cacheRefDom() {
     var tab = document.getElementById('tab-refund');
     if (!tab) return;
+    refFilterBar = tab.querySelector('.filter-bar');
     var dates = tab.querySelectorAll('.filter-input--date');
     refDateFrom = dates[0];
     refDateTo   = dates[1];
@@ -212,6 +214,7 @@
     refRequester   = selects[1];
     refSearchField = selects[2];
     refSearchInput = tab.querySelector('.filter-input--search');
+    refBtnReset    = tab.querySelector('.btn-reset');
     refBtnSearch   = tab.querySelector('.btn-search');
     refBtnExcel    = tab.querySelector('.btn-excel');
 
@@ -220,85 +223,132 @@
     refPagination  = tab.querySelector('.pagination');
   }
 
-  function buildRefFilters() {
-    var f = [];
-    if (refDateFrom && refDateFrom.value) f.push({ column: 'requested_at', op: 'gte', value: refDateFrom.value + 'T00:00:00' });
-    if (refDateTo && refDateTo.value) f.push({ column: 'requested_at', op: 'lte', value: refDateTo.value + 'T23:59:59' });
-    if (refStatus && refStatus.value !== '전체') f.push({ column: 'status', op: 'eq', value: refStatus.value });
-    if (refRequester && refRequester.value !== '전체') f.push({ column: 'requester', op: 'eq', value: refRequester.value });
-    return f;
-  }
+  /** RPC 파라미터 조립 (search_refunds) */
+  function buildRefRpcParams(page, perPage) {
+    var params = {
+      p_date_from:      (refDateFrom && refDateFrom.value) ? refDateFrom.value + 'T00:00:00' : null,
+      p_date_to:        (refDateTo && refDateTo.value) ? refDateTo.value + 'T23:59:59' : null,
+      p_status:         (refStatus && refStatus.value) ? refStatus.value : null,
+      p_requester:      (refRequester && refRequester.value) ? refRequester.value : null,
+      p_search_type:    null,
+      p_search_keyword: null,
+      p_page:           page || 1,
+      p_per_page:       perPage || PER_PAGE
+    };
 
-  function buildRefSearch() {
-    if (!refSearchInput || !refSearchInput.value.trim()) return null;
-    var field = refSearchField ? refSearchField.value : '결제번호';
-    if (field === '결제번호') return { column: 'payment_id', value: refSearchInput.value.trim() };
-    return null;
+    if (refSearchInput && refSearchInput.value.trim()) {
+      params.p_search_type = refSearchField ? refSearchField.value : '보호자 닉네임';
+      params.p_search_keyword = refSearchInput.value.trim();
+    }
+
+    return params;
   }
 
   function renderRefRow(r, idx, offset) {
     var no = offset + idx + 1;
-    var memberName = jv(r.members, 'name');
+    var memberNickname = jv(r.members, 'nickname');
+    var memberPhone = jv(r.members, 'phone');
     var kgName = jv(r.kindergartens, 'name');
+    var petName = jv(r.pets, 'name');
     var reqBadge = api.autoBadge(r.requester || '', { '보호자': 'brown', '유치원': 'pink', '관리자': 'red' });
     var statusBadge = api.autoBadge(r.status || '', { '환불대기': 'orange', '환불완료': 'green', '환불실패': 'red' });
-    var penaltyRate = (r.penalty_rate && r.penalty_rate > 0)
-      ? '<span class="refund-penalty-rate--highlighted">' + r.penalty_rate + '%</span>'
-      : (r.penalty_rate || '0') + '%';
 
     return '<tr>' +
       '<td>' + no + '</td>' +
+      '<td>' + api.escapeHtml(r.penalty_payment_id || '') + '</td>' +
       '<td>' + api.formatDate(r.requested_at) + '</td>' +
       '<td>' + reqBadge + '</td>' +
-      '<td>' + api.escapeHtml(memberName) + '</td>' +
+      '<td>' + api.escapeHtml(memberNickname) + '</td>' +
+      '<td class="masked">' + api.maskPhone(memberPhone) + '</td>' +
       '<td>' + api.escapeHtml(kgName) + '</td>' +
-      '<td class="text-right">' + api.formatMoney(r.original_amount) + '</td>' +
+      '<td>' + api.escapeHtml(petName) + '</td>' +
       '<td class="text-right">' + api.formatMoney(r.refund_amount) + '</td>' +
-      '<td>' + (r.refund_rate || 100) + '%</td>' +
       '<td class="text-right">' + api.formatMoney(r.penalty_amount) + '</td>' +
-      '<td>' + penaltyRate + '</td>' +
-      '<td>—</td>' +
       '<td>' + statusBadge + '</td>' +
       '<td>' + (api.formatDate(r.completed_at) || '—') + '</td>' +
-      '<td>' + (r.payment_id ? '<a href="payment-detail.html?id=' + r.payment_id + '" class="data-table__link">결제상세</a>' : '—') + '</td>' +
-      '<td>' + (r.reservation_id ? '<a href="reservation-detail.html?id=' + r.reservation_id + '" class="data-table__link">예약상세</a>' : '—') + '</td>' +
+      '<td>' + (r.payment_id ? '<a href="payment-detail.html?id=' + r.payment_id + '" class="data-table__link">' + api.escapeHtml(r.payment_id) + '</a>' : '—') + '</td>' +
       '<td><a href="refund-detail.html?id=' + r.id + '" class="data-table__link">상세</a></td>' +
       '</tr>';
   }
 
-  function loadRefList(page) {
+  var REF_COL_COUNT = 14;
+
+  async function loadRefList(page) {
     refPage = page || 1;
     var offset = (refPage - 1) * PER_PAGE;
-    api.showTableLoading(refListBody, 16);
+    api.showTableLoading(refListBody, REF_COL_COUNT);
 
-    api.fetchList('refunds', {
-      select: '*, members:member_id(name), kindergartens:kindergarten_id(name)',
-      filters: buildRefFilters(), search: buildRefSearch(),
-      order: { column: 'requested_at', ascending: false },
-      page: refPage, perPage: PER_PAGE
-    }).then(function (res) {
-      var rows = res.data || [], total = res.count || 0;
-      refResultCount.textContent = api.formatNumber(total);
-      if (!rows.length) { api.showTableEmpty(refListBody, 16, '검색 결과가 없습니다.'); refPagination.innerHTML = ''; return; }
+    try {
+      var rpcResult = await window.__supabase.rpc('search_refunds', buildRefRpcParams(refPage));
+
+      if (rpcResult.error) {
+        console.error('[payments] refund RPC error:', rpcResult.error);
+        api.showTableEmpty(refListBody, REF_COL_COUNT, '데이터 로드 실패: ' + (rpcResult.error.message || JSON.stringify(rpcResult.error)));
+        return;
+      }
+
+      var result = parsePayRpcResult(rpcResult.data);
+      var rows = result.data || [];
+      var total = result.count || 0;
+
+      if (refResultCount) refResultCount.textContent = api.formatNumber(total);
+
+      if (rows.length === 0) {
+        api.showTableEmpty(refListBody, REF_COL_COUNT, '검색 결과가 없습니다.');
+        if (refPagination) refPagination.innerHTML = '';
+        return;
+      }
+
       refListBody.innerHTML = rows.map(function (r, i) { return renderRefRow(r, i, offset); }).join('');
-      api.renderPagination(refPagination, refPage, total, PER_PAGE, loadRefList);
-    }).catch(function () { api.showTableEmpty(refListBody, 16, '데이터를 불러오지 못했습니다.'); });
+      api.renderPagination(refPagination, refPage, total, PER_PAGE, function (p) { loadRefList(p); });
+    } catch (err) {
+      console.error('[payments] refund list exception:', err);
+      api.showTableEmpty(refListBody, REF_COL_COUNT, '데이터를 불러오지 못했습니다.');
+    }
   }
 
   function bindRefEvents() {
     if (refBtnSearch) refBtnSearch.addEventListener('click', function () { loadRefList(1); });
     if (refSearchInput) refSearchInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') loadRefList(1); });
+    if (refBtnReset) refBtnReset.addEventListener('click', function () {
+      if (window.__resetFilters) window.__resetFilters(refFilterBar);
+    });
     if (refBtnExcel) refBtnExcel.addEventListener('click', function () {
-      api.fetchAll('refunds', { select: '*, members:member_id(name), kindergartens:kindergarten_id(name)', filters: buildRefFilters(), search: buildRefSearch(), order: { column: 'requested_at', ascending: false } }).then(function (res) {
-        var allRows = res.data || [];
-        api.exportExcel(allRows.map(function (r) {
-          return { '환불번호': r.id || '', '취소일시': r.requested_at || '', '요청자': r.requester || '', '보호자': jv(r.members, 'name'), '유치원명': jv(r.kindergartens, 'name'), '원결제금액': r.original_amount || 0, '환불금액': r.refund_amount || 0, '위약금': r.penalty_amount || 0, '상태': r.status || '' };
+      var params = buildRefRpcParams(1, 10000);
+
+      window.__supabase.rpc('search_refunds', params).then(function (rpcResult) {
+        if (rpcResult.error) { alert('다운로드 실패'); return; }
+        var result = parsePayRpcResult(rpcResult.data);
+        var rows = result.data || [];
+        if (rows.length === 0) { alert('다운로드할 데이터가 없습니다.'); return; }
+        api.exportExcel(rows.map(function (r) {
+          return {
+            '위약금 결제번호': r.penalty_payment_id || '',
+            '환불요청일시': r.requested_at || '',
+            '요청자': r.requester || '',
+            '보호자 닉네임': jv(r.members, 'nickname'),
+            '보호자 연락처': jv(r.members, 'phone'),
+            '유치원명': jv(r.kindergartens, 'name'),
+            '반려동물 이름': jv(r.pets, 'name'),
+            '환불금액': r.refund_amount || 0,
+            '위약금 결제금액': r.penalty_amount || 0,
+            '처리상태': r.status || '',
+            '환불완료일시': r.completed_at || '',
+            '원 결제번호': r.payment_id || ''
+          };
         }), [
-          { key: '환불번호', label: '환불번호' }, { key: '취소일시', label: '취소일시' },
-          { key: '요청자', label: '요청자' }, { key: '보호자', label: '보호자' },
-          { key: '유치원명', label: '유치원명' }, { key: '원결제금액', label: '원결제금액' },
-          { key: '환불금액', label: '환불금액' }, { key: '위약금', label: '위약금' },
-          { key: '상태', label: '상태' }
+          { key: '위약금 결제번호', label: '위약금 결제번호' },
+          { key: '환불요청일시', label: '환불요청일시' },
+          { key: '요청자', label: '요청자' },
+          { key: '보호자 닉네임', label: '보호자 닉네임' },
+          { key: '보호자 연락처', label: '보호자 연락처' },
+          { key: '유치원명', label: '유치원명' },
+          { key: '반려동물 이름', label: '반려동물 이름' },
+          { key: '환불금액', label: '환불금액' },
+          { key: '위약금 결제금액', label: '위약금 결제금액' },
+          { key: '처리상태', label: '처리상태' },
+          { key: '환불완료일시', label: '환불완료일시' },
+          { key: '원 결제번호', label: '원 결제번호' }
         ], '환불위약금');
       });
     });
