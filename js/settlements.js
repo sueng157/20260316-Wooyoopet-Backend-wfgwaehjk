@@ -167,7 +167,7 @@
     var no = offset + idx + 1;
     var kgName = (r.kindergartens && r.kindergartens.name) || '';
     var memberName = (r.members && r.members.name) || '';
-    var typeBadge = api.autoBadge(r.transaction_type || '', { '돌봄결제': 'blue', '위약금': 'orange' });
+    var typeBadge = api.autoBadge(r.transaction_type || '', { '돌봄': 'blue', '위약금': 'orange' });
     var statusBadge = api.autoBadge(r.status || '', { '정산예정': 'orange', '정산완료': 'green', '정산보류': 'red' });
     return '<tr>' +
       '<td class="data-table__checkbox"><input type="checkbox" data-id="' + (r.id || '') + '"></td>' +
@@ -500,7 +500,7 @@
       var amount = document.getElementById('detailStlAmount');
       if (amount) {
         api.setHtml(amount, [
-          ['거래유형', api.autoBadge(r.transaction_type || '', { '돌봄결제': 'blue', '위약금': 'orange' })],
+          ['거래유형', api.autoBadge(r.transaction_type || '', { '돌봄': 'blue', '위약금': 'orange' })],
           ['결제금액', '<span class="payment-amount-highlight">' + api.formatMoney(r.payment_amount) + '</span>'],
           ['수수료율', (r.commission_rate || 20) + '%'],
           ['수수료 금액', api.formatMoney(r.commission_amount)],

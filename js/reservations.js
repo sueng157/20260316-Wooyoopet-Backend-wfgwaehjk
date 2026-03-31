@@ -243,8 +243,8 @@
       'members:member_id(id, name, nickname, phone, address_road, address_complex, address_building_dong, address_building_ho), ' +
       'pets:pet_id(id, name, breed, gender, birth_date, weight, size_class, is_neutered, is_vaccinated), ' +
       'kindergartens:kindergarten_id(id, name, address_road, address_complex, address_building_dong, address_building_ho, members:member_id(name, phone)), ' +
-      'payments(id, amount, care_fee, walk_fee, pickup_fee, pg_transaction_id, paid_at, payment_method, card_company, status), ' +
-      'refunds(id, refund_amount, penalty_amount, penalty_rate, status, requester, cancel_reason, requested_at), ' +
+      'payments(id, amount, care_fee, walk_fee, pickup_fee, pg_transaction_id, paid_at, payment_method, card_company, status, payment_type), ' +
+      'refunds(id, refund_amount, penalty_amount, penalty_rate, status, requester, cancel_reason, requested_at, penalty_payment_id), ' +
       'reservation_status_logs(created_at, prev_status, new_status, changed_by, note)';
 
     api.fetchDetail('reservations', id, selectStr).then(function (result) {
@@ -255,7 +255,8 @@
       var pet = r.pets || {};
       var kg = r.kindergartens || {};
       var kgOwner = kg.members || {};
-      var pay = Array.isArray(r.payments) ? r.payments[0] : (r.payments || {});
+      var allPayments = Array.isArray(r.payments) ? r.payments : (r.payments ? [r.payments] : []);
+      var pay = allPayments.find(function (p) { return p.payment_type !== '위약금'; }) || {};
       var ref = Array.isArray(r.refunds) ? r.refunds[0] : (r.refunds || null);
       var logs = r.reservation_status_logs || [];
 

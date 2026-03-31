@@ -137,7 +137,8 @@
       var payRes = await sb.from('payments')
         .select('member_id, amount')
         .in('member_id', memberIds)
-        .eq('status', '결제완료');
+        .eq('status', '결제완료')
+        .eq('payment_type', '돌봄');
       if (payRes.data) {
         payRes.data.forEach(function (p) {
           if (!payMap[p.member_id]) payMap[p.member_id] = { count: 0, amount: 0 };
@@ -208,7 +209,8 @@
       var payRes = await sb.from('payments')
         .select('member_id, amount')
         .in('member_id', allIds)
-        .eq('status', '결제완료');
+        .eq('status', '결제완료')
+        .eq('payment_type', '돌봄');
       if (payRes.data) {
         payRes.data.forEach(function (p) {
           if (!payMap[p.member_id]) payMap[p.member_id] = { count: 0, amount: 0 };
@@ -459,7 +461,8 @@
     var payRes = await sb.from('payments')
       .select('amount', { count: 'exact' })
       .eq('member_id', memberId)
-      .eq('status', '결제완료');
+      .eq('status', '결제완료')
+      .eq('payment_type', '돌봄');
 
     var payCount = payRes.count || 0;
     var payTotal = 0;
@@ -492,7 +495,10 @@
 
     var res = await api.fetchList('payments', {
       select: '*, kindergartens(name)',
-      filters: [{ column: 'member_id', op: 'eq', value: memberId }],
+      filters: [
+        { column: 'member_id', op: 'eq', value: memberId },
+        { column: 'payment_type', op: 'eq', value: '돌봄' }
+      ],
       orderBy: 'created_at',
       ascending: false,
       page: 1,
