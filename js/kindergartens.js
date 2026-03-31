@@ -693,25 +693,27 @@
   }
 
   // 정산 요약 — payments 테이블에 kindergarten_id 컬럼 존재 확인됨
-  // payments에는 payment_type 컬럼 없음 → settlements의 transaction_type으로 집계
+  // payments.payment_type으로 돌봄/위약금 구분 조회
   async function loadSettlementSummary(kgId) {
     var sb = window.__supabase;
 
-    // 누적 돌봄 결제금액 — payments에서 status='결제완료'인 것
+    // 누적 돌봄 결제금액 — payments에서 돌봄 결제만 집계
     var careRes = await sb.from('payments')
       .select('amount')
       .eq('kindergarten_id', kgId)
-      .eq('status', '결제완료');
+      .eq('status', '결제완료')
+      .eq('payment_type', '돌봄');
     var careTotal = 0;
     if (careRes.data) careRes.data.forEach(function (r) { careTotal += (r.amount || 0); });
 
-    // 위약금은 settlements의 transaction_type='위약금' 으로 집계
-    var penRes = await sb.from('settlements')
-      .select('payment_amount')
+    // 위약금은 payments.payment_type='위약금'으로 직접 조회
+    var penRes = await sb.from('payments')
+      .select('amount')
       .eq('kindergarten_id', kgId)
-      .eq('transaction_type', '위약금');
+      .eq('status', '결제완료')
+      .eq('payment_type', '위약금');
     var penTotal = 0;
-    if (penRes.data) penRes.data.forEach(function (r) { penTotal += (r.payment_amount || 0); });
+    if (penRes.data) penRes.data.forEach(function (r) { penTotal += (r.amount || 0); });
 
     var totalValid = careTotal + penTotal;
     var platformFee = Math.round(totalValid * 0.2);
