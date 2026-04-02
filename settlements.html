@@ -77,32 +77,32 @@
 
         <!-- 필터 바 -->
         <div class="filter-bar">
-          <!-- 1행: 기간 -->
+          <!-- 1행: 필터 (등록상태 + 사업자유형) -->
           <div class="filter-row">
-            <span class="filter-label">기간</span>
-            <input type="date" class="filter-input" value="2025-01-01">
-            <span class="filter-label" style="min-width:auto; text-align:center;">~</span>
-            <input type="date" class="filter-input" value="2026-03-17">
-          </div>
-          <!-- 2행: 이니시스 등록상태 -->
-          <div class="filter-row">
-            <span class="filter-label">등록상태</span>
+            <span class="filter-label">필터</span>
             <select class="filter-select">
-              <option>전체</option>
-              <option>미등록</option>
-              <option>요청중</option>
-              <option>완료</option>
-              <option>실패</option>
+              <option value="">등록상태: 전체</option>
+              <option value="미등록">미등록</option>
+              <option value="요청중">요청중</option>
+              <option value="완료">완료</option>
+              <option value="실패">실패</option>
+            </select>
+            <select class="filter-select">
+              <option value="">사업자: 전체</option>
+              <option value="사업자">사업자</option>
+              <option value="개인">개인</option>
             </select>
           </div>
-          <!-- 3행: 검색 -->
+          <!-- 2행: 검색 -->
           <div class="filter-row">
             <span class="filter-label">검색</span>
             <select class="filter-select" style="max-width:160px;">
               <option>유치원명</option>
               <option>운영자 성명</option>
+              <option>사업자등록번호</option>
             </select>
             <input type="text" class="filter-input" placeholder="검색어를 입력하세요">
+            <button class="btn-reset">초기화</button>
             <button class="btn-search">검색</button>
           </div>
         </div>
