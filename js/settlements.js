@@ -25,21 +25,21 @@
   }
 
   /* ── A-1: 정산정보 탭 ── */
-  var infoDateFrom, infoDateTo, infoStatus, infoSearchField, infoSearchInput;
-  var infoBtnSearch, infoBtnExcel, infoResultCount, infoBody, infoPagination;
+  var infoFilterBar, infoStatus, infoBizType, infoSearchField, infoSearchInput;
+  var infoBtnReset, infoBtnSearch, infoBtnExcel, infoResultCount, infoBody, infoPagination;
   var infoPage = 1;
 
   function cacheInfoDom() {
     var tab = document.getElementById('tab-info');
     if (!tab) return;
-    var dates = tab.querySelectorAll('.filter-input');
-    infoDateFrom = dates[0];
-    infoDateTo   = dates[1];
 
+    infoFilterBar = tab.querySelector('.filter-bar');
     var selects = tab.querySelectorAll('.filter-select');
-    infoStatus      = selects[0];
-    infoSearchField = selects[1];
-    infoSearchInput = tab.querySelectorAll('.filter-input')[2];
+    infoStatus      = selects[0];  // 등록상태 드롭다운
+    infoBizType     = selects[1];  // 사업자유형 드롭다운
+    infoSearchField = selects[2];  // 검색기준 드롭다운
+    infoSearchInput = tab.querySelector('.filter-input');
+    infoBtnReset    = tab.querySelector('.btn-reset');
     infoBtnSearch   = tab.querySelector('.btn-search');
     infoBtnExcel    = tab.querySelector('.btn-excel');
 
@@ -48,21 +48,33 @@
     infoPagination  = tab.querySelector('.pagination');
   }
 
-  function buildInfoFilters() {
-    var f = [];
-    if (infoDateFrom && infoDateFrom.value) f.push({ column: 'created_at', op: 'gte', value: infoDateFrom.value + 'T00:00:00' });
-    if (infoDateTo && infoDateTo.value) f.push({ column: 'created_at', op: 'lte', value: infoDateTo.value + 'T23:59:59' });
-    if (infoStatus && infoStatus.value !== '전체') f.push({ column: 'inicis_status', op: 'eq', value: infoStatus.value });
-    // URL 파라미터로 유치원 필터
-    var kgIdParam = api.getParam('kindergarten_id');
-    if (kgIdParam) f.push({ column: 'kindergarten_id', op: 'eq', value: kgIdParam });
-    return f;
+  /** RPC 파라미터 조립 (search_settlement_infos) */
+  function buildInfoRpcParams(page, perPage) {
+    var params = {
+      p_inicis_status:   (infoStatus && infoStatus.value) ? infoStatus.value : null,
+      p_business_type:   (infoBizType && infoBizType.value) ? infoBizType.value : null,
+      p_search_type:     null,
+      p_search_keyword:  null,
+      p_kindergarten_id: api.getParam('kindergarten_id') || null,
+      p_page:            page || 1,
+      p_per_page:        perPage || PER_PAGE
+    };
+
+    if (infoSearchInput && infoSearchInput.value.trim()) {
+      params.p_search_type = infoSearchField ? infoSearchField.value : '유치원명';
+      params.p_search_keyword = infoSearchInput.value.trim();
+    }
+
+    return params;
   }
 
-  function buildInfoSearch() {
-    if (!infoSearchInput || !infoSearchInput.value.trim()) return null;
-    var field = infoSearchField ? infoSearchField.value : '운영자 성명';
-    return { column: 'operator_name', value: infoSearchInput.value.trim() };
+  /** RPC 결과 파싱 (문자열 방어) */
+  function parseInfoRpcResult(raw) {
+    if (!raw) return { data: [], count: 0 };
+    if (typeof raw === 'string') {
+      try { return JSON.parse(raw); } catch (e) { return { data: [], count: 0 }; }
+    }
+    return raw;
   }
 
   function renderInfoRow(r, idx, offset) {
@@ -89,33 +101,53 @@
       '</tr>';
   }
 
-  function loadInfoList(page) {
+  async function loadInfoList(page) {
     infoPage = page || 1;
     var offset = (infoPage - 1) * PER_PAGE;
     api.showTableLoading(infoBody, 15);
 
-    api.fetchList('settlement_infos', {
-      select: '*, kindergartens:kindergarten_id(name)',
-      filters: buildInfoFilters(), search: buildInfoSearch(),
-      order: { column: 'created_at', ascending: false },
-      page: infoPage, perPage: PER_PAGE
-    }).then(function (res) {
-      var rows = res.data || [], total = res.count || 0;
-      infoResultCount.textContent = api.formatNumber(total);
-      if (!rows.length) { api.showTableEmpty(infoBody, 15, '검색 결과가 없습니다.'); infoPagination.innerHTML = ''; return; }
+    try {
+      var rpcResult = await window.__supabase.rpc('search_settlement_infos', buildInfoRpcParams(infoPage));
+
+      if (rpcResult.error) {
+        console.error('[settlements] info RPC error:', rpcResult.error);
+        api.showTableEmpty(infoBody, 15, '데이터 로드 실패: ' + (rpcResult.error.message || JSON.stringify(rpcResult.error)));
+        return;
+      }
+
+      var result = parseInfoRpcResult(rpcResult.data);
+      var rows = result.data || [];
+      var total = result.count || 0;
+
+      if (infoResultCount) infoResultCount.textContent = api.formatNumber(total);
+
+      if (!rows.length) {
+        api.showTableEmpty(infoBody, 15, '검색 결과가 없습니다.');
+        if (infoPagination) infoPagination.innerHTML = '';
+        return;
+      }
+
       infoBody.innerHTML = rows.map(function (r, i) { return renderInfoRow(r, i, offset); }).join('');
       api.renderPagination(infoPagination, infoPage, total, PER_PAGE, loadInfoList);
-    }).catch(function () { api.showTableEmpty(infoBody, 15, '데이터를 불러오지 못했습니다.'); });
+    } catch (err) {
+      console.error('[settlements] info list error:', err);
+      api.showTableEmpty(infoBody, 15, '데이터를 불러오지 못했습니다.');
+    }
   }
 
   function bindInfoEvents() {
     if (infoBtnSearch) infoBtnSearch.addEventListener('click', function () { loadInfoList(1); });
     if (infoSearchInput) infoSearchInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') loadInfoList(1); });
+    if (infoBtnReset) infoBtnReset.addEventListener('click', function () {
+      if (window.__resetFilters) window.__resetFilters(infoFilterBar);
+    });
     if (infoBtnExcel) infoBtnExcel.addEventListener('click', function () {
-      api.fetchAll('settlement_infos', { select: '*, kindergartens:kindergarten_id(name)', filters: buildInfoFilters(), search: buildInfoSearch(), order: { column: 'created_at', ascending: false } }).then(function (res) {
-        var rows = res.data || [];
+      var params = buildInfoRpcParams(1, 10000);
+      window.__supabase.rpc('search_settlement_infos', params).then(function (rpcResult) {
+        var result = parseInfoRpcResult(rpcResult.data);
+        var rows = result.data || [];
         api.exportExcel(rows.map(function (r) {
-          return { '유치원명': (r.kindergartens && r.kindergartens.name) || '', '운영자': r.operator_name || '', '사업자유형': r.business_type || '', '판매자ID': r.inicis_seller_id || '', '은행': r.account_bank || '', '이니시스상태': r.inicis_status || '', '신청일': r.created_at || '' };
+          return { '유치원명': (r.kindergartens && r.kindergartens.name) || '', '운영자': r.operator_name || '', '사업자유형': r.business_type || '', '사업자등록번호': r.business_reg_number || '', '판매자ID': r.inicis_seller_id || '', '은행': r.account_bank || '', '이니시스상태': r.inicis_status || '', '신청일': r.created_at || '' };
         }), '정산정보');
       });
     });
