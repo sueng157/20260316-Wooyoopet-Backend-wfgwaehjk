@@ -88,9 +88,6 @@
 
           <div class="info-grid__label">채팅방 상태</div>
           <div class="info-grid__value"><span class="badge badge--c-green">활성</span></div>
-
-          <div class="info-grid__label">총 메시지 수</div>
-          <div class="info-grid__value">45건</div>
         </div>
       </div>
 
@@ -160,19 +157,19 @@
           </thead>
           <tbody>
             <tr>
-              <td><a href="reservation-detail.html" class="mini-table__link">R-00001234</a></td>
+              <td><a href="reservation-detail.html" class="mini-table__link">e0e0e0e0</a></td>
               <td><span class="badge badge--c-blue">예약확정</span></td>
               <td>2026-03-20 09:00</td>
               <td class="text-right">55,000원</td>
             </tr>
             <tr>
-              <td><a href="reservation-detail.html" class="mini-table__link">R-00001100</a></td>
+              <td><a href="reservation-detail.html" class="mini-table__link">a1b2c3d4</a></td>
               <td><span class="badge badge--c-green">돌봄완료</span></td>
               <td>2026-03-05 10:00</td>
               <td class="text-right">48,000원</td>
             </tr>
             <tr>
-              <td><a href="reservation-detail.html" class="mini-table__link">R-00000980</a></td>
+              <td><a href="reservation-detail.html" class="mini-table__link">f5e6d7c8</a></td>
               <td><span class="badge badge--c-green">돌봄완료</span></td>
               <td>2026-02-20 09:30</td>
               <td class="text-right">55,000원</td>
@@ -309,19 +306,26 @@
         <div class="detail-card__header">
           <h3 class="detail-card__title">신고 이력</h3>
         </div>
-        <div class="info-grid" id="detailChatReport">
+        <div class="info-grid" id="detailChatReportStatus">
           <div class="info-grid__label">신고 여부</div>
           <div class="info-grid__value"><span class="report-no">없음</span></div>
-
-          <div class="info-grid__label">신고 건수</div>
-          <div class="info-grid__value">0건</div>
-
-          <div class="info-grid__label">최근 신고일시</div>
-          <div class="info-grid__value">—</div>
-
-          <div class="info-grid__label">신고 상세</div>
-          <div class="info-grid__value">—</div>
         </div>
+        <table class="mini-table" id="detailChatReportTable">
+          <thead>
+            <tr>
+              <th>신고일시</th>
+              <th>신고자</th>
+              <th>신고자 유형</th>
+              <th>신고번호</th>
+              <th>처리상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" style="text-align:center;color:var(--text-weak);padding:24px 0;">신고 이력이 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
     </div><!-- /.content -->

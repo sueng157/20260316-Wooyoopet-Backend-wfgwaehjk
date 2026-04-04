@@ -20,9 +20,10 @@
 [완료] JavaScript UI 구현 (4파일 621줄, 인라인 JS 0건, PR #39~#42)
 [완료] 백엔드 구축(Phase 1,2,3 완료)(PR #48~#57)
   ↓
-[진행중] DB 연결 보완 및 UI 개선 (PR #59~#96)
+[진행중] DB 연결 보완 및 UI 개선 (PR #59~#97)
   - 회원관리, 유치원관리, 반려동물관리, 돌봄예약관리, 결제관리, 정산관리 : 수정 완료
-  - 채팅관리 ~ 설정 : 작업 예정
+  - 채팅관리 : 채팅내역 작업완료, 신고접수 작업예정
+  - 후기관리 ~ 설정 : 작업 예정
   ↓
 [예정] 호스팅 전환·모바일앱 백엔드·기존 서버 정리
   - Phase 4,5,6 (DB 연결 보완 및 UI 개선 후 진행예정)
@@ -34,7 +35,7 @@
 ### 1-3. 저장소 정보
 
 - **프로젝트**: 우유펫 관리자 백오피스 대시보드
-- **현재 단계**: Phase 1~3 완료 (PR #48~#57) → DB 연결 보완 및 UI 개선 진행중 (PR #59~#96) → Phase 4 예정
+- **현재 단계**: Phase 1~3 완료 (PR #48~#57) → DB 연결 보완 및 UI 개선 진행중 (PR #59~#97) → Phase 4 예정
 - **저장소**: `https://github.com/sueng157/20260316-Wooyoopet-Backend-wfgwaehjk.git`
 - **브랜치 전략**: `main` (머지용) / `genspark_ai_developer` (작업용)
 - **스펙 문서**: `full_spec_with_tables.md` (루트에 위치, 대메뉴 0~11번 전체 명세)
@@ -352,7 +353,14 @@ components.css      → 재사용 UI 컴포넌트 (필터바, 테이블, 배지,
 
 ### 5-7. 채팅관리 특이사항
 
-- **목록화면 닉네임 표시**: 채팅내역 12컬럼 (이름 제외, 닉네임만), 신고접수 11컬럼 (이름→닉네임)
+- **채팅내역 목록 (chats.html 탭1)**: `search_chat_rooms` RPC로 전환 (sql/29), 보호자 닉네임·유치원명 ILIKE 검색 지원. 초기화 버튼은 필터값 리셋만 수행 (다른 메뉴와 동일 패턴)
+- **채팅내역 상세 (chat-detail.html)**:
+  - 기본정보: 총 메시지 수 항목 삭제 → 3항목 (고유번호, 생성일, 상태)
+  - 예약 목록: 컬럼명 수정 (`check_in_at` → `checkin_scheduled`, `amount` → `payments(amount)` 서브조인), 예약번호는 UUID 앞 8자 표시
+  - 신고 이력: info-grid(신고 여부) + mini-table(5열) 구조로 전면 개편, FK 충돌 방지를 위해 reports → members 별도 쿼리 분리 (HANDOVER 5-14 패턴 적용)
+  - DB 바인딩 정상화: `showChatDetailLoading()` → `fetchDetail` → `showChatDetailError()` 흐름 구현, 더미 HTML이 남지 않도록 로딩 플레이스홀더 + 에러 핸들링 추가
+- **has_report 트리거** (sql/28): reports INSERT/UPDATE/DELETE 시 `chat_rooms.has_report` 자동 갱신 (접수·처리중 건 존재 여부)
+- **목록화면 닉네임 표시**: 채팅내역 10컬럼 (이름 제외, 닉네임만), 신고접수 11컬럼 (이름→닉네임)
 - **메시지 내역 말풍선 UI**: 보호자(좌측 갈색 bubble), 유치원(우측 분홍 bubble), 시스템(중앙 회색 bubble), 날짜 구분선, 닉네임·시간·읽음여부 메타 표시
 - **모달**: 채팅방 강제 비활성화(1개), 처리상태 변경/제재 적용/기각 처리(3개)
 
@@ -374,6 +382,7 @@ components.css      → 재사용 UI 컴포넌트 (필터바, 테이블, 배지,
 | `search_refunds` | 결제관리 > 환불/위약금 탭 | `sql/21_rpc_payment_type_update.sql` | refunds → members, kindergartens, reservations → pets, payments(penalty_payment) |
 | `search_settlement_infos` | 정산관리 > 정산정보 탭 | `sql/23_search_settlement_infos.sql` | settlement_infos → kindergartens |
 | `search_settlements` | 정산관리 > 정산내역 탭 | `sql/24_search_settlements.sql` | settlements → kindergartens, settlement_infos(LATERAL) |
+| `search_chat_rooms` | 채팅관리 > 채팅내역 탭 | `sql/29_search_chat_rooms.sql` | chat_rooms → members(guardian), kindergartens, chat_room_reservations → reservations |
 
 **RPC 함수 공통 구조:**
 1. **파라미터 설계**: `p_date_from`, `p_date_to` (기간), `p_status` (상태 필터), `p_search_type` + `p_search_keyword` (검색 기준/키워드), `p_page` + `p_per_page` (페이지네이션). 필요에 따라 추가 필터 파라미터 포함
@@ -489,12 +498,12 @@ js/pets.js              516줄  (목록·상세, 삭제, 닉네임조인, 돌봄
 js/reservations.js      522줄  (목록·상세, 직권취소, 노쇼 — PR #57에서 async/await 리팩터링)
 js/payments.js          725줄  (결제/환불 2탭, 결제 상세, 환불/위약금 상세, 위약금면제, search_payments·search_refunds RPC, FK 충돌 방지 별도 쿼리 분리)
 js/settlements.js       819줄  (정산정보/내역 2탭, search_settlement_infos+search_settlements RPC, 기간버튼, 요약동기화, 일괄정산, 엑셀)
-js/chats.js             475줄  (채팅/신고 2탭, 비활성화, 제재/기각)
+js/chats.js             719줄  (채팅/신고 2탭, search_chat_rooms RPC, 상세 DB 바인딩, 비활성화, 제재/기각)
 js/reviews.js           510줄  (보호자/유치원 2탭, 숨김/해제 — PR #57에서 날짜보정+에러핸들링)
 js/educations.js        674줄  (퀴즈/체크리스트/서약서/이수현황, 버전관리)
 js/contents.js          496줄  (배너/공지/FAQ/약관 4탭, 푸시발송, 버전발행)
 js/settings.js          504줄  (앱설정6카드, 관리자CRUD, 피드백, 규칙 추가/삭제)
-총 8,457줄  (Phase 3 완료 + DB 연결 보완·UI 개선 기준)
+총 8,701줄  (Phase 3 완료 + DB 연결 보완·UI 개선 기준)
 ```
 
 ---
@@ -715,6 +724,7 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 | #93 | 결제관리 | 환불/위약금 상세 리팩터링: 블록 순서 재배열(환불 기본정보→위약금 결제 정보→위약금 산정→환불 처리 정보→관련 링크), 기본정보에 예약번호·보호자 닉네임·반려동물·유치원 링크 추가, FK 충돌 방지 위해 payments·penalty_payment 별도 쿼리 분리, mapPaymentMethod() 적용, 더미 데이터 제거→로딩 플레이스홀더, async/await+showRefundDetailError() 에러 핸들링, HANDOVER.md 5-14 FK 조인 가이드 추가 |
 | #95 | 정산관리 | 정산정보 탭: search_settlement_infos RPC 연동(sql/23), 필터(이니시스 등록상태/사업자여부/검색), 엑셀 다운로드, 유치원 필터 배너. 정산내역 탭: search_settlements RPC 신규(sql/24), 5행 필터→4행 컴팩트화, 기간 버튼, 금액 범위 필터, get_settlement_summary 요약(sql/25, 11항목), 일괄 정산완료, 요약 카드 래퍼 디자인 개선(2행 5col 가운데 정렬), 엑셀 다운로드 |
 | #96 | 정산관리 | 사업자 유형 3분류 변경(개인사업자/법인사업자/비사업자, CHECK 제약, sql/26), 정산정보 상세 항목 재배치(주민등록번호·이메일 → 사업자 정보로 이동), 주민등록번호 원본 저장+JS 마스킹 토글(maskSsn, sql/27), 정산내역 상세 환불번호 컬럼 삭제, 스펙 문서 반영 |
+| #97 | 채팅관리 | 채팅내역 목록: `search_chat_rooms` RPC 전환(sql/29), 보호자 닉네임·유치원명 ILIKE 검색 지원, 초기화 버튼 필터값 리셋만, 엑셀 다운로드 RPC 전환. 채팅내역 상세: 총 메시지 수 삭제, 예약번호 UUID 앞 8자 표시, 컬럼명 보정(checkin_scheduled, payments(amount)), 신고이력 전면 개편(info-grid+mini-table, reports→members 별도 쿼리), DB 바인딩 정상화(로딩 플레이스홀더+에러 핸들링), has_report 트리거(sql/28) |
 
 **진행 상황:**
 - ✅ 회원관리 (1번): 수정 완료
@@ -723,7 +733,8 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 - ✅ 돌봄예약관리 (4번): 수정 완료
 - ✅ 결제관리 (5번): 수정 완료 (결제내역 탭, 환불/위약금 탭 목록, 결제 상세, 환불/위약금 상세, 결제 리팩터링 Phase A~C — PR #79, #81~#93)
 - ✅ 정산관리 (6번): 수정 완료 (PR #95~#96)
-- ⬜ 채팅관리 ~ 설정 (7~11번): 작업 예정
+- 🔶 채팅관리 (7번): 채팅내역 작업완료, 신고접수 작업예정 (PR #97)
+- ⬜ 후기관리 ~ 설정 (8~11번): 작업 예정
 
 ---
 

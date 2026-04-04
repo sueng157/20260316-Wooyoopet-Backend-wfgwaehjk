@@ -77,33 +77,30 @@
 
         <!-- 필터 바 -->
         <div class="filter-bar">
-          <!-- 1행: 기간 -->
+          <!-- 1행: 필터 -->
           <div class="filter-row">
-            <span class="filter-label">기간</span>
-            <input type="date" class="filter-input filter-input--date" value="2026-01-01">
-            <span class="filter-separator">~</span>
-            <input type="date" class="filter-input filter-input--date" value="2026-03-17">
-          </div>
-          <!-- 2행: 상태 + 신고여부 -->
-          <div class="filter-row">
-            <span class="filter-label">채팅방 상태</span>
-            <select class="filter-select">
-              <option>전체</option>
-              <option>활성</option>
-              <option>비활성</option>
+            <span class="filter-label">필터</span>
+            <select class="filter-select" id="chatStatus">
+              <option value="">채팅방 상태: 전체</option>
+              <option value="활성">활성</option>
+              <option value="비활성">비활성</option>
             </select>
-            <span class="filter-label" style="margin-left:12px;">신고 여부</span>
-            <select class="filter-select">
-              <option>전체</option>
-              <option>신고있음</option>
-              <option>신고없음</option>
+            <select class="filter-select" id="chatReported">
+              <option value="">신고 여부: 전체</option>
+              <option value="없음">없음</option>
+              <option value="있음">있음</option>
             </select>
           </div>
-          <!-- 3행: 검색 -->
+          <!-- 2행: 검색 -->
           <div class="filter-row">
             <span class="filter-label">검색</span>
-            <input type="text" class="filter-input filter-input--search" placeholder="보호자 닉네임, 유치원명으로 검색">
-            <button class="btn-search">검색</button>
+            <select class="filter-select" id="chatSearchField" style="max-width:160px;">
+              <option>보호자 닉네임</option>
+              <option>유치원명</option>
+            </select>
+            <input type="text" class="filter-input" id="chatSearchInput" placeholder="검색어를 입력하세요" style="max-width:320px;">
+            <button class="btn-reset" id="chatBtnReset">초기화</button>
+            <button class="btn-search" id="chatBtnSearch">검색</button>
           </div>
         </div>
 
@@ -124,12 +121,10 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>채팅방 번호</th>
                 <th>보호자 닉네임</th>
                 <th>유치원명</th>
                 <th>마지막 메시지</th>
                 <th>마지막 메시지 일시</th>
-                <th>총 메시지 수</th>
                 <th>연동 예약번호</th>
                 <th>신고 여부</th>
                 <th>채팅방 상태</th>
@@ -140,12 +135,10 @@
             <tbody id="chatListBody">
               <tr>
                 <td>1</td>
-                <td>CR-00000128</td>
                 <td>뽀삐맘</td>
                 <td>밤톨이네</td>
                 <td><span class="message-preview">안녕하세요~ 내일 예약 관련해서 문의드려요</span></td>
                 <td>2026-03-17 14:32</td>
-                <td>45</td>
                 <td><a href="reservation-detail.html" class="data-table__link">R-00001234</a></td>
                 <td><span class="report-no">없음</span></td>
                 <td><span class="badge badge--c-green">활성</span></td>
@@ -154,12 +147,10 @@
               </tr>
               <tr>
                 <td>2</td>
-                <td>CR-00000127</td>
                 <td>초코아빠</td>
                 <td>해피독스</td>
                 <td><span class="message-preview">감사합니다. 잘 도착했습니다!</span></td>
                 <td>2026-03-17 11:05</td>
-                <td>23</td>
                 <td><a href="reservation-detail.html" class="data-table__link">R-00001201</a></td>
                 <td><span class="report-yes">있음</span></td>
                 <td><span class="badge badge--c-green">활성</span></td>
@@ -168,12 +159,10 @@
               </tr>
               <tr>
                 <td>3</td>
-                <td>CR-00000126</td>
                 <td>몽이언니</td>
                 <td>퍼피하우스</td>
                 <td><span class="message-preview">네 알겠습니다. 확인되면 연락주세요~</span></td>
                 <td>2026-03-16 18:20</td>
-                <td>67</td>
                 <td>—</td>
                 <td><span class="report-no">없음</span></td>
                 <td><span class="badge badge--c-green">활성</span></td>
@@ -182,12 +171,10 @@
               </tr>
               <tr>
                 <td>4</td>
-                <td>CR-00000125</td>
                 <td>루비엄마</td>
                 <td>해피독스</td>
                 <td><span class="message-preview">죄송합니다, 오늘은 어려울 것 같아요</span></td>
                 <td>2026-03-16 09:45</td>
-                <td>12</td>
                 <td><a href="reservation-detail.html" class="data-table__link">R-00001180</a></td>
                 <td><span class="report-no">없음</span></td>
                 <td><span class="badge badge--c-gray">비활성</span></td>
@@ -196,12 +183,10 @@
               </tr>
               <tr>
                 <td>5</td>
-                <td>CR-00000124</td>
                 <td>콩이맘</td>
                 <td>밤톨이네</td>
                 <td><span class="message-preview">그때 사진 보내주실 수 있을까요?</span></td>
                 <td>2026-03-15 16:30</td>
-                <td>89</td>
                 <td><a href="reservation-detail.html" class="data-table__link">R-00001155</a></td>
                 <td><span class="report-yes">있음</span></td>
                 <td><span class="badge badge--c-green">활성</span></td>
@@ -210,12 +195,10 @@
               </tr>
               <tr>
                 <td>6</td>
-                <td>CR-00000123</td>
                 <td>하늘이아빠</td>
                 <td>도그빌리지</td>
                 <td><span class="message-preview">예약 취소 부탁드립니다</span></td>
                 <td>2026-03-14 10:12</td>
-                <td>8</td>
                 <td>—</td>
                 <td><span class="report-no">없음</span></td>
                 <td><span class="badge badge--c-gray">비활성</span></td>
@@ -224,12 +207,10 @@
               </tr>
               <tr>
                 <td>7</td>
-                <td>CR-00000122</td>
                 <td>별이맘</td>
                 <td>퍼피하우스</td>
                 <td><span class="message-preview">다음 주 수요일 가능할까요?</span></td>
                 <td>2026-03-13 15:50</td>
-                <td>34</td>
                 <td><a href="reservation-detail.html" class="data-table__link">R-00001102</a></td>
                 <td><span class="report-no">없음</span></td>
                 <td><span class="badge badge--c-green">활성</span></td>
@@ -238,14 +219,12 @@
               </tr>
               <tr>
                 <td>8</td>
-                <td>CR-00000121</td>
                 <td>두부엄마</td>
                 <td>도그빌리지</td>
                 <td><span class="message-preview">[시스템] 예약이 확정되었습니다.</span></td>
                 <td>2026-03-12 08:00</td>
-                <td>5</td>
                 <td><a href="reservation-detail.html" class="data-table__link">R-00001089</a></td>
-                <td><span class="report-no">없음</span></td>
+                <td><span class="report-yes">있음</span></td>
                 <td><span class="badge badge--c-green">활성</span></td>
                 <td>2026-03-10</td>
                 <td><a href="chat-detail.html" class="data-table__link">상세</a></td>
