@@ -30,6 +30,9 @@
 
   var topicBody, checklistBody, pledgeBody, statusBody;
   var topicCount, statusCount;
+  // 이수현황 DOM 캐시 (reviews.js 패턴)
+  var s = {};
+  var sFilterBar;
 
   function cacheListDom() {
     topicBody = document.getElementById('topicListBody');
@@ -40,7 +43,18 @@
     var tab1 = document.getElementById('tab-topics');
     if (tab1) topicCount = tab1.querySelector('.result-header__count strong');
     var tab3 = document.getElementById('tab-status');
-    if (tab3) statusCount = tab3.querySelector('.result-header__count strong');
+    if (tab3) {
+      statusCount = tab3.querySelector('.result-header__count strong');
+      sFilterBar           = tab3.querySelector('.filter-bar');
+      s.completionFilter   = document.getElementById('statusCompletionFilter');
+      s.searchField        = document.getElementById('statusSearchField');
+      s.searchInput        = document.getElementById('statusSearchInput');
+      s.btnReset           = document.getElementById('statusBtnReset');
+      s.btnSearch          = document.getElementById('statusBtnSearch');
+      s.btnExcel           = tab3.querySelector('.btn-excel');
+      s.body               = statusBody;
+      s.pagination         = tab3.querySelector('.pagination');
+    }
   }
 
   // 탭1: 교육 주제
@@ -165,42 +179,95 @@
     pledgeBody.innerHTML = html;
   }
 
+  // ── 이수현황 RPC 파라미터 조립 (search_education_completions) ──
+  function buildStatusRpcParams(page, perPage) {
+    var params = {
+      p_completion_status: (s.completionFilter && s.completionFilter.value) ? s.completionFilter.value : null,
+      p_search_type:       null,
+      p_search_keyword:    null,
+      p_page:              page || 1,
+      p_per_page:          perPage || PER_PAGE
+    };
+
+    if (s.searchInput && s.searchInput.value.trim()) {
+      params.p_search_type = s.searchField ? s.searchField.value : '유치원명';
+      params.p_search_keyword = s.searchInput.value.trim();
+    }
+
+    return params;
+  }
+
+  /** RPC 결과 파싱 (문자열 방어) */
+  function parseStatusRpcResult(raw) {
+    if (!raw) return { data: [], count: 0 };
+    if (typeof raw === 'string') {
+      try { return JSON.parse(raw); } catch (e) { return { data: [], count: 0 }; }
+    }
+    return raw;
+  }
+
   // 탭3: 이수현황
   var sPage = 1;
-  async function loadStatusList() {
-    if (!statusBody) return;
-    api.showTableLoading(statusBody, 9);
-    var result = await api.fetchList('education_completions', {
-      select: '*, kindergartens:kindergarten_id(name)',
-      orderBy: 'created_at',
-      page: sPage, perPage: PER_PAGE
-    });
-    if (result.error) { api.showTableEmpty(statusBody, 9, '데이터 로드 실패'); return; }
-    if (statusCount) statusCount.textContent = api.formatNumber(result.count);
-    if (!result.data.length) { api.showTableEmpty(statusBody, 9); return; }
+  async function loadStatusList(page) {
+    sPage = page || 1;
+    if (!s.body) return;
+    var offset = (sPage - 1) * PER_PAGE;
+    api.showTableLoading(s.body, 12);
 
-    var html = '';
-    var start = (sPage - 1) * PER_PAGE;
-    for (var i = 0; i < result.data.length; i++) {
-      var s = result.data[i];
-      var kgName = s.kindergartens ? s.kindergartens.name : '';
-      html += '<tr>' +
-        '<td>' + (start + i + 1) + '</td>' +
-        '<td>' + api.escapeHtml(kgName) + '</td>' +
-        '<td>' + (s.completed_topics || 0) + '/' + (s.total_topics || 0) + '</td>' +
-        '<td>' + (s.progress_rate || 0) + '%</td>' +
-        '<td>' + api.autoBadge(s.completion_status) + '</td>' +
-        '<td>' + (s.checklist_confirmed ? '<span style="color:var(--success)">완료</span>' : '<span style="color:var(--text-weak)">미완료</span>') + '</td>' +
-        '<td>' + (s.pledge_agreed ? '<span style="color:var(--success)">완료</span>' : '<span style="color:var(--text-weak)">미완료</span>') + '</td>' +
-        '<td>' + api.formatDate(s.all_completed_at || '-') + '</td>' +
-        '<td>' + api.renderDetailLink('education-status-detail.html', s.id) + '</td>' +
-        '</tr>';
+    try {
+      var rpcResult = await window.__supabase.rpc('search_education_completions', buildStatusRpcParams(sPage));
+
+      if (rpcResult.error) {
+        console.error('[educations] status RPC error:', rpcResult.error);
+        api.showTableEmpty(s.body, 12, '데이터 로드 실패: ' + (rpcResult.error.message || JSON.stringify(rpcResult.error)));
+        return;
+      }
+
+      var result = parseStatusRpcResult(rpcResult.data);
+      var rows = result.data || [];
+      var total = result.count || 0;
+
+      if (statusCount) statusCount.textContent = api.formatNumber(total);
+
+      if (!rows.length) {
+        api.showTableEmpty(s.body, 12, '검색 결과가 없습니다.');
+        if (s.pagination) s.pagination.innerHTML = '';
+        return;
+      }
+
+      var html = '';
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        var no = offset + i + 1;
+        var pRate = r.progress_rate || 0;
+        html += '<tr>' +
+          '<td>' + no + '</td>' +
+          '<td>' + api.escapeHtml(r.kindergarten_name || '') + '</td>' +
+          '<td>' + api.escapeHtml(r.owner_name || '') + '</td>' +
+          '<td>' + api.maskPhone(r.owner_phone || '') + '</td>' +
+          '<td>' + (r.total_topics || 0) + '</td>' +
+          '<td>' + (r.completed_topics || 0) + '</td>' +
+          '<td>' +
+            '<div class="edu-progress-inline">' +
+              '<div class="edu-progress-inline__track">' +
+                '<div class="edu-progress-inline__fill" style="width:' + pRate + '%"></div>' +
+              '</div>' +
+              '<span class="edu-progress-inline__text">' + pRate + '%</span>' +
+            '</div>' +
+          '</td>' +
+          '<td>' + (r.checklist_confirmed ? '<span class="badge badge--c-green">확인완료</span>' : '<span class="badge badge--c-gray">미확인</span>') + '</td>' +
+          '<td>' + (r.pledge_agreed ? '<span class="badge badge--c-green">동의</span>' : '<span class="badge badge--c-red">미동의</span>') + '</td>' +
+          '<td>' + api.formatDate(r.all_completed_at, true) + '</td>' +
+          '<td>' + api.autoBadge(r.completion_status) + '</td>' +
+          '<td>' + api.renderDetailLink('education-status-detail.html', r.id) + '</td>' +
+          '</tr>';
+      }
+      s.body.innerHTML = html;
+      api.renderPagination(s.pagination, sPage, total, PER_PAGE, loadStatusList);
+    } catch (err) {
+      console.error('[educations] status list exception:', err);
+      api.showTableEmpty(s.body, 12, '데이터를 불러오지 못했습니다.');
     }
-    statusBody.innerHTML = html;
-
-    var tab3 = document.getElementById('tab-status');
-    var pagination = tab3 ? tab3.querySelector('.pagination') : null;
-    if (pagination) api.renderPagination(pagination, sPage, result.count, PER_PAGE, function (p) { sPage = p; loadStatusList(); });
   }
 
   function bindListEvents() {
@@ -264,42 +331,49 @@
       });
     }
 
-    // 이수현황 탭 – 검색 & 엑셀
-    var tab3 = document.getElementById('tab-status');
-    if (tab3) {
-      var btnSearch = tab3.querySelector('.btn-search');
-      if (btnSearch) btnSearch.addEventListener('click', function () { sPage = 1; loadStatusList(); });
-      var searchInput = tab3.querySelector('.filter-input');
-      if (searchInput) searchInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { sPage = 1; loadStatusList(); } });
+    // 이수현황 탭 – 검색 & 초기화 & 엑셀 (reviews.js 패턴)
+    if (s.btnSearch) s.btnSearch.addEventListener('click', function () { loadStatusList(1); });
+    if (s.searchInput) s.searchInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') loadStatusList(1); });
 
-      var btnExcel = tab3.querySelector('.btn-excel');
-      if (btnExcel) btnExcel.addEventListener('click', async function () {
-        var all = await api.fetchAll('education_completions', {
-          select: '*, kindergartens:kindergarten_id(name)',
-          orderBy: 'created_at'
-        });
-        var rows = (all.data || []).map(function (s) {
+    // 초기화: 필터값만 리셋, 데이터테이블 갱신 안함 (reviews.js와 동일)
+    if (s.btnReset) s.btnReset.addEventListener('click', function () {
+      if (window.__resetFilters) window.__resetFilters(sFilterBar);
+    });
+
+    // 엑셀 다운로드 (RPC 사용)
+    if (s.btnExcel) s.btnExcel.addEventListener('click', function () {
+      var params = buildStatusRpcParams(1, 10000);
+      window.__supabase.rpc('search_education_completions', params).then(function (rpcResult) {
+        if (rpcResult.error) { alert('다운로드 실패'); return; }
+        var result = parseStatusRpcResult(rpcResult.data);
+        var rows = result.data || [];
+        api.exportExcel(rows.map(function (r) {
           return {
-            kg: s.kindergartens ? s.kindergartens.name : '',
-            topics: (s.completed_topics || 0) + '/' + (s.total_topics || 0),
-            progress: (s.progress_rate || 0) + '%',
-            status: s.completion_status || '',
-            checklist: s.checklist_confirmed ? '완료' : '미완료',
-            pledge: s.pledge_agreed ? '완료' : '미완료',
-            completed_at: api.formatDate(s.all_completed_at || '-')
+            kindergarten_name: r.kindergarten_name || '',
+            owner_name: r.owner_name || '',
+            owner_phone: api.maskPhone(r.owner_phone),
+            total_topics: r.total_topics || 0,
+            completed_topics: r.completed_topics || 0,
+            progress_rate: (r.progress_rate || 0) + '%',
+            checklist_confirmed: r.checklist_confirmed ? '확인완료' : '미확인',
+            pledge_agreed: r.pledge_agreed ? '동의' : '미동의',
+            all_completed_at: api.formatDate(r.all_completed_at, true),
+            completion_status: r.completion_status || ''
           };
-        });
-        api.exportExcel(rows, [
-          { key: 'kg', label: '유치원명' },
-          { key: 'topics', label: '이수 주제' },
-          { key: 'progress', label: '진행률' },
-          { key: 'status', label: '이수 상태' },
-          { key: 'checklist', label: '체크리스트' },
-          { key: 'pledge', label: '서약서' },
-          { key: 'completed_at', label: '이수 완료일' }
+        }), [
+          { key: 'kindergarten_name', label: '유치원명' },
+          { key: 'owner_name', label: '운영자 성명' },
+          { key: 'owner_phone', label: '운영자 연락처' },
+          { key: 'total_topics', label: '전체 교육 수' },
+          { key: 'completed_topics', label: '이수 완료 수' },
+          { key: 'progress_rate', label: '진행률' },
+          { key: 'checklist_confirmed', label: '체크리스트 확인' },
+          { key: 'pledge_agreed', label: '활동서약서 동의' },
+          { key: 'all_completed_at', label: '이수완료일' },
+          { key: 'completion_status', label: '이수상태' }
         ], '이수현황');
       });
-    }
+    });
   }
 
   function initList() {
@@ -309,7 +383,7 @@
     loadTopicList();
     loadChecklistList();
     loadPledgeList();
-    loadStatusList();
+    loadStatusList(1);
   }
 
   // ══════════════════════════════════════════
@@ -1313,40 +1387,187 @@
     var id = api.getParam('id');
     if (!id) return;
 
-    var result = await api.fetchDetail('education_completions', id, '*, kindergartens:kindergarten_id(id, name)');
+    // ① education_completions + kindergartens(members) 조인
+    var result = await api.fetchDetail('education_completions', id,
+      '*, kindergartens:kindergarten_id(id, name, member_id, members:member_id(id, name, phone))');
     if (result.error || !result.data) { alert('이수현황을 불러올 수 없습니다.'); return; }
     var d = result.data;
     var kg = d.kindergartens || {};
+    var member = kg.members || {};
 
-    var basicEl = document.getElementById('detailEduStatusBasic');
-    if (basicEl) {
-      api.setHtml(basicEl, '<div class="info-grid">' +
-        '<span class="info-grid__label">유치원명</span><span class="info-grid__value"><a href="kindergarten-detail.html?id=' + (kg.id || '') + '" class="info-grid__value--link">' + api.escapeHtml(kg.name || '') + '</a></span>' +
-        '<span class="info-grid__label">이수 진행률</span><span class="info-grid__value">' + (d.progress_rate || 0) + '% (' + (d.completed_topics || 0) + '/' + (d.total_topics || 0) + ')</span>' +
-        '<span class="info-grid__label">이수 상태</span><span class="info-grid__value">' + api.autoBadge(d.completion_status) + '</span>' +
-        '<span class="info-grid__label">전체 이수 완료일</span><span class="info-grid__value">' + api.formatDate(d.all_completed_at) + '</span>' +
-        '<span class="info-grid__label">체크리스트 확인</span><span class="info-grid__value">' + (d.checklist_confirmed ? api.renderBadge('완료', 'green') : api.renderBadge('미완료', 'gray')) + '</span>' +
-        '<span class="info-grid__label">서약서 동의</span><span class="info-grid__value">' + (d.pledge_agreed ? api.renderBadge('완료', 'green') : api.renderBadge('미완료', 'gray')) + '</span>' +
-        '</div>');
+    // ② 공개 교육 주제 목록 조회 (동적 total_topics 계산용)
+    var topicsResult = await api.fetchList('education_topics', {
+      select: 'id, title, display_order',
+      filters: [{ column: 'visibility', op: 'eq', value: '공개' }],
+      orderBy: 'display_order',
+      ascending: true,
+      perPage: 100
+    });
+    var publicTopics = (topicsResult.data && topicsResult.data.length > 0) ? topicsResult.data : [];
+    var totalTopics = publicTopics.length;
+
+    // ③ 동적 계산: completedTopics, progressRate, completionStatus
+    var completedTopics = d.completed_topics || 0;
+    var progressRate = totalTopics > 0 ? Math.round(completedTopics / totalTopics * 100) : 0;
+    var completionStatus;
+    if (completedTopics >= totalTopics && totalTopics > 0 && d.checklist_confirmed && d.pledge_agreed) {
+      completionStatus = '이수완료';
+    } else if (completedTopics > 0) {
+      completionStatus = '진행중';
+    } else {
+      completionStatus = '미시작';
     }
 
-    // 주제별 이수 내역
+    // ④ 최신 체크리스트/서약서 버전 조회
+    var sb = window.__supabase;
+    var latestCheckRes = await sb.from('checklists')
+      .select('id, version_number')
+      .order('version_number', { ascending: false })
+      .limit(1);
+    var latestCheck = (latestCheckRes.data && latestCheckRes.data.length > 0) ? latestCheckRes.data[0] : null;
+
+    var latestPledgeRes = await sb.from('pledges')
+      .select('id, version_number')
+      .order('version_number', { ascending: false })
+      .limit(1);
+    var latestPledge = (latestPledgeRes.data && latestPledgeRes.data.length > 0) ? latestPledgeRes.data[0] : null;
+
+    // ═══════ 영역 ① 유치원 기본정보 ═══════
+    var basicEl = document.getElementById('detailEduStatusBasic');
+    if (basicEl) {
+      api.setHtml(basicEl, [
+        ['유치원명', api.escapeHtml(kg.name || '-')],
+        ['운영자 성명', api.escapeHtml(member.name || '-')],
+        ['운영자 연락처', api.renderMaskedField(
+          api.maskPhone(member.phone), api.formatPhone(member.phone),
+          'education_completions', id, 'owner_phone'
+        )],
+        ['유치원 고유번호', '<a href="kindergarten-detail.html?id=' + (kg.id || '') + '" class="data-table__link">' + api.escapeHtml(kg.id || '-') + '</a>']
+      ]);
+    }
+
+    // ═══════ 영역 ② 이수 전체 요약 ═══════
+    var summaryEl = document.getElementById('detailEduStatusSummary');
+    if (summaryEl) {
+      summaryEl.innerHTML =
+        '<div class="stat-cards--3col">' +
+          '<div class="stat-card">' +
+            '<div class="stat-card__label">전체 교육 주제 수</div>' +
+            '<div class="stat-card__value">' + totalTopics + '</div>' +
+            '<div class="stat-card__unit">건</div>' +
+          '</div>' +
+          '<div class="stat-card stat-card--highlight">' +
+            '<div class="stat-card__label">이수 완료 수</div>' +
+            '<div class="stat-card__value">' + completedTopics + '</div>' +
+            '<div class="stat-card__unit">건</div>' +
+          '</div>' +
+          '<div class="stat-card stat-card--highlight">' +
+            '<div class="stat-card__label">진행률</div>' +
+            '<div class="stat-card__value">' + progressRate + '%</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="info-grid" style="margin-top:16px;">' +
+          '<span class="info-grid__label">이수 상태</span>' +
+          '<span class="info-grid__value">' + api.autoBadge(completionStatus) + '</span>' +
+          '<span class="info-grid__label">전체 이수 완료일</span>' +
+          '<span class="info-grid__value">' + api.formatDate(d.all_completed_at) + '</span>' +
+        '</div>';
+    }
+
+    // ═══════ 영역 ③ 교육별 이수 상세 ═══════
     var topicEl = document.getElementById('detailEduStatusTopics');
     if (topicEl) {
-      var topics = d.topic_details || [];
-      if (Array.isArray(topics) && topics.length > 0) {
+      if (publicTopics.length > 0) {
+        // topic_details JSONB를 topic_id 기준 맵으로 변환
+        var detailMap = {};
+        var topicDetails = d.topic_details || [];
+        if (Array.isArray(topicDetails)) {
+          for (var j = 0; j < topicDetails.length; j++) {
+            var td = topicDetails[j];
+            if (td.topic_id) detailMap[td.topic_id] = td;
+          }
+        }
+
         var html = '';
-        for (var i = 0; i < topics.length; i++) {
-          var t = topics[i];
-          html += '<tr><td>' + (i + 1) + '</td><td>' + api.escapeHtml(t.topic_id || '') + '</td><td>' + api.formatDate(t.completed_at) + '</td></tr>';
+        for (var i = 0; i < publicTopics.length; i++) {
+          var pt = publicTopics[i];
+          var matched = detailMap[pt.id];
+          var statusBadge, dateStr;
+          if (matched && matched.completed_at) {
+            statusBadge = '<span class="badge badge--c-green">이수</span>';
+            dateStr = api.formatDate(matched.completed_at);
+          } else {
+            statusBadge = '<span class="badge badge--c-gray">미이수</span>';
+            dateStr = '-';
+          }
+          html += '<tr>' +
+            '<td>' + (pt.display_order || (i + 1)) + '</td>' +
+            '<td>' + api.escapeHtml(pt.title || '') + '</td>' +
+            '<td>' + statusBadge + '</td>' +
+            '<td>' + dateStr + '</td>' +
+            '</tr>';
         }
         topicEl.innerHTML = html;
       } else {
-        topicEl.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-weak);">이수 내역이 없습니다.</td></tr>';
+        topicEl.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-weak);">공개된 교육 주제가 없습니다.</td></tr>';
       }
     }
 
-    // 강제 이수 완료
+    // ═══════ 영역 ④ 체크리스트 확인 정보 ═══════
+    var checkEl = document.getElementById('detailEduStatusChecklist');
+    if (checkEl) {
+      var checkConfirmed = d.checklist_confirmed;
+      var checkVersionId = d.checklist_version_id || null;
+      var checkVersionNum = d.checklist_version_number || null;
+      var checkVersionHtml = '-';
+      if (checkVersionId && checkVersionNum) {
+        checkVersionHtml = '<a href="education-checklist-detail.html?id=' + checkVersionId + '" class="data-table__link">v' + checkVersionNum + '</a>';
+      } else if (checkVersionNum) {
+        checkVersionHtml = 'v' + checkVersionNum;
+      }
+      var checkMatchBadge = '-';
+      if (checkVersionNum && latestCheck) {
+        checkMatchBadge = (checkVersionNum === latestCheck.version_number)
+          ? api.renderBadge('일치', 'green')
+          : api.renderBadge('불일치', 'red');
+      }
+      api.setHtml(checkEl, [
+        ['확인 여부', checkConfirmed ? api.renderBadge('확인완료', 'green') : api.renderBadge('미확인', 'gray')],
+        ['확인 완료일시', api.formatDate(d.checklist_confirmed_at)],
+        ['확인한 체크리스트 버전', checkVersionHtml],
+        ['최신 버전 일치 여부', checkMatchBadge]
+      ]);
+    }
+
+    // ═══════ 영역 ⑤ 서약서 동의 정보 ═══════
+    var pledgeEl = document.getElementById('detailEduStatusPledge');
+    if (pledgeEl) {
+      var pledgeAgreed = d.pledge_agreed;
+      var pledgeVersionId = d.pledge_version_id || null;
+      var pledgeVersionNum = d.pledge_version_number || null;
+      var pledgeVersionHtml = '-';
+      if (pledgeVersionId && pledgeVersionNum) {
+        pledgeVersionHtml = '<a href="education-pledge-detail.html?id=' + pledgeVersionId + '" class="data-table__link">v' + pledgeVersionNum + '</a>';
+      } else if (pledgeVersionNum) {
+        pledgeVersionHtml = 'v' + pledgeVersionNum;
+      }
+      var pledgeMatchBadge = '-';
+      if (pledgeVersionNum && latestPledge) {
+        pledgeMatchBadge = (pledgeVersionNum === latestPledge.version_number)
+          ? api.renderBadge('일치', 'green')
+          : api.renderBadge('불일치', 'red');
+      }
+      api.setHtml(pledgeEl, [
+        ['동의 여부', pledgeAgreed ? api.renderBadge('동의', 'green') : api.renderBadge('미동의', 'gray')],
+        ['동의 일시', api.formatDate(d.pledge_agreed_at)],
+        ['동의한 서약서 버전', pledgeVersionHtml],
+        ['최신 버전 일치 여부', pledgeMatchBadge]
+      ]);
+    }
+
+    // ═══════ 영역 ⑥ 액션 버튼 ═══════
+
+    // 강제 이수 완료 (동적 totalTopics 사용)
     var forceBtn = document.getElementById('forceCompleteBtn');
     if (forceBtn) {
       forceBtn.addEventListener('click', async function () {
@@ -1354,7 +1575,7 @@
         await api.updateRecord('education_completions', id, {
           completion_status: '이수완료',
           progress_rate: 100,
-          completed_topics: d.total_topics || 0,
+          completed_topics: totalTopics,
           all_completed_at: new Date().toISOString(),
           force_completed: true,
           force_completed_reason: reason ? reason.value.trim() : ''
@@ -1381,22 +1602,6 @@
         });
         await api.insertAuditLog('이수현황초기화', 'education_completions', id, {});
         alert('이수 현황이 초기화되었습니다.');
-        location.reload();
-      });
-    }
-
-    // 체크리스트 초기화
-    var resetCheckBtn = document.getElementById('resetChecklistBtn');
-    if (resetCheckBtn) {
-      resetCheckBtn.addEventListener('click', async function () {
-        await api.updateRecord('education_completions', id, {
-          checklist_confirmed: false,
-          checklist_confirmed_at: null,
-          pledge_agreed: false,
-          pledge_agreed_at: null
-        });
-        await api.insertAuditLog('체크리스트초기화', 'education_completions', id, {});
-        alert('체크리스트/서약서가 초기화되었습니다.');
         location.reload();
       });
     }

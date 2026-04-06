@@ -347,25 +347,33 @@
 
         <!-- 필터 바 -->
         <div class="filter-bar">
+          <!-- 1행: 필터 -->
           <div class="filter-row">
-            <span class="filter-label">이수 상태</span>
-            <select class="filter-select">
-              <option>전체</option>
-              <option>미시작</option>
-              <option>진행중</option>
-              <option>이수완료</option>
+            <span class="filter-label">필터</span>
+            <select class="filter-select" id="statusCompletionFilter">
+              <option value="">이수 상태: 전체</option>
+              <option value="미시작">미시작</option>
+              <option value="진행중">진행중</option>
+              <option value="이수완료">이수완료</option>
             </select>
           </div>
+          <!-- 2행: 검색 -->
           <div class="filter-row">
             <span class="filter-label">검색</span>
-            <input type="text" class="filter-input filter-input--search" placeholder="유치원명, 운영자 성명">
-            <button class="btn-search">검색</button>
+            <select class="filter-select" id="statusSearchField" style="max-width:160px;">
+              <option value="유치원명">유치원명</option>
+              <option value="운영자 성명">운영자 성명</option>
+              <option value="운영자 연락처">운영자 연락처</option>
+            </select>
+            <input type="text" class="filter-input" id="statusSearchInput" placeholder="검색어를 입력하세요" style="max-width:320px;">
+            <button class="btn-reset" id="statusBtnReset">초기화</button>
+            <button class="btn-search" id="statusBtnSearch">검색</button>
           </div>
         </div>
 
         <!-- 결과 헤더 -->
         <div class="result-header">
-          <span class="result-header__count">검색 결과 <strong>320</strong>건</span>
+          <span class="result-header__count">검색 결과 <strong>0</strong>건</span>
           <button class="btn-excel">
             <svg class="btn-excel__icon" viewBox="0 0 16 16" fill="currentColor">
               <path d="M8 12l-4-4h2.5V3h3v5H12L8 12zm-6 2h12v1.5H2V14z"/>
@@ -386,140 +394,20 @@
                 <th>전체 교육 수</th>
                 <th>이수 완료 수</th>
                 <th>진행률</th>
-                <th>체크리스트</th>
-                <th>서약서 동의</th>
-                <th>서약서 동의일시</th>
-                <th>이수 완료일</th>
-                <th>이수 상태</th>
+                <th>체크리스트 확인</th>
+                <th>활동서약서 동의</th>
+                <th>이수완료일</th>
+                <th>이수상태</th>
                 <th>상세</th>
               </tr>
             </thead>
             <tbody id="statusListBody">
-              <tr>
-                <td>1</td>
-                <td>밤톨이네</td>
-                <td>이정훈</td>
-                <td><span class="masked">010-****-5678</span></td>
-                <td>8</td>
-                <td>8</td>
-                <td>
-                  <div class="edu-progress-inline">
-                    <div class="edu-progress-inline__track">
-                      <div class="edu-progress-inline__fill" style="width:100%"></div>
-                    </div>
-                    <span class="edu-progress-inline__text">100%</span>
-                  </div>
-                </td>
-                <td><span class="badge badge--c-green">확인완료</span></td>
-                <td><span class="badge badge--c-green">동의</span></td>
-                <td>2025-12-05</td>
-                <td>2025-12-08</td>
-                <td><span class="badge badge--c-green">이수완료</span></td>
-                <td><a href="education-status-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>사랑이네</td>
-                <td>박수진</td>
-                <td><span class="masked">010-****-1234</span></td>
-                <td>8</td>
-                <td>5</td>
-                <td>
-                  <div class="edu-progress-inline">
-                    <div class="edu-progress-inline__track">
-                      <div class="edu-progress-inline__fill" style="width:63%"></div>
-                    </div>
-                    <span class="edu-progress-inline__text">63%</span>
-                  </div>
-                </td>
-                <td><span class="badge badge--c-green">확인완료</span></td>
-                <td><span class="badge badge--c-red">미동의</span></td>
-                <td>-</td>
-                <td>-</td>
-                <td><span class="badge badge--c-orange">진행중</span></td>
-                <td><a href="education-status-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>해피도그</td>
-                <td>김하늘</td>
-                <td><span class="masked">010-****-9876</span></td>
-                <td>8</td>
-                <td>0</td>
-                <td>
-                  <div class="edu-progress-inline">
-                    <div class="edu-progress-inline__track">
-                      <div class="edu-progress-inline__fill" style="width:0%"></div>
-                    </div>
-                    <span class="edu-progress-inline__text">0%</span>
-                  </div>
-                </td>
-                <td><span class="badge badge--c-gray">미확인</span></td>
-                <td><span class="badge badge--c-red">미동의</span></td>
-                <td>-</td>
-                <td>-</td>
-                <td><span class="badge badge--c-gray">미시작</span></td>
-                <td><a href="education-status-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>하늘정원</td>
-                <td>최민영</td>
-                <td><span class="masked">010-****-4567</span></td>
-                <td>8</td>
-                <td>8</td>
-                <td>
-                  <div class="edu-progress-inline">
-                    <div class="edu-progress-inline__track">
-                      <div class="edu-progress-inline__fill" style="width:100%"></div>
-                    </div>
-                    <span class="edu-progress-inline__text">100%</span>
-                  </div>
-                </td>
-                <td><span class="badge badge--c-green">확인완료</span></td>
-                <td><span class="badge badge--c-green">동의</span></td>
-                <td>2025-12-03</td>
-                <td>2025-12-06</td>
-                <td><span class="badge badge--c-green">이수완료</span></td>
-                <td><a href="education-status-detail.html" class="data-table__link">상세</a></td>
-              </tr>
-              <tr>
-                <td>5</td>
-                <td>멍멍하우스</td>
-                <td>정서윤</td>
-                <td><span class="masked">010-****-3456</span></td>
-                <td>8</td>
-                <td>3</td>
-                <td>
-                  <div class="edu-progress-inline">
-                    <div class="edu-progress-inline__track">
-                      <div class="edu-progress-inline__fill" style="width:38%"></div>
-                    </div>
-                    <span class="edu-progress-inline__text">38%</span>
-                  </div>
-                </td>
-                <td><span class="badge badge--c-gray">미확인</span></td>
-                <td><span class="badge badge--c-red">미동의</span></td>
-                <td>-</td>
-                <td>-</td>
-                <td><span class="badge badge--c-orange">진행중</span></td>
-                <td><a href="education-status-detail.html" class="data-table__link">상세</a></td>
-              </tr>
             </tbody>
           </table>
         </div>
 
         <!-- 페이지네이션 -->
         <div class="pagination">
-          <button class="pagination__btn pagination__btn--arrow" disabled>&laquo;</button>
-          <button class="pagination__btn pagination__btn--arrow" disabled>&lsaquo;</button>
-          <button class="pagination__btn active">1</button>
-          <button class="pagination__btn">2</button>
-          <button class="pagination__btn">3</button>
-          <button class="pagination__btn">4</button>
-          <button class="pagination__btn">5</button>
-          <button class="pagination__btn pagination__btn--arrow">&rsaquo;</button>
-          <button class="pagination__btn pagination__btn--arrow">&raquo;</button>
         </div>
 
       </div><!-- /tab-status -->
