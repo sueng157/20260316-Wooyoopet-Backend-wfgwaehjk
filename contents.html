@@ -245,24 +245,48 @@
       <!-- ============================================================ -->
       <div class="tab-content" id="tab-notice">
 
+        <!-- 필터 바 (배너 탭 3행 구조와 통일) -->
         <div class="filter-bar">
+          <!-- 1행: 기간 + 기간유형 드롭다운 + date range + 퀵버튼 -->
           <div class="filter-row">
-            <span class="filter-label">대상</span>
-            <select class="filter-select">
-              <option>전체</option>
-              <option>보호자</option>
-              <option>유치원</option>
+            <span class="filter-label">기간</span>
+            <select class="filter-select" id="nDateType">
+              <option value="created_at" selected>등록일</option>
+              <option value="updated_at">수정일</option>
             </select>
-
-            <span class="filter-label">공개 상태</span>
-            <select class="filter-select">
-              <option>전체</option>
-              <option>공개</option>
-              <option>비공개</option>
+            <input type="date" class="filter-input filter-input--date" id="nDateFrom" value="">
+            <span class="filter-separator">~</span>
+            <input type="date" class="filter-input filter-input--date" id="nDateTo" value="">
+            <button type="button" class="filter-period-btn active" data-period="all">전체</button>
+            <button type="button" class="filter-period-btn" data-period="this-month">당월</button>
+            <button type="button" class="filter-period-btn" data-period="1month">지난 1개월</button>
+            <button type="button" class="filter-period-btn" data-period="1week">지난 1주일</button>
+          </div>
+          <!-- 2행: 필터 (드롭다운 2개 횡배치) -->
+          <div class="filter-row">
+            <span class="filter-label">필터</span>
+            <select class="filter-select" id="nTarget">
+              <option value="">대상: 전체</option>
+              <option value="전체(공통)">전체(공통)</option>
+              <option value="보호자">보호자</option>
+              <option value="유치원">유치원</option>
             </select>
-
-            <span class="filter-label">키워드</span>
-            <input type="text" class="filter-input" placeholder="공지 제목·내용 검색">
+            <select class="filter-select" id="nPublic">
+              <option value="">공개상태: 전체</option>
+              <option value="공개">공개</option>
+              <option value="비공개">비공개</option>
+            </select>
+          </div>
+          <!-- 3행: 검색 -->
+          <div class="filter-row">
+            <span class="filter-label">검색</span>
+            <select class="filter-select" id="nSearchField" style="max-width:160px;">
+              <option value="title">공지제목</option>
+              <option value="content">공지내용</option>
+            </select>
+            <input type="text" class="filter-input" id="nSearchInput" placeholder="검색어를 입력하세요" style="max-width:320px;">
+            <button class="btn-reset" id="nBtnReset">초기화</button>
+            <button class="btn-search" id="nBtnSearch">검색</button>
           </div>
         </div>
 
@@ -298,7 +322,7 @@
               <tr>
                 <td>12</td>
                 <td>서비스 점검 안내 (3/20 02:00~06:00)</td>
-                <td><span class="badge badge--c-gray">전체</span></td>
+                <td><span class="badge badge--c-gray">전체(공통)</span></td>
                 <td class="cnt-pin-cell">📌</td>
                 <td><span class="badge badge--c-green">공개</span></td>
                 <td>1,234</td>
@@ -331,7 +355,7 @@
               <tr>
                 <td>9</td>
                 <td>환불 정책 변경 안내</td>
-                <td><span class="badge badge--c-gray">전체</span></td>
+                <td><span class="badge badge--c-gray">전체(공통)</span></td>
                 <td class="cnt-pin-cell" style="color:var(--text-weak);">—</td>
                 <td><span class="badge badge--c-gray">비공개</span></td>
                 <td>89</td>

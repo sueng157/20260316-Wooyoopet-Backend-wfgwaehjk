@@ -30,6 +30,10 @@
   var b = {};
   var bFilterBar;
 
+  // 공지사항 탭 전용 DOM 캐시
+  var n = {};
+  var nFilterBar;
+
   function cacheListDom() {
     bannerBody = document.getElementById('bannerListBody');
     noticeBody = document.getElementById('noticeListBody');
@@ -59,6 +63,22 @@
       b.btnReset     = document.getElementById('bBtnReset');
       b.btnSearch    = document.getElementById('bBtnSearch');
       b.btnExcel     = bTab.querySelector('.btn-excel');
+    }
+
+    // 공지사항 탭 전용 DOM 캐시
+    var nTab = document.getElementById('tab-notice');
+    if (nTab) {
+      nFilterBar      = nTab.querySelector('.filter-bar');
+      n.dateType      = document.getElementById('nDateType');
+      n.dateFrom      = document.getElementById('nDateFrom');
+      n.dateTo        = document.getElementById('nDateTo');
+      n.target        = document.getElementById('nTarget');
+      n.public        = document.getElementById('nPublic');
+      n.searchField   = document.getElementById('nSearchField');
+      n.searchInput   = document.getElementById('nSearchInput');
+      n.btnReset      = document.getElementById('nBtnReset');
+      n.btnSearch     = document.getElementById('nBtnSearch');
+      n.btnExcel      = nTab.querySelector('.btn-excel');
     }
   }
 
@@ -175,10 +195,31 @@
     if (!noticeBody) return;
     api.showTableLoading(noticeBody, 9);
     var tab = document.getElementById('tab-notice');
-    var filters = buildTabFilters(tab, 'created_at');
+
+    // 필터 조건 조립 (공지사항 전용)
+    var filters = [];
+    var dateCol = (n.dateType && n.dateType.value) ? n.dateType.value : 'created_at';
+    if (n.dateFrom && n.dateFrom.value) {
+      filters.push({ column: dateCol, op: 'gte', value: n.dateFrom.value + 'T00:00:00' });
+    }
+    if (n.dateTo && n.dateTo.value) {
+      filters.push({ column: dateCol, op: 'lte', value: n.dateTo.value + 'T23:59:59' });
+    }
+    if (n.target && n.target.value) {
+      filters.push({ column: 'target', op: 'eq', value: n.target.value });
+    }
+    if (n.public && n.public.value) {
+      filters.push({ column: 'visibility', op: 'eq', value: n.public.value });
+    }
+    var searchOpts = {};
+    if (n.searchInput && n.searchInput.value.trim()) {
+      var searchCol = (n.searchField && n.searchField.value) ? n.searchField.value : 'title';
+      searchOpts = { column: searchCol, value: n.searchInput.value.trim() };
+    }
 
     var result = await api.fetchList('notices', {
       filters: filters,
+      search: searchOpts,
       orderBy: 'created_at', page: nPage, perPage: PER_PAGE
     });
     if (result.error) { api.showTableEmpty(noticeBody, 9, '데이터 로드 실패'); return; }
@@ -186,19 +227,19 @@
     if (!result.data.length) { api.showTableEmpty(noticeBody, 9); return; }
 
     var html = '';
+    var start = (nPage - 1) * PER_PAGE;
     for (var i = 0; i < result.data.length; i++) {
-      var n = result.data[i];
-      var start = (nPage - 1) * PER_PAGE;
+      var row = result.data[i];
       html += '<tr>' +
         '<td>' + (start + i + 1) + '</td>' +
-        '<td>' + api.escapeHtml(n.title) + '</td>' +
-        '<td>' + api.autoBadge(n.target || '') + '</td>' +
-        '<td>' + (n.is_pinned ? '<span style="color:var(--danger);font-weight:600;">고정</span>' : '-') + '</td>' +
-        '<td>' + api.autoBadge(n.visibility === '공개' ? '공개' : '비공개') + '</td>' +
-        '<td>' + (n.view_count || 0) + '</td>' +
-        '<td>' + (n.push_sent ? '발송' : '-') + '</td>' +
-        '<td>' + api.formatDate(n.created_at) + '</td>' +
-        '<td>' + api.renderDetailLink('content-notice-detail.html', n.id) + '</td>' +
+        '<td>' + api.escapeHtml(row.title) + '</td>' +
+        '<td>' + api.autoBadge(row.target || '') + '</td>' +
+        '<td>' + (row.is_pinned ? '<span style="color:var(--danger);font-weight:600;">고정</span>' : '-') + '</td>' +
+        '<td>' + api.autoBadge(row.visibility === '공개' ? '공개' : '비공개') + '</td>' +
+        '<td>' + (row.view_count || 0) + '</td>' +
+        '<td>' + api.formatDate(row.created_at) + '</td>' +
+        '<td>' + api.formatDate(row.updated_at) + '</td>' +
+        '<td>' + api.renderDetailLink('content-notice-detail.html', row.id) + '</td>' +
         '</tr>';
     }
     noticeBody.innerHTML = html;
@@ -325,8 +366,26 @@
       },
       'tab-notice': {
         table: 'notices', orderBy: 'created_at', dateCol: 'created_at',
-        map: function (n) { return { title: n.title || '', target: n.target || '', pinned: n.is_pinned ? '고정' : '-', visibility: n.visibility || '', views: n.view_count || 0, push: n.push_sent ? '발송' : '미발송', created: api.formatDate(n.created_at) }; },
-        headers: [{ key: 'title', label: '제목' }, { key: 'target', label: '대상' }, { key: 'pinned', label: '상단고정' }, { key: 'visibility', label: '공개' }, { key: 'views', label: '조회수' }, { key: 'push', label: '푸시' }, { key: 'created', label: '등록일' }],
+        map: function (row) {
+          return {
+            title: row.title || '',
+            target: row.target || '',
+            pinned: row.is_pinned ? '고정' : '-',
+            visibility: row.visibility || '',
+            views: row.view_count || 0,
+            created: api.formatDate(row.created_at),
+            updated: api.formatDate(row.updated_at)
+          };
+        },
+        headers: [
+          { key: 'title', label: '공지제목' },
+          { key: 'target', label: '대상' },
+          { key: 'pinned', label: '상단고정' },
+          { key: 'visibility', label: '공개상태' },
+          { key: 'views', label: '조회수' },
+          { key: 'created', label: '등록일' },
+          { key: 'updated', label: '수정일' }
+        ],
         filename: '공지사항'
       },
       'tab-faq': {
@@ -340,7 +399,7 @@
     if (!c) { alert('이 탭은 엑셀 다운로드를 지원하지 않습니다.'); return; }
     var tab = document.getElementById(tabName);
 
-    // 배너 탭은 전용 필터 사용
+    // 탭별 전용 필터 사용
     var filters;
     if (tabName === 'tab-banner') {
       filters = [];
@@ -349,6 +408,13 @@
       if (b.dateTo && b.dateTo.value) filters.push({ column: dateCol, op: 'lte', value: b.dateTo.value + 'T23:59:59' });
       if (b.position && b.position.value) filters.push({ column: 'display_position', op: 'eq', value: b.position.value });
       if (b.public && b.public.value) filters.push({ column: 'visibility', op: 'eq', value: b.public.value });
+    } else if (tabName === 'tab-notice') {
+      filters = [];
+      var dateCol = (n.dateType && n.dateType.value) ? n.dateType.value : 'created_at';
+      if (n.dateFrom && n.dateFrom.value) filters.push({ column: dateCol, op: 'gte', value: n.dateFrom.value + 'T00:00:00' });
+      if (n.dateTo && n.dateTo.value) filters.push({ column: dateCol, op: 'lte', value: n.dateTo.value + 'T23:59:59' });
+      if (n.target && n.target.value) filters.push({ column: 'target', op: 'eq', value: n.target.value });
+      if (n.public && n.public.value) filters.push({ column: 'visibility', op: 'eq', value: n.public.value });
     } else {
       filters = buildTabFilters(tab, c.dateCol);
     }
@@ -357,6 +423,9 @@
     if (c.ascending !== undefined) fetchOpts.ascending = c.ascending;
     if (tabName === 'tab-banner' && b.searchInput && b.searchInput.value.trim()) {
       fetchOpts.search = { column: 'title', value: b.searchInput.value.trim() };
+    } else if (tabName === 'tab-notice' && n.searchInput && n.searchInput.value.trim()) {
+      var searchCol = (n.searchField && n.searchField.value) ? n.searchField.value : 'title';
+      fetchOpts.search = { column: searchCol, value: n.searchInput.value.trim() };
     }
     var all = await api.fetchAll(c.table, fetchOpts);
     var rows = (all.data || []).map(c.map);
@@ -438,10 +507,76 @@
       });
     }
 
-    // ── 나머지 탭(공지/FAQ/약관) — 기존 로직 유지 ──
-    var tabs = ['tab-notice', 'tab-faq', 'tab-terms'];
-    var loaders = [loadNoticeList, loadFaqList, loadTermsList];
-    var pageResets = [function () { nPage = 1; }, function () { fPage = 1; }, function () { tPage = 1; }];
+    // ── 공지사항 탭 전용 이벤트 ──
+    var noticeTab = document.getElementById('tab-notice');
+    if (noticeTab) {
+      // 검색 버튼
+      if (n.btnSearch) n.btnSearch.addEventListener('click', function () { nPage = 1; loadNoticeList(); });
+      // 검색어 Enter 키
+      if (n.searchInput) n.searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { nPage = 1; loadNoticeList(); }
+      });
+      // 초기화 버튼: 필터값만 리셋, 데이터테이블 갱신 안함
+      if (n.btnReset) n.btnReset.addEventListener('click', function () {
+        if (window.__resetFilters) window.__resetFilters(nFilterBar);
+        // 기간 퀵버튼을 '전체'로 복원
+        noticeTab.querySelectorAll('.filter-period-btn').forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-period') === 'all');
+        });
+      });
+      // 엑셀 다운로드
+      if (n.btnExcel) n.btnExcel.addEventListener('click', function () {
+        excelForTab('tab-notice');
+      });
+
+      // 기간 퀵버튼 (배너 탭과 동일 패턴)
+      var nPeriodBtns = noticeTab.querySelectorAll('.filter-period-btn');
+      nPeriodBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          nPeriodBtns.forEach(function (pb) { pb.classList.remove('active'); });
+          btn.classList.add('active');
+
+          var period = btn.getAttribute('data-period');
+          var from = '';
+          var to = '';
+
+          if (period === 'all') {
+            from = ''; to = '';
+          } else if (period === 'this-month') {
+            var now = new Date();
+            from = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
+            var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            to = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(lastDay).padStart(2, '0');
+          } else if (period === '1month') {
+            var d1 = new Date();
+            d1.setMonth(d1.getMonth() - 1);
+            from = d1.getFullYear() + '-' + String(d1.getMonth() + 1).padStart(2, '0') + '-' + String(d1.getDate()).padStart(2, '0');
+            to = api.getToday();
+          } else if (period === '1week') {
+            var d7 = new Date();
+            d7.setDate(d7.getDate() - 7);
+            from = d7.getFullYear() + '-' + String(d7.getMonth() + 1).padStart(2, '0') + '-' + String(d7.getDate()).padStart(2, '0');
+            to = api.getToday();
+          }
+
+          if (n.dateFrom) n.dateFrom.value = from;
+          if (n.dateTo) n.dateTo.value = to;
+        });
+      });
+
+      // 날짜 input 수동 변경 시 기간 퀵버튼 active 해제
+      [n.dateFrom, n.dateTo].forEach(function (el) {
+        if (!el) return;
+        el.addEventListener('change', function () {
+          nPeriodBtns.forEach(function (pb) { pb.classList.remove('active'); });
+        });
+      });
+    }
+
+    // ── 나머지 탭(FAQ/약관) — 기존 로직 유지 ──
+    var tabs = ['tab-faq', 'tab-terms'];
+    var loaders = [loadFaqList, loadTermsList];
+    var pageResets = [function () { fPage = 1; }, function () { tPage = 1; }];
 
     for (var i = 0; i < tabs.length; i++) {
       var tab = document.getElementById(tabs[i]);
