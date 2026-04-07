@@ -23,7 +23,7 @@
 [진행중] DB 연결 보완 및 UI 개선 (PR #59~#104)
   - 회원관리, 유치원관리, 반려동물관리, 돌봄예약관리, 결제관리, 정산관리, 채팅관리, 후기관리, 교육관리 : 수정 완료
   - 콘텐츠관리(배너 탭) : 수정 완료
-  - 콘텐츠관리(공지사항 탭) : 수정 완료 (목록 필터 3행 통일 + 등록/상세 페이지 전면 재구성)
+  - 콘텐츠관리(공지사항 탭) : 수정 완료 (목록 필터 3행 통일 + 등록/상세 페이지 전면 재구성 + Quill 에디터 + 다건 첨부파일)
   - 콘텐츠관리(FAQ/약관 탭) ~ 설정 : 작업 예정
   ↓
 [예정] 호스팅 전환·모바일앱 백엔드·기존 서버 정리
@@ -302,7 +302,7 @@ components.css      → 재사용 UI 컴포넌트 (필터바, 테이블, 배지,
 | 규칙 | 내용 |
 |------|------|
 | 배너 이미지 크기 | 360×100px (또는 720×200px) |
-| 공지사항 | 대상(전체/보호자/유치원), 상단 고정, 푸시 알림 발송 기능 |
+| 공지사항 | 대상(전체(공통)/보호자/유치원), 상단 고정, Quill 에디터(본문 HTML 저장), 다건 첨부(10개/10MB, PDF·DOC·DOCX·HWP·JPG·JPEG·PNG), 공개상태 읽기전용 배지+모달 전환, 푸시 발송(발송완료 시 버튼 비활성), 조회수 표시 |
 | FAQ | 카테고리(결제/돌봄/환불/회원/유치원), 순서 변경 |
 | 약관 | 필수/선택, 버전 관리, 새 버전 발행, 동의 회원 존재 시 삭제 불가 |
 
@@ -662,10 +662,10 @@ css/settlements.css      82줄  (정산관리 전용 버튼/요약, 체크박스
 css/chats.css           163줄  (채팅관리 전용 말풍선/텍스트, 색상은 CSS 변수 사용)
 css/reviews.css          51줄  (후기관리 전용 태그, 후기태그·말줄임은 components.css 사용)
 css/educations.css      473줄  (교육관리 전용 — 이미지/퀴즈/토글/체크리스트/서약서, 섹션카드·화살표는 components.css 사용)
-css/contents.css        175줄  (콘텐츠관리 전용 — 카테고리(시스템색상+유치원핑크)/이미지 프리뷰/배너 사이즈 오버라이드, 폼·화살표·스크롤은 components.css 사용)
+css/contents.css        233줄  (콘텐츠관리 전용 — 카테고리(시스템색상+유치원핑크)/이미지 프리뷰/배너 사이즈 오버라이드/공지 첨부파일 리스트/Quill 에디터 리스트 오버라이드/disabled 버튼, 폼·화살표·스크롤은 components.css 사용)
 css/settings.css        109줄  (설정 전용 — 인풋그룹/힌트/권한셀렉트, 색상은 CSS 변수 사용, 폼은 form-* 사용)
 css/login.css           194줄  (로그인 전용 — 중앙 카드 레이아웃, 패스워드 토글, 디자인 시스템 변수 활용)
-총 3,462줄
+총 3,520줄
 ```
 
 ### 6-2. JavaScript 파일 크기
@@ -674,7 +674,7 @@ css/login.css           194줄  (로그인 전용 — 중앙 카드 레이아웃
 js/supabase-client.js    20줄  (Supabase CDN 클라이언트 초기화, URL/anon-key 설정)
 js/auth.js              365줄  (로그인/로그아웃, 세션 체크, 사이드바·헤더 프로필 동적 표시, 메뉴 접근 권한 제어)
 js/common.js            167줄  (모달 시스템, 마스킹 토글, 소개글 토글, textarea→버튼 활성화, 필터 초기화)
-js/components.js        224줄  (탭 전환, 전체선택 체크박스, 순서 화살표, 버전 검증, 글자수 카운터)
+js/components.js        231줄  (탭 전환, 전체선택 체크박스, 순서 화살표, 버전 검증, 글자수 카운터, URL 해시 탭 복원)
 js/api.js               842줄  (Supabase CRUD 래퍼, 포매터, 배지, 페이지네이션, 엑셀, 감사로그, 마스킹, 권한)
 js/dashboard.js         244줄  (통계 카드, 승인 대기, 매출 요약, 활동 로그)
 js/members.js           812줄  (목록·상세, 이용정지/해제, 주소인증, 엑셀, 결제집계, 서류확인 모달)
@@ -686,9 +686,9 @@ js/settlements.js       819줄  (정산정보/내역 2탭, search_settlement_inf
 js/chats.js             974줄  (채팅/신고 2탭, search_chat_rooms·search_reports RPC, 채팅상세 DB 바인딩, 신고상세 DB 바인딩(admin 조인·report_logs), 비활성화, 제재/기각, 처리이력 로드)
 js/reviews.js           679줄  (보호자/유치원 2탭, search_guardian_reviews·search_kindergarten_reviews RPC, 기간퀵버튼(전체/당월/1개월/1주일), 숨김/해제)
 js/educations.js       2151줄  (교육 주제 CRUD + 이미지 Storage 관리 + 고아파일 정리 + 체크리스트/서약서 보기·편집·상태변경·삭제 + 이수현황 목록(RPC)+상세(동적 렌더링), 버전관리)
-js/contents.js         1795줄  (배너/공지/FAQ/약관 4탭, 배너 Storage 관리+고아정리+보기/편집 모드, 공지사항 Quill 에디터+다건 첨부파일+보기/편집 모드, 푸시발송, 버전발행)
+js/contents.js         1795줄  (배너/공지/FAQ/약관 4탭, 배너 Storage 관리+고아정리+보기/편집 모드, 공지사항 Quill 에디터+다건 첨부파일(10개/10MB)+보기/편집 모드+Storage 관리+고아정리, 푸시발송, 버전발행)
 js/settings.js          504줄  (앱설정6카드, 관리자CRUD, 피드백, 규칙 추가/삭제)
-총 11,733줄  (Phase 3 완료 + DB 연결 보완·UI 개선 기준)
+총 12,381줄  (Phase 3 완료 + DB 연결 보완·UI 개선 기준)
 ```
 
 ---
@@ -915,6 +915,8 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 | #102 | 교육관리 | 이수현황 탭: `search_education_completions` RPC 신규(sql/38, 동적 total_topics·progress_rate·completion_status, 필터+검색+페이지네이션), #tab-status 필터바 재설계(상태 드롭다운+검색 드롭다운+입력+초기화/검색 버튼), 12컬럼 테이블(진행률 바, 체크리스트/서약서 배지), 엑셀 다운로드(연락처 마스킹), `var` 중복 선언 제거. 이수현황 상세(education-status-detail.html): 기본정보·요약·주제·체크리스트·서약 5영역 동적 렌더링, `loadStatusDetail()` 전면 개편(kindergartens→members 조인, 공개 주제 동적 집계, topic_details JSONB 매칭, 체크리스트/서약서 버전 비교), 체크리스트 확인 초기화 버튼/모달 삭제, 강제 이수 동적 totalTopics 적용, 더미 HTML 제거 |
 | #103 | 교육관리 | 이수현황 상세 3건 수정: (1) 이수 전체 요약에 체크리스트 확인/활동서약서 동의 배지 2행 추가, (2) fetchDetail 조인에 checklists:checklist_version_id + pledges:pledge_version_id 추가하여 version_number 조회 (기존 미존재 d.checklist_version_number 참조 수정), (3) checkVersionId/pledgeVersionId 변수 정리 (FK 조인 결과만 참조, fallback 제거) |
 | #104 | 콘텐츠관리 | 배너 등록/상세 페이지 전면 재작성: 등록 페이지(content-banner-create.html)와 상세 페이지(content-banner-detail.html) 분리, 노출상태 필드를 기본정보 블록으로 이동, 보기/편집 모드 분리(educations.js 패턴 적용), 이미지 Storage 관리(`banner-images` 버킷, 업로드/교체/삭제, 고아 이미지 정리), 노출상태 자동 계산(is_public+start_date+end_date→노출중/예정/종료/비공개), display_order 자동 설정, 연결유형별 입력 전환(외부URL↔앱내화면), CSS에 `#editBannerImgPreview` 사이즈 오버라이드 추가(360×100px) |
+| #106 | 콘텐츠관리 | 공지사항 탭 목록: 검색필터 3행 구조 통일(등록일+퀵버튼, 필터(대상+공개상태), 검색+초기화), 테이블 컬럼 정규화, 데이터테이블 매핑 수정 |
+| #107 | 콘텐츠관리 | 공지사항 등록/상세 페이지 전면 재구성: 등록 페이지(content-notice-create.html) 2블록 구조(기본정보+본문), Quill CDN 에디터 통합, 다건 첨부파일(10개/10MB, PDF·DOC·DOCX·HWP·JPG·JPEG·PNG, `notice-attachments` 버킷), 공개상태 읽기전용 배지, 대상 드롭다운(전체(공통)/보호자/유치원). 상세 페이지(content-notice-detail.html) 보기/편집 모드 분리, 푸시 발송 상태 관리(발송완료→disabled), 공개/비공개 전환 모달, Quill 에디터 생명주기(편집 진입 시 생성, 취소 시 파괴), 첨부파일 관리(추가/삭제, 고아파일 정리), 글머리기호/번호 리스트 조회모드 표시 수정(common.css 전역 리셋 오버라이드). URL 해시 기반 탭 복원(js/components.js), 8개 HTML 뒤로가기 링크에 탭 해시 추가 |
 | #99 | 후기관리 | 보호자 후기 탭: 필터바 3행 구조 개편(작성일+퀵버튼(전체/당월/지난1개월/지난1주일), 필터(만족도+이미지), 검색+초기화), 테이블 컬럼명 변경(작성일/반려동물 이름/예약상세), `search_guardian_reviews` RPC 전환(sql/32), 엑셀 다운로드 RPC 전환. 유치원 후기 탭: 동일 구조 필터바(드롭다운 2개: 만족도+보호자 전용, 이미지 기능 없음), 테이블 11컬럼(이미지 컬럼 없음), `search_kindergarten_reviews` RPC 신규(sql/33), 엑셀 다운로드 RPC 전환. JS: buildGuardianRpcParams/buildKgRpcParams, parseRpcResult, renderRow, bindPeriodButtons(양쪽 탭), 초기화 버튼 |
 
 **진행 상황:**
@@ -927,7 +929,7 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 - ✅ 채팅관리 (7번): 수정 완료 (PR #97~#98)
 - ✅ 후기관리 (8번): 수정 완료 (PR #99)
 - ✅ 교육관리 (9번): 수정 완료 (교육 주제, 체크리스트/서약서, 이수현황 목록+상세 — PR #100~#103, sql/35~38)
-- 🔵 콘텐츠관리 (10번): 배너 탭 수정 완료 (PR #104), 공지/FAQ/약관 탭 작업 예정
+- 🔵 콘텐츠관리 (10번): 배너 탭 수정 완료 (PR #104), 공지사항 탭 수정 완료 (PR #106~#107), FAQ/약관 탭 작업 예정
 - ⬜ 설정 (11번): 작업 예정
 
 ---
