@@ -20,9 +20,10 @@
 [완료] JavaScript UI 구현 (4파일 621줄, 인라인 JS 0건, PR #39~#42)
 [완료] 백엔드 구축(Phase 1,2,3 완료)(PR #48~#57)
   ↓
-[진행중] DB 연결 보완 및 UI 개선 (PR #59~#103)
+[진행중] DB 연결 보완 및 UI 개선 (PR #59~#104)
   - 회원관리, 유치원관리, 반려동물관리, 돌봄예약관리, 결제관리, 정산관리, 채팅관리, 후기관리, 교육관리 : 수정 완료
-  - 콘텐츠관리 ~ 설정 : 작업 예정
+  - 콘텐츠관리(배너 탭) : 수정 완료
+  - 콘텐츠관리(공지/FAQ/약관 탭) ~ 설정 : 작업 예정
   ↓
 [예정] 호스팅 전환·모바일앱 백엔드·기존 서버 정리
   - Phase 4,5,6 (DB 연결 보완 및 UI 개선 후 진행예정)
@@ -34,7 +35,7 @@
 ### 1-3. 저장소 정보
 
 - **프로젝트**: 우유펫 관리자 백오피스 대시보드
-- **현재 단계**: Phase 1~3 완료 (PR #48~#57) → DB 연결 보완 및 UI 개선 진행중 (PR #59~#103) → Phase 4 예정
+- **현재 단계**: Phase 1~3 완료 (PR #48~#57) → DB 연결 보완 및 UI 개선 진행중 (PR #59~#104) → Phase 4 예정
 - **저장소**: `https://github.com/sueng157/20260316-Wooyoopet-Backend-wfgwaehjk.git`
 - **브랜치 전략**: `main` (머지용) / `genspark_ai_developer` (작업용)
 - **스펙 문서**: `full_spec_with_tables.md` (루트에 위치, 대메뉴 0~11번 전체 명세)
@@ -304,6 +305,45 @@ components.css      → 재사용 UI 컴포넌트 (필터바, 테이블, 배지,
 | FAQ | 카테고리(결제/돌봄/환불/회원/유치원), 순서 변경 |
 | 약관 | 필수/선택, 버전 관리, 새 버전 발행, 동의 회원 존재 시 삭제 불가 |
 
+### 5-17. 콘텐츠관리 배너 이미지 Storage 관리 (PR #104)
+
+**Supabase Storage 버킷**: `banner-images`
+
+**이미지 업로드 유틸리티 (contents.js):**
+- `uploadBannerImage(file)` — `banner-images` 버킷에 `{timestamp}_{random}_{filename}` 형태로 업로드, 공개 URL 반환
+- `deleteBannerImageFromStorage(url)` — URL에서 파일 경로를 추출하여 `banner-images` 버킷에서 삭제
+
+**고아 파일(orphan) 정리 로직:**
+
+| 케이스 | 페이지 | 처리 방식 |
+|--------|--------|----------|
+| 이미지 교체 | create, detail | 업로드 핸들러에서 새 파일 업로드 전 기존 URL로 `deleteBannerImageFromStorage()` 호출 |
+| 등록 안 하고 이탈 | content-banner-create | `beforeunload`/`pagehide` 이벤트에서 `bannerCreateSaved` 플래그가 false이면 `bannerImageUrl` 삭제 |
+| 편집 취소/이탈 | content-banner-detail | 취소 버튼: 원본 URL과 다른 새 이미지면 삭제 후 원본 복원. `beforeunload`/`pagehide`: `isEditMode`가 true이고 `bannerDetailSaved`가 false이면 원본과 다른 이미지 삭제 |
+| 편집 저장 | content-banner-detail | 원본 URL과 다른 이미지로 교체 저장 시, 저장 직전에 이전 원본 이미지를 Storage에서 삭제 |
+
+**주의사항**: 교육관리와 동일 — `beforeunload`/`pagehide`에서의 async Storage 삭제는 브라우저에 따라 완료가 보장되지 않음
+
+### 5-18. 콘텐츠관리 배너 JS 상세 (contents.js — PR #104)
+
+| 기능 | 함수/요소 | 동작 | 대상 페이지 |
+|------|-----------|------|------------|
+| 배너 상세 로드 | `loadBannerDetail()` | banners 테이블 단건 조회, 보기 모드 렌더링, 노출상태 자동 계산 | content-banner-detail |
+| 보기↔편집 모드 | `toggleBannerViewEdit()` | info-grid(읽기전용) ↔ form-*(인풋) 전환, 상단 버튼 토글 | content-banner-detail |
+| 상세 페이지 바인딩 | `bindBannerDetailActions()` | 수정/저장/취소/삭제/비공개 버튼 이벤트 | content-banner-detail |
+| 이미지 업로드/교체/삭제 | 업로드 핸들러 | 파일 선택→Storage 업로드→프리뷰 표시, 교체 시 이전 파일 삭제, 삭제 시 Storage에서 제거 | create, detail |
+| 고아 이미지 정리 | `beforeunload`/`pagehide` | 교육관리와 동일 패턴 (5-17 참조) | create, detail |
+| 배너 등록 | `initBannerCreate()` | display_order 자동 설정(최대값+1), 폼 바인딩, 저장 시 banners INSERT | content-banner-create |
+| 필터/검색 | `loadBannerList()` | 노출상태/표시위치 필터, 검색, 페이지네이션 | contents.html #tab-banner |
+| 노출상태 자동 계산 | `calcExposureStatus()` | is_public + start_date + end_date 기반 4상태 계산 (노출중/예정/종료/비공개) | 목록, 상세 |
+| 배지 렌더링 | `autoBadge()` | 노출상태 4종 + 연결유형 2종 + 표시위치 배지 | 목록, 상세 |
+| 연결 유형 플레이스홀더 | 연결유형 `change` | '외부 URL' → URL 입력, '앱 내 화면' → 드롭다운 전환 | create, detail |
+
+**배너 등록/상세 페이지 분리 구조 (PR #104):**
+- `content-banner-create.html`: 등록 전용 페이지 (폼 모드만)
+- `content-banner-detail.html`: 상세 전용 페이지 (보기 모드 기본, [수정] 클릭 시 편집 모드)
+- 노출 상태 필드: 기본정보 블록 상단에 배치 (별도 섹션 아님)
+
 ### 5-11. 설정(11번 메뉴) 규칙
 
 | 규칙 | 내용 |
@@ -547,10 +587,10 @@ css/settlements.css      82줄  (정산관리 전용 버튼/요약, 체크박스
 css/chats.css           163줄  (채팅관리 전용 말풍선/텍스트, 색상은 CSS 변수 사용)
 css/reviews.css          51줄  (후기관리 전용 태그, 후기태그·말줄임은 components.css 사용)
 css/educations.css      473줄  (교육관리 전용 — 이미지/퀴즈/토글/체크리스트/서약서, 섹션카드·화살표는 components.css 사용)
-css/contents.css        143줄  (콘텐츠관리 전용 — 카테고리(시스템색상+유치원핑크)/이미지 프리뷰, 폼·화살표·스크롤은 components.css 사용)
+css/contents.css        175줄  (콘텐츠관리 전용 — 카테고리(시스템색상+유치원핑크)/이미지 프리뷰/배너 사이즈 오버라이드, 폼·화살표·스크롤은 components.css 사용)
 css/settings.css        109줄  (설정 전용 — 인풋그룹/힌트/권한셀렉트, 색상은 CSS 변수 사용, 폼은 form-* 사용)
 css/login.css           194줄  (로그인 전용 — 중앙 카드 레이아웃, 패스워드 토글, 디자인 시스템 변수 활용)
-총 3,430줄
+총 3,462줄
 ```
 
 ### 6-2. JavaScript 파일 크기
@@ -571,9 +611,9 @@ js/settlements.js       819줄  (정산정보/내역 2탭, search_settlement_inf
 js/chats.js             974줄  (채팅/신고 2탭, search_chat_rooms·search_reports RPC, 채팅상세 DB 바인딩, 신고상세 DB 바인딩(admin 조인·report_logs), 비활성화, 제재/기각, 처리이력 로드)
 js/reviews.js           679줄  (보호자/유치원 2탭, search_guardian_reviews·search_kindergarten_reviews RPC, 기간퀵버튼(전체/당월/1개월/1주일), 숨김/해제)
 js/educations.js       2151줄  (교육 주제 CRUD + 이미지 Storage 관리 + 고아파일 정리 + 체크리스트/서약서 보기·편집·상태변경·삭제 + 이수현황 목록(RPC)+상세(동적 렌더링), 버전관리)
-js/contents.js          496줄  (배너/공지/FAQ/약관 4탭, 푸시발송, 버전발행)
+js/contents.js         1154줄  (배너/공지/FAQ/약관 4탭, 배너 Storage 관리+고아정리+보기/편집 모드, 푸시발송, 버전발행)
 js/settings.js          504줄  (앱설정6카드, 관리자CRUD, 피드백, 규칙 추가/삭제)
-총 11,075줄  (Phase 3 완료 + DB 연결 보완·UI 개선 기준)
+총 11,733줄  (Phase 3 완료 + DB 연결 보완·UI 개선 기준)
 ```
 
 ---
@@ -799,6 +839,7 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 | #100~#101 | 교육관리 | 체크리스트/서약서 탭 전면 개편: apply_status '이전 버전'→'미적용' 변경(sql/36, CHECK 제약 DROP→UPDATE→ADD), 버전관리 UI 개편(보기/편집 모드 분리, [상태변경][수정][삭제] 버튼, 상태변경 토글(단일 활성 버전), 삭제 보호(적용중 삭제 금지)), drag-handle 제거, 서약서 3depth 구조 도입(content+description+sub_items, sql/37 pledge_items.description 추가), 생성 시 미적용 상태 기본값, autoBadge '미적용' 매핑 추가, created_by FK 마이그레이션(sql/35) |
 | #102 | 교육관리 | 이수현황 탭: `search_education_completions` RPC 신규(sql/38, 동적 total_topics·progress_rate·completion_status, 필터+검색+페이지네이션), #tab-status 필터바 재설계(상태 드롭다운+검색 드롭다운+입력+초기화/검색 버튼), 12컬럼 테이블(진행률 바, 체크리스트/서약서 배지), 엑셀 다운로드(연락처 마스킹), `var` 중복 선언 제거. 이수현황 상세(education-status-detail.html): 기본정보·요약·주제·체크리스트·서약 5영역 동적 렌더링, `loadStatusDetail()` 전면 개편(kindergartens→members 조인, 공개 주제 동적 집계, topic_details JSONB 매칭, 체크리스트/서약서 버전 비교), 체크리스트 확인 초기화 버튼/모달 삭제, 강제 이수 동적 totalTopics 적용, 더미 HTML 제거 |
 | #103 | 교육관리 | 이수현황 상세 3건 수정: (1) 이수 전체 요약에 체크리스트 확인/활동서약서 동의 배지 2행 추가, (2) fetchDetail 조인에 checklists:checklist_version_id + pledges:pledge_version_id 추가하여 version_number 조회 (기존 미존재 d.checklist_version_number 참조 수정), (3) checkVersionId/pledgeVersionId 변수 정리 (FK 조인 결과만 참조, fallback 제거) |
+| #104 | 콘텐츠관리 | 배너 등록/상세 페이지 전면 재작성: 등록 페이지(content-banner-create.html)와 상세 페이지(content-banner-detail.html) 분리, 노출상태 필드를 기본정보 블록으로 이동, 보기/편집 모드 분리(educations.js 패턴 적용), 이미지 Storage 관리(`banner-images` 버킷, 업로드/교체/삭제, 고아 이미지 정리), 노출상태 자동 계산(is_public+start_date+end_date→노출중/예정/종료/비공개), display_order 자동 설정, 연결유형별 입력 전환(외부URL↔앱내화면), CSS에 `#editBannerImgPreview` 사이즈 오버라이드 추가(360×100px) |
 | #99 | 후기관리 | 보호자 후기 탭: 필터바 3행 구조 개편(작성일+퀵버튼(전체/당월/지난1개월/지난1주일), 필터(만족도+이미지), 검색+초기화), 테이블 컬럼명 변경(작성일/반려동물 이름/예약상세), `search_guardian_reviews` RPC 전환(sql/32), 엑셀 다운로드 RPC 전환. 유치원 후기 탭: 동일 구조 필터바(드롭다운 2개: 만족도+보호자 전용, 이미지 기능 없음), 테이블 11컬럼(이미지 컬럼 없음), `search_kindergarten_reviews` RPC 신규(sql/33), 엑셀 다운로드 RPC 전환. JS: buildGuardianRpcParams/buildKgRpcParams, parseRpcResult, renderRow, bindPeriodButtons(양쪽 탭), 초기화 버튼 |
 
 **진행 상황:**
@@ -811,7 +852,8 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 - ✅ 채팅관리 (7번): 수정 완료 (PR #97~#98)
 - ✅ 후기관리 (8번): 수정 완료 (PR #99)
 - ✅ 교육관리 (9번): 수정 완료 (교육 주제, 체크리스트/서약서, 이수현황 목록+상세 — PR #100~#103, sql/35~38)
-- ⬜ 콘텐츠관리 ~ 설정 (10~11번): 작업 예정
+- 🔵 콘텐츠관리 (10번): 배너 탭 수정 완료 (PR #104), 공지/FAQ/약관 탭 작업 예정
+- ⬜ 설정 (11번): 작업 예정
 
 ---
 
