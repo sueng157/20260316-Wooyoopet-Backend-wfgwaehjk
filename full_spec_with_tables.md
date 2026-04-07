@@ -1270,7 +1270,13 @@
 |  | 수정일 | 자동 |
 상세 기능: 저장(등록 또는 수정), 삭제(확인 팝업), 비공개 전환, 푸시 알림 발송(공지 등록 시 대상 회원에게 알림 보내기 선택 가능).
 
-> **참고**: 공지사항 탭의 DB 연결 및 UI 개선은 아직 작업 예정입니다 (배너 탭과 동일한 패턴으로 진행 예정).
+> **구현 완료** (PR #106~#107):
+> - **목록**: 검색필터 3행 구조 통일 (등록일+퀵버튼, 필터(대상+공개상태), 검색+초기화)
+> - **등록 페이지** (`content-notice-create.html`): 2블록 구조 (기본정보 + 본문), 공개상태 비공개 배지 고정(읽기전용), 대상 드롭다운 "전체(공통)" 추가, Quill 에디터 (CDN v1.3.7, HTML 저장), 다건 첨부파일 (최대 10개, 각 10MB, PDF·DOC·DOCX·HWP·JPG·JPEG·PNG, `notice-attachments` 버킷)
+> - **상세 페이지** (`content-notice-detail.html`): 보기/편집 모드 분리, 푸시 발송 상태 (push_sent=true → disabled "발송완료"), 공개/비공개 전환 모달, 편집 시 Quill 에디터 생성/파괴, 첨부파일 추가/삭제 + 고아파일 정리
+> - **본문 렌더링**: `notices.content`에 HTML string 저장, 조회 시 `innerHTML` + `notice-content-render ql-editor` 클래스로 글머리기호/번호 리스트 정상 표시 (`common.css` 전역 리셋 오버라이드)
+> - **URL 해시 탭 복원**: `js/components.js`에서 `#tab-notice` 등 해시 감지 → 탭 자동 활성화, 8개 HTML 뒤로가기 링크에 해시 추가
+> - **공지사항은 RPC 미사용**: 단일 테이블 조회(notices)이므로 Supabase 자동 API(PostgREST)로 처리
 ---
 ### 탭 3: FAQ
 목록 화면
