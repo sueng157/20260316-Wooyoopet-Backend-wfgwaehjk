@@ -1195,22 +1195,51 @@
 | 10 | 등록일 |  |
 | 11 | 상세 | 상세 화면 이동 링크 |
 목록 기능: 노출 상태 필터(전체/노출중/예정/종료/비공개), 표시 위치 필터, 노출 순서 변경(드래그 또는 화살표), 새 배너 등록 버튼.
-상세 화면 (등록·수정 겸용)
+등록 화면 (content-banner-create.html)
 | 영역 | 항목명 | 설명 |
 | --- | --- | --- |
-| 배너 정보 | 배너 고유번호 | 시스템 내부 고유번호 (수정 시에만 표시) |
-|  | 배너 제목 | 관리용 이름 (입력) |
-|  | 배너 이미지 | 이미지 업로드 (권장 크기: 360×100px 또는 720×200px) |
-|  | 연결 유형 | 외부 URL / 앱 내 화면 선택 |
+| 배너 정보 | 배너 제목 | 관리용 이름 (입력) |
+|  | 배너 이미지 | 이미지 업로드 (권장 크기: 360×100px 또는 720×200px). Storage 버킷: `banner-images` |
+|  | 노출 상태 | 공개 / 비공개 선택 |
+|  | 연결 유형 | 외부 URL / 앱 내 화면 선택 (선택에 따라 입력 UI 전환) |
 |  | 연결 링크 | URL 입력 또는 앱 내 화면 선택 (드롭다운) |
-|  | 표시 위치 | 홈 상단, 홈 중간 등 선택 |
-|  | 노출 순서 | 숫자 입력 |
+|  | 표시 위치 | 홈 상단 / 홈 중간 등 선택 |
+|  | 노출 순서 | 숫자 입력 (자동 설정: 현재 최대값+1) |
 |  | 노출 시작일 | 날짜 선택 |
 |  | 노출 종료일 | 날짜 선택 |
-|  | 노출 상태 | 공개 / 비공개 선택 |
-|  | 등록일 | 자동 (수정 시에만 표시) |
-|  | 수정일 | 자동 (수정 시에만 표시) |
-상세 기능: 저장(등록 또는 수정), 삭제(확인 팝업), 비공개 전환.
+등록 기능: 저장(등록), 등록 안 하고 이탈 시 업로드된 이미지 자동 삭제(고아 파일 정리).
+
+상세 화면 (content-banner-detail.html) — 보기/편집 모드 분리
+
+보기 모드 (info-grid, 읽기전용):
+| 영역 | 항목명 | 설명 |
+| --- | --- | --- |
+| 배너 정보 | 배너 고유번호 | 시스템 내부 고유번호 |
+|  | 노출 상태 | 노출중 / 예정 / 종료 / 비공개 (자동 계산) |
+|  | 배너 제목 | 텍스트 |
+|  | 배너 이미지 | 이미지 표시 (360×100px) |
+|  | 연결 유형 | 외부 URL / 앱 내 화면 |
+|  | 연결 링크 | URL 또는 앱 내 화면명 |
+|  | 표시 위치 | 위치명 |
+|  | 노출 순서 | 숫자 |
+|  | 노출 시작일 | 날짜 |
+|  | 노출 종료일 | 날짜 |
+|  | 등록일 | 자동 |
+|  | 수정일 | 자동 |
+
+편집 모드 (form-*, [수정] 클릭 시 전환):
+- 보기 모드의 info-grid가 form 인풋으로 전환 (이미지 업로드/교체/삭제 버튼 표시)
+- [저장] 시 banners UPDATE + 이전 이미지 Storage 삭제, [취소] 시 새 이미지 Storage 삭제 + 원본 복원
+
+상세 기능: 수정(보기→편집 모드 전환), 저장(수정), 취소(보기 모드 복관), 삭제(확인 팝업 + Storage 이미지 삭제), 비공개 전환.
+
+> **구현 노트 (배너 탭):**
+> - **이미지 Storage**: `banner-images` Supabase Storage 버킷 사용. 관리자(is_admin) 전용 RLS 정책
+> - **고아 파일 정리**: 교육관리와 동일한 패턴 (HANDOVER.md 5-17 참조) — 등록 이탈 시 미저장 이미지 삭제, 편집 취소 시 새 이미지 삭제+원본 복원
+> - **노출상태 자동 계산**: is_public=false→비공개, is_public=true+오늘<start_date→예정, is_public=true+오늘>end_date→종료, is_public=true+기간내→노출중
+> - **display_order 자동 설정**: 등록 시 현재 최대 `display_order` 조회 후 +1 기본값 설정
+> - **보기/편집 모드 분리**: educations.js 패턴을 적용하여 info-grid(읽기) ↔ form(수정) 전환
+> - **배너는 RPC 미사용**: 단일 테이블 조회(banners)이므로 Supabase 자동 API(PostgREST)로 처리
 ---
 ### 탭 2: 공지사항
 목록 화면
@@ -1240,6 +1269,8 @@
 |  | 등록일 | 자동 |
 |  | 수정일 | 자동 |
 상세 기능: 저장(등록 또는 수정), 삭제(확인 팝업), 비공개 전환, 푸시 알림 발송(공지 등록 시 대상 회원에게 알림 보내기 선택 가능).
+
+> **참고**: 공지사항 탭의 DB 연결 및 UI 개선은 아직 작업 예정입니다 (배너 탭과 동일한 패턴으로 진행 예정).
 ---
 ### 탭 3: FAQ
 목록 화면
@@ -1434,7 +1465,7 @@
 - `search_kindergarten_reviews` — 후기관리 > 유치원 후기 (kindergarten_reviews → members, kindergartens, pets)
 - `search_education_completions` — 교육관리 > 이수현황 (education_completions → kindergartens → members, 동적 total_topics·progress_rate·completion_status)
 
-참고: 교육관리 교육 주제 탭은 단일 테이블 조회(education_topics + education_quizzes)이므로 RPC 없이 Supabase 자동 API(PostgREST)로 처리합니다. 이수현황 탭은 `search_education_completions` RPC로 조회합니다.
+참고: 교육관리 교육 주제 탭은 단일 테이블 조회(education_topics + education_quizzes)이므로 RPC 없이 Supabase 자동 API(PostgREST)로 처리합니다. 이수현황 탭은 `search_education_completions` RPC로 조회합니다. 콘텐츠관리 배너 탭도 단일 테이블(banners) 조회이므로 RPC 없이 Supabase 자동 API로 처리합니다.
 
 신규 메뉴 개발 시 위 함수들의 구조를 참고하여 동일한 패턴(파라미터 설계, SECURITY DEFINER + is_admin() 권한 체크, json_build_object 반환, ILIKE 검색 매핑, 페이지네이션)으로 RPC 함수를 생성합니다. 상세 가이드는 HANDOVER.md의 5-12 섹션을 참조하세요.
 ---

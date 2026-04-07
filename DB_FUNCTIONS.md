@@ -99,3 +99,4 @@
 | 2026-03-31 | **Phase A 결제 리팩터링 완료** — `search_payments`에 `p_payment_type` 파라미터 추가 (기존 시그니처 DROP), `search_refunds`에 penalty_payment JOIN 추가, `get_dashboard_monthly_sales`/`get_dashboard_today_stats` 돌봄/위약금 분리, `get_settlement_summary` 기간 필터 + 기존 시그니처 DROP | `sql/21_rpc_payment_type_update.sql` |
 | 2026-04-04 | `search_guardian_reviews` 함수 추가 — 보호자 후기 통합 검색 RPC (작성일/만족도/이미지/검색어 필터 + 페이지네이션). LEFT JOIN pets (pet_id nullable) | `sql/32_search_guardian_reviews.sql` |
 | 2026-04-04 | `search_kindergarten_reviews` 함수 추가 — 유치원 후기 통합 검색 RPC (작성일/만족도/보호자전용/검색어 필터 + 페이지네이션). 이미지 기능 없음. LEFT JOIN pets | `sql/33_search_kindergarten_reviews.sql` |
+| 2026-04-07 | 콘텐츠관리 배너 탭 DB 연결 (PR #104) — 배너는 단일 테이블(banners) 조회이므로 **RPC 미사용** (Supabase 자동 API로 처리). `banner-images` Storage 버킷 추가 (관리자 전용 RLS). 노출상태는 JS에서 is_public+start_date+end_date 기반 동적 계산 | — |
