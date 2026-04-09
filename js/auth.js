@@ -89,6 +89,11 @@
     var page = parts[parts.length - 1] || DASHBOARD_PAGE;
     // URL에 파일명이 없으면 (/ 로 끝나면) index.html
     if (page === '' || page === '/') page = DASHBOARD_PAGE;
+    // Cloudflare Pages 등 .html 확장자 없이 서빙되는 경우 대응
+    // 예: /login → login.html, /members → members.html
+    if (page && page.indexOf('.') === -1) {
+      page = page + '.html';
+    }
     return page;
   }
 
