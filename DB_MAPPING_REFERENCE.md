@@ -1,6 +1,6 @@
 # 기존 DB ↔ 신규 DB 전체 매핑 대조표
 
-> 최종 업데이트: 2026-04-13 (테이블·컬럼명 전수 교정 완료)
+> 최종 업데이트: 2026-04-13 (테이블·컬럼명 전수 교정 + 매니저 검토 반영 완료)
 > 목적: MariaDB(기존 PHP 서버) → Supabase(신규) 테이블/컬럼 1:1 대조
 > 사용법: Step 2 SQL 작성 전, 매니저와 함께 검토하여 빠진 것/잘못된 것 확인
 
@@ -12,10 +12,10 @@
 
 | # | 기존 MariaDB 테이블 | 신규 Supabase 테이블 | 용도 | 비고 |
 |---|---------------------|---------------------|------|------|
-| 1 | g5_member (82컬럼) | **members** | 회원 (보호자+유치원) | 82→30컬럼으로 축소 + 신규 11컬럼 추가 예정 |
-| 2 | g5_write_partner (63컬럼) | **kindergartens** | 유치원(돌봄 파트너) 정보 | 63→34컬럼으로 축소 + 신규 3컬럼 추가 예정 |
+| 1 | g5_member (82컬럼) | **members** | 회원 (보호자+유치원) | 82→31컬럼으로 축소 + 신규 10컬럼 추가 예정 |
+| 2 | g5_write_partner (63컬럼) | **kindergartens** | 유치원(돌봄 파트너) 정보 | 63→35컬럼으로 축소 + 신규 3컬럼 추가 예정 |
 | 3 | g5_write_animal (55컬럼) | **pets** | 반려동물 | 55→14컬럼으로 축소 |
-| 4 | payment_request (23컬럼) | **reservations** | 돌봄 예약(결제요청) | 컬럼명 변경, 신규 4컬럼 추가 예정 |
+| 4 | payment_request (23컬럼) | **reservations** | 돌봄 예약(결제요청) | 컬럼명 변경, 기존 21컬럼 + 신규 4컬럼 추가 예정 |
 | 5 | inicis_payments (18컬럼) | **payments** | 결제 정보 | 구조 변경됨 (Supabase가 더 상세) |
 | 6 | (payment_request.penalty 필드) | **refunds** | 환불/위약금 | MariaDB에는 별도 테이블 없었음 → Supabase에서 신규 생성 |
 | 7 | settlement_info (15컬럼) | **settlement_infos** | 정산 계좌/사업자 정보 | 구조 유사 |
@@ -93,7 +93,7 @@
 
 ## 2. 주요 테이블별 컬럼 상세 대조
 
-### 2-1. 회원 — g5_member (82컬럼) → members (30+11컬럼)
+### 2-1. 회원 — g5_member (82컬럼) → members (31+10컬럼)
 
 > 기존 82개 컬럼 중 앱에서 실제 사용하는 것만 Supabase에 매핑.
 > 그누보드 전용 컬럼(mb_zip1, mb_zip2, mb_recommend, mb_point 등)은 제외.
@@ -141,7 +141,7 @@
 | 39 | review_notify | varchar(1) | review_notify | text | 🆕 추가 | 후기 알림 ON/OFF |
 | 40 | new_kinder_notify | varchar(1) | new_kindergarten_notify | text | 🆕 추가 | 신규 유치원 알림 ON/OFF |
 | 41 | direct | varchar(100) | address_direct | text | 🆕 추가 | 직접입력 주소 |
-| 42 | — | — | address_doc_urls | text[] | 🆕 추가 | 주소 인증 서류 이미지 URL |
+| 42 | — | — | address_doc_urls | text[] | ✅ 존재 | 주소 인증 서류 이미지 URL (DB에 이미 존재) |
 
 **불필요 컬럼 (Supabase에 매핑하지 않음):**
 - mb_6 (찜한 강아지수) → favorite_pets 실시간 COUNT 조회로 대체
@@ -153,7 +153,7 @@
 
 ---
 
-### 2-2. 유치원 — g5_write_partner (63컬럼) → kindergartens (34+3컬럼)
+### 2-2. 유치원 — g5_write_partner (63컬럼) → kindergartens (35+3컬럼)
 
 | # | MariaDB 컬럼 | Supabase 컬럼 | 타입 | 상태 | 비고 |
 |---|-------------|--------------|------|------|------|
@@ -179,10 +179,11 @@
 | 20 | — | seller_id | text | ✅ 존재 | 판매자 ID |
 | 21 | — | noshow_count | int | ✅ 존재 | 노쇼 횟수 |
 | 22 | — | noshow_sanction | text | ✅ 존재 | 노쇼 제재 |
-| 23 | — | created_at | timestamptz | ✅ 존재 | |
-| 24 | mb_9 | latitude | numeric | 🆕 추가 | 유치원 위도 |
-| 25 | mb_10 | longitude | numeric | 🆕 추가 | 유치원 경도 |
-| 26 | wr_6 | registration_status | text | 🆕 추가 | 등록 상태 (temp=임시저장) |
+| 23 | — | address_doc_urls | text[] | ✅ 존재 | 주소 인증 서류 (members와 동기화 트리거 예정 — Step 2에서 처리) |
+| 24 | — | created_at | timestamptz | ✅ 존재 | |
+| 25 | mb_9 | latitude | numeric | 🆕 추가 | 유치원 위도 |
+| 26 | mb_10 | longitude | numeric | 🆕 추가 | 유치원 경도 |
+| 27 | wr_6 | registration_status | text | 🆕 추가 | 등록 상태 (temp=임시저장) |
 
 **검토 결과 불필요로 판단된 매핑:**
 - wr_1 (`has_own_pet`) → `kindergarten_resident_pets` 테이블로 판단 가능
@@ -224,7 +225,7 @@
 
 ---
 
-### 2-4. 돌봄 예약 — payment_request (23컬럼) → reservations (18+4컬럼)
+### 2-4. 돌봄 예약 — payment_request (23컬럼) → reservations (21+4컬럼)
 
 | # | MariaDB 컬럼 | Supabase 컬럼 | 타입 | 상태 | 비고 |
 |---|-------------|--------------|------|------|------|
@@ -245,11 +246,14 @@
 | 15 | — | requested_at | timestamptz | ✅ 존재 | 요청 일시 |
 | 16 | — | guardian_checkout_confirmed | bool | ✅ 존재 | 보호자 하원 확인 |
 | 17 | — | kg_checkout_confirmed | bool | ✅ 존재 | 유치원 하원 확인 |
-| 18 | created_at | created_at | timestamptz | ✅ 존재 | |
-| 19 | reminder_start_sent_at | reminder_start_sent_at | timestamptz | 🆕 추가 | 등원 알림 발송 시각 (스케줄러) |
-| 20 | reminder_end_sent_at | reminder_end_sent_at | timestamptz | 🆕 추가 | 하원 알림 발송 시각 |
-| 21 | care_start_sent_at | care_start_sent_at | timestamptz | 🆕 추가 | 돌봄시작 알림 발송 시각 |
-| 22 | care_end_sent_at | care_end_sent_at | timestamptz | 🆕 추가 | 돌봄종료 알림 발송 시각 |
+| 18 | — | guardian_checkout_confirmed_at | timestamptz | ✅ 존재 | 보호자 하원 확인 시각 |
+| 19 | — | kg_checkout_confirmed_at | timestamptz | ✅ 존재 | 유치원 하원 확인 시각 |
+| 20 | — | auto_complete_scheduled_at | timestamptz | ✅ 존재 | 자동 완료 예정 시각 (스케줄러 Edge Function에서 사용) |
+| 21 | created_at | created_at | timestamptz | ✅ 존재 | |
+| 22 | reminder_start_sent_at | reminder_start_sent_at | timestamptz | 🆕 추가 | 등원 알림 발송 시각 (스케줄러) |
+| 23 | reminder_end_sent_at | reminder_end_sent_at | timestamptz | 🆕 추가 | 하원 알림 발송 시각 |
+| 24 | care_start_sent_at | care_start_sent_at | timestamptz | 🆕 추가 | 돌봄시작 알림 발송 시각 |
+| 25 | care_end_sent_at | care_end_sent_at | timestamptz | 🆕 추가 | 돌봄종료 알림 발송 시각 |
 
 **검토 결과 불필요로 판단된 매핑:**
 - `price` → `payments.amount` 에 존재
@@ -260,7 +264,7 @@
 
 ---
 
-### 2-5. 결제 — inicis_payments (18컬럼) → payments (19컬럼)
+### 2-5. 결제 — inicis_payments (18컬럼) → payments (20컬럼)
 
 | # | MariaDB 컬럼 | Supabase 컬럼 | 상태 | 비고 |
 |---|-------------|--------------|------|------|
@@ -280,7 +284,8 @@
 | 14 | — | care_fee, walk_fee, pickup_fee | ✅ 존재 | Supabase 신규 (수수료 분리) |
 | 15 | — | submall_id | ✅ 존재 | Supabase 신규 (이니시스 서브몰) |
 | 16 | — | payment_type | ✅ 존재 | Supabase 신규 (돌봄결제/위약금) |
-| 17 | — | created_at | ✅ 존재 | |
+| 17 | — | cancel_reason (text) | ✅ 존재 | 결제 취소 사유 |
+| 18 | — | created_at | ✅ 존재 | |
 
 ---
 
@@ -312,9 +317,10 @@
 | — | sender_type | ✅ 존재 | 보호자/유치원/시스템 |
 | message_type | message_type | ✅ 존재 | 텍스트/이미지/시스템 등 |
 | content | content | ✅ 존재 | 텍스트 + 이미지 URL 포함 |
-| file_path | — | — | content에 URL 포함 방식으로 변경 |
+| file_path | — | — | image_urls 컬럼으로 대체됨 |
 | file_type | — | — | message_type으로 구분 |
 | created_at | created_at | ✅ 존재 | |
+| — | image_urls (jsonb) | ✅ 존재 | 채팅 이미지 URL 배열 (file_path 대체) |
 | — | is_read (bool) | ✅ 존재 | Supabase 신규 |
 
 #### chat_room_members (room_members → 신규 생성 필요)
@@ -369,12 +375,13 @@
 | protector_id | member_id (FK) | |
 | pet_id | pet_id (FK) | |
 | content | content | |
-| images | image_urls (text[]) | JSON 문자열→배열 |
-| tags | selected_tags (text[]) | JSON 문자열→배열 |
+| images | image_urls (jsonb) | JSON 문자열→jsonb 배열 |
+| tags | selected_tags (jsonb) | JSON 문자열→jsonb 배열 |
 | created_at | created_at / written_at | |
 | — | satisfaction | Supabase 신규 (최고예요/좋았어요/아쉬워요) |
 | — | reservation_id (FK) | Supabase 신규 |
 | — | is_hidden | Supabase 신규 (관리자 숨김) |
+| — | is_guardian_only (bool) | ✅ 존재 | '보호자에게만 보이는 후기' 필터링 |
 
 #### notification (5컬럼) → notifications (동일 구조)
 
@@ -408,7 +415,10 @@
 | 품종 목록: animal_kinds + animal_kinds_x | **pet_breeds** 하나로 통합 (type 컬럼: dog/cat, 현재 dog만 운영) |
 | 채팅 가이드: chat_guides + message_templates | **chat_templates** 하나로 통합 (type 컬럼으로 구분) |
 
-### 3-2. 앱에서 필요하여 신규 추가 확정된 컬럼 (18개)
+### 3-2. 앱에서 필요하여 신규 추가 확정된 컬럼 (17개)
+
+> members.address_doc_urls와 kindergartens.address_doc_urls는 이미 DB에 존재하므로 아래 목록에서 제외.
+> 실제 신규 추가 대상은 **17개** (members 10 + kindergartens 3 + reservations 4)
 
 | 테이블 | 추가 컬럼 | 용도 |
 |--------|----------|------|
@@ -416,13 +426,23 @@
 | members | language, app_version | 앱 설정 |
 | members | chat_notify, reservation_notify, checkinout_notify, review_notify, new_kindergarten_notify | 알림 ON/OFF 설정 (5개) |
 | members | address_direct | 직접입력 주소 |
-| members | address_doc_urls | 주소 인증 서류 이미지 |
 | kindergartens | latitude, longitude | 유치원 위치 (지도 검색) |
 | kindergartens | registration_status | 등록 상태 (임시저장 등) |
 | reservations | reminder_start_sent_at, reminder_end_sent_at | 등하원 알림 발송 시각 (스케줄러 중복 방지) |
 | reservations | care_start_sent_at, care_end_sent_at | 돌봄 시작/종료 알림 발송 시각 |
 
-### 3-3. 반려동물 wr_3 ~ wr_11 용도 미확인
+### 3-3. 매니저 검토 시 추가 확인된 기존 컬럼
+
+| 테이블 | 컬럼 | 타입 | 상태 | 비고 |
+|--------|------|------|------|------|
+| payments | cancel_reason | text | ✅ 존재 | 결제 취소 사유 (향후 앱 취소 기능 추가 예정) |
+| kindergarten_reviews | is_guardian_only | bool | ✅ 존재 | '보호자에게만 보이는 후기' 필터링 |
+| chat_messages | image_urls | jsonb | ✅ 존재 | 채팅 이미지 URL 배열 (file_path 대체) |
+| reservations | guardian_checkout_confirmed_at | timestamptz | ✅ 존재 | 보호자 하원 확인 시각 |
+| reservations | kg_checkout_confirmed_at | timestamptz | ✅ 존재 | 유치원 하원 확인 시각 |
+| reservations | auto_complete_scheduled_at | timestamptz | ✅ 존재 | 자동 완료 예정 시각 (스케줄러 Edge Function에서 사용) |
+
+### 3-4. 반려동물 wr_3 ~ wr_11 용도 미확인
 
 g5_write_animal 테이블의 wr_3, wr_8, wr_9, wr_10, wr_11 컬럼의 정확한 용도를 앱 코드 또는 외주 개발자에게 확인 필요.
 
@@ -444,3 +464,4 @@ g5_write_animal 테이블의 wr_3, wr_8, wr_9, wr_10, wr_11 컬럼의 정확한 
 |------|------|
 | 2026-04-11 | 최초 작성 — 매니저 검토용 전체 매핑 대조표 |
 | 2026-04-13 | **전수 교정** — 실제 Supabase DB와 대조하여 85개 불일치 수정: 테이블명 7개 교정 (pet_breeds, favorite_kindergartens, favorite_pets, chat_templates 등), 컬럼명 15개 교정 (address_complex, profile_image, checkin_scheduled 등), 불필요 매핑 8개 삭제, 누락 컬럼 49개 보완, 신규 추가 컬럼 18개 확정 |
+| 2026-04-13 | **매니저 검토 반영** — members.address_doc_urls → ✅ 존재로 변경 (신규 18→17개), kindergartens.address_doc_urls 추가 (✅ 존재), reservations 3개 컬럼 추가 (guardian_checkout_confirmed_at, kg_checkout_confirmed_at, auto_complete_scheduled_at), payments.cancel_reason 추가, kindergarten_reviews.is_guardian_only 추가, chat_messages.image_urls 추가, 테이블별 컬럼 수 정정 |

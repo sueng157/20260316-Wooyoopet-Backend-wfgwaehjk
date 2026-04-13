@@ -1,6 +1,6 @@
 # 우유펫 모바일 앱 백엔드 마이그레이션 설계서
 
-> 최종 업데이트: 2026-04-13 (Step 1 전수 분석 완료 + 테이블·컬럼명 전수 교정)
+> 최종 업데이트: 2026-04-13 (Step 1 전수 분석 완료 + 테이블·컬럼명 전수 교정 + 매니저 검토 반영)
 > 목적: PHP/MariaDB → Supabase 전환을 위한 상세 설계 및 작업 추적
 > 관련 문서: `HANDOVER.md` (Phase 5), `MOBILE_APP_ANALYSIS.md` (앱 소스 분석)
 
@@ -87,7 +87,7 @@
 | 1-2 | MariaDB 핵심 테이블 분석 | ✅ 완료 | API에서 참조하는 테이블·컬럼 전부 확인 |
 | 1-3 | MariaDB ↔ Supabase 테이블 매핑 | ✅ 완료 | 섹션 4 (테이블 매핑표) |
 | 1-4 | PHP API → Supabase 전환 매핑 | ✅ 완료 | 섹션 5 (API 전환 매핑표 — 62개 전체) |
-| 1-5 | 누락 테이블·컬럼 식별 | ✅ 완료 | 섹션 6 (스키마 보강 목록 — 12개 신규 테이블) |
+| 1-5 | 누락 테이블·컬럼 식별 | ✅ 완료 | 섹션 6 (스키마 보강 목록 — 9개 신규 테이블) |
 | 1-6 | Edge Functions 설계 | ✅ 완료 | 섹션 7 (Edge Functions 8개 상세 설계) |
 
 ### Step 2: Supabase 스키마 보강
@@ -203,7 +203,7 @@
 
 #### members (g5_member → members)
 
-> 기존 30개 컬럼 + 신규 추가 11개 = 총 41개
+> 기존 31개 컬럼 + 신규 추가 10개 = 총 41개
 
 | MariaDB 컬럼 | Supabase 컬럼 | 타입 | 상태 | 비고 |
 |-------------|--------------|------|------|------|
@@ -247,11 +247,11 @@
 | review_notify | review_notify | text | 🆕 추가 | 후기 알림 ON/OFF |
 | new_kinder_notify | new_kindergarten_notify | text | 🆕 추가 | 신규 유치원 알림 ON/OFF |
 | direct | address_direct | text | 🆕 추가 | 직접입력 주소 |
-| — | address_doc_urls | text[] | 🆕 추가 | 주소 인증 서류 이미지 URL |
+| — | address_doc_urls | text[] | ✅ 존재 | 주소 인증 서류 이미지 URL |
 
 #### kindergartens (g5_write_partner → kindergartens)
 
-> 기존 34개 컬럼 + 신규 추가 3개 = 총 37개
+> 기존 35개 컬럼 + 신규 추가 3개 = 총 38개
 
 | MariaDB 컬럼 | Supabase 컬럼 | 타입 | 상태 | 비고 |
 |-------------|--------------|------|------|------|
@@ -277,6 +277,7 @@
 | — | seller_id | text | ✅ 존재 | 판매자 ID |
 | — | noshow_count | int | ✅ 존재 | 노쇼 횟수 |
 | — | noshow_sanction | text | ✅ 존재 | 노쇼 제재 |
+| — | address_doc_urls | ARRAY | ✅ 존재 | 주소 인증 서류 (members와 동기화 트리거 예정 — Step 2에서 처리) |
 | — | created_at | timestamptz | ✅ 존재 | |
 | mb_9 | latitude | numeric | 🆕 추가 | 유치원 위도 |
 | mb_10 | longitude | numeric | 🆕 추가 | 유치원 경도 |
@@ -290,7 +291,7 @@
 
 #### reservations (payment_request → reservations)
 
-> 기존 18개 컬럼 + 신규 추가 4개 = 총 22개
+> 기존 21개 컬럼 + 신규 추가 4개 = 총 25개
 
 | MariaDB 컬럼 | Supabase 컬럼 | 타입 | 상태 | 비고 |
 |-------------|--------------|------|------|------|
@@ -311,6 +312,9 @@
 | — | requested_at | timestamptz | ✅ 존재 | 요청 일시 |
 | — | guardian_checkout_confirmed | bool | ✅ 존재 | 보호자 하원 확인 |
 | — | kg_checkout_confirmed | bool | ✅ 존재 | 유치원 하원 확인 |
+| — | guardian_checkout_confirmed_at | timestamptz | ✅ 존재 | 보호자 하원 확인 시각 |
+| — | kg_checkout_confirmed_at | timestamptz | ✅ 존재 | 유치원 하원 확인 시각 |
+| — | auto_complete_scheduled_at | timestamptz | ✅ 존재 | 자동 완료 예정 시각 (스케줄러 Edge Function에서 사용) |
 | created_at | created_at | timestamptz | ✅ 존재 | |
 | reminder_start_sent_at | reminder_start_sent_at | timestamptz | 🆕 추가 | 등원 알림 발송 시각 (스케줄러 중복 방지) |
 | reminder_end_sent_at | reminder_end_sent_at | timestamptz | 🆕 추가 | 하원 알림 발송 시각 |
@@ -323,6 +327,14 @@
 > - `payment_id` → `payments.reservation_id` 로 역참조
 > - `is_review_written` → `guardian_reviews`/`kindergarten_reviews` JOIN으로 판단
 > - `is_settled` → `settlements` 테이블에서 관리
+
+#### 기타 매핑 참고 (매니저 검토 추가분)
+
+| 테이블 | 컬럼 | 타입 | 상태 | 비고 |
+|--------|------|------|------|------|
+| payments | cancel_reason | text | ✅ 존재 | 결제 취소 사유 (향후 앱 취소 기능 추가 예정) |
+| kindergarten_reviews | is_guardian_only | bool | ✅ 존재 | '보호자에게만 보이는 후기' 필터링 |
+| chat_messages | image_urls | jsonb | ✅ 존재 | 채팅 이미지 URL 배열 (file_path 대체) |
 
 ---
 
@@ -365,7 +377,7 @@
 | 14 | set_animal_delete.php | 자동 API | pets UPDATE (soft delete: deleted=true) | 쉬움 |
 | 15 | set_first_animal_set.php | RPC | pets BATCH UPDATE (기존 firstYN='N' → 선택 firstYN='Y') | 쉬움 |
 
-### 5-3. 유치원/보호자 (5개)
+### 5-3. 유치원/보호자 (6개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
@@ -384,7 +396,7 @@
 | 23 | chat.php → get_rooms | RPC | chat_rooms SELECT + unread_count 서브쿼리 + last_message + members 관계 | 상 |
 | 24 | chat.php → get_messages | 자동 API | chat_messages SELECT (room_id 필터, 페이징) + last_read_message_id UPDATE | 중 |
 | 25 | chat.php → send_message | Edge Function | chat_messages INSERT + Storage 파일 + **Realtime 브로드캐스트** + FCM 푸시 + notification INSERT | 상 |
-| 26 | chat.php → get_images | 자동 API | chat_messages SELECT WHERE file_path IS NOT NULL | 쉬움 |
+| 26 | chat.php → get_images | 자동 API | chat_messages SELECT WHERE image_urls IS NOT NULL | 쉬움 |
 | 27 | chat.php → leave_room | 자동 API | chat_rooms UPDATE (deleted_at=NOW()) | 쉬움 |
 | 28 | chat.php → muted | 자동 API | chat_room_members UPDATE (is_muted) | 쉬움 |
 | 29 | read_chat.php | 자동 API | chat_room_members UPDATE (last_read_message_id) | 쉬움 |
@@ -420,14 +432,15 @@
 | 41 | set_settlement_info.php | 자동 API | settlement_infos UPSERT + 주민번호 뒷자리 암호화 (Edge Function) | 중 |
 | 42 | set_settlement_admin_approve.php | 자동 API | settlement_infos UPDATE (status='active') — 관리자 전용 | 쉬움 |
 
-### 5-8. 리뷰 (4개)
+### 5-8. 리뷰 (3개)
+
+> 참고: set_care_review.php는 5-6 돌봄 상태 관리 37번에서 처리 (후기 작성). 중복 제거.
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 43 | get_review.php | RPC | guardian_reviews/kindergarten_reviews SELECT + 태그 집계 (JSON 배열 파싱) + pets JOIN + kindergartens JOIN | 중 |
+| 43 | get_review.php | RPC | guardian_reviews/kindergarten_reviews SELECT + 태그 집계 (JSON 배열 파싱) + pets JOIN + kindergartens JOIN + is_guardian_only 필터 | 중 |
 | 44 | get_review_string.php | 자동 API | (리뷰 문구 마스터) → 별도 테이블 or 앱 내장 | 쉬움 |
-| 45 | set_review.php | 자동 API + Storage | reviews INSERT (type, tags JSON, images) + Storage 이미지 | 쉬움 |
-| 46 | set_care_review.php | (5-6에서 처리) | guardian_reviews/kindergarten_reviews 존재 여부로 판단 | 쉬움 |
+| 45 | set_review.php | 자동 API + Storage | guardian_reviews 또는 kindergarten_reviews INSERT (satisfaction, selected_tags jsonb, image_urls jsonb) + Storage 이미지 | 쉬움 |
 
 ### 5-9. 즐겨찾기 (6개)
 
@@ -463,7 +476,7 @@
 | 64 | get_kakaolink.php | 자동 API | (카카오링크 마스터) → app_settings or 앱 내장 | 쉬움 |
 | 65 | get_bank_list.php | 자동 API | banks SELECT WHERE use_yn=true ORDER BY sort_order | 쉬움 |
 
-### 5-12. 차단 (4개)
+### 5-12. 차단 (5개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
@@ -473,7 +486,7 @@
 | 69 | get_block_user.php | 자동 API | member_blocks SELECT (차단 목록) | 쉬움 |
 | 70 | get_blocked_list.php | 자동 API | member_blocks SELECT + members JOIN (차단 상세) | 쉬움 |
 
-### 5-13. 기타 (7개)
+### 5-13. 기타 (15개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
@@ -487,8 +500,8 @@
 | 78 | set_message_template.php | 자동 API | chat_templates INSERT (type='custom') | 쉬움 |
 | 79 | get_partner_status.php | RPC | members + kindergartens LEFT JOIN (파트너 상태 요약) | 쉬움 |
 | 80 | get_partner_by_phone.php | RPC | members + kindergartens + pets JOIN (번호로 조회) | 쉬움 |
-| 81 | get_favorite_animal_list.php | 자동 API | favorite_pets SELECT + pets JOIN (유치원이 찞한 반려동물) | 쉬움 |
-| 82 | get_favorite_partner_list.php | 자동 API | favorite_kindergartens SELECT + kindergartens JOIN (보호자가 찞한 유치원) | 쉬움 |
+| 81 | get_favorite_animal_list.php | 자동 API | favorite_pets SELECT + pets JOIN (유치원이 찜한 반려동물) | 쉬움 |
+| 82 | get_favorite_partner_list.php | 자동 API | favorite_kindergartens SELECT + kindergartens JOIN (보호자가 찜한 유치원) | 쉬움 |
 | 83 | scheduler.php | Edge Function | reservations 일괄 상태 변경 + FCM + Realtime (cron) | 상 |
 | 84 | buildings.php | Edge Function | 네이버 역지오코딩 + apt_buildings DB 조회 | 중 |
 | 85 | get_address.php | Edge Function | 행안부 주소 API 프록시 | 쉬움 |
@@ -534,10 +547,11 @@
 
 | SQL 파일 | 내용 | 상태 |
 |---------|------|------|
-| sql/42_members_add_app_columns.sql | members에 11개 컬럼 추가 (latitude, longitude, language, app_version, chat_notify, reservation_notify, checkinout_notify, review_notify, new_kindergarten_notify, address_direct, address_doc_urls) | ⬜ 작성 필요 |
+| sql/42_members_add_app_columns.sql | members에 10개 컬럼 추가 (latitude, longitude, language, app_version, chat_notify, reservation_notify, checkinout_notify, review_notify, new_kindergarten_notify, address_direct) — address_doc_urls는 이미 존재 | ⬜ 작성 필요 |
 | sql/42_reservations_add_scheduler_columns.sql | reservations에 4개 컬럼 추가 (reminder_start_sent_at, reminder_end_sent_at, care_start_sent_at, care_end_sent_at) | ⬜ 작성 필요 |
 | sql/42_kindergartens_add_columns.sql | kindergartens에 3개 컬럼 추가 (latitude, longitude, registration_status) | ⬜ 작성 필요 |
 | sql/42_pets_add_legacy_columns.sql | pets에 wr_1~wr_11 매핑 확인 (이미 있는 컬럼과 대조) | ⬜ 확인 필요 |
+| sql/42_address_doc_urls_sync_trigger.sql | members ↔ kindergartens address_doc_urls 동기화 트리거 (members.address_doc_urls 변경 시 해당 회원의 kindergartens.address_doc_urls 자동 동기화) | ⬜ 작성 필요 |
 
 ### 6-3. 앱 사용자용 RLS 정책
 
@@ -617,7 +631,9 @@
   2. 하원 30분 전 알림 (reminder_end_sent_at IS NULL)
   3. 돌봄 시작 시점: chat_messages INSERT (care_start) + Realtime
   4. 돌봄 종료 시점: chat_messages INSERT (care_end + review) + Realtime + FCM + status='care_completed'
-  5. scheduler_history 기록
+  5. 자동 완료: auto_complete_scheduled_at 도달 시 자동으로 돌봄완료 처리
+     (양측 모두 하원확인을 안 한 경우 일정 시간 후 자동 완료)
+  6. scheduler_history 기록
 ```
 
 ---
@@ -675,5 +691,6 @@
 |------|------|
 | 2026-04-11 | 최초 작성 — 프로젝트 개요, 수집 자료 현황, 작업 단계 설계, 테이블·API 매핑 프레임워크 |
 | 2026-04-11 | **Step 1 전수 분석 완료** — PHP API 95개 전부 읽기 완료, 테이블 매핑표 확정, API 전환 매핑 85개 확정, Edge Functions 8개 상세 설계 |
-| 2026-04-13 | **테이블·컬럼명 전수 교정** — 실제 Supabase DB와 대조하여 85개 불일치 수정: 신규 테이블 12→09개 (이름변경 4, 삭제 3), 컬럼명 오류 15개 수정, 불필요 매핑 8개 제거, 누락 컬럼 49개 보완, 신규 추가 컬럼 18개 확정 (members 11 + kindergartens 3 + reservations 4) |
 | 2026-04-11 | **Step 1 검토 반영** — address_verifications 테이블 제거 (members.address_doc_urls로 대체) → 신규 테이블 13→12개, DB_MAPPING_REFERENCE.md 전체 대조표 별도 작성 |
+| 2026-04-13 | **테이블·컬럼명 전수 교정** — 실제 Supabase DB와 대조하여 85개 불일치 수정: 신규 테이블 12→09개 (이름변경 4, 삭제 3), 컬럼명 오류 15개 수정, 불필요 매핑 8개 제거, 누락 컬럼 49개 보완, 신규 추가 컬럼 18개 확정 (members 11 + kindergartens 3 + reservations 4) |
+| 2026-04-13 | **매니저 검토 반영** — 실제 DB 대조 후 누락 컬럼 추가 (reservations 3개, payments 1개, kindergartens 1개, chat_messages 1개), members.address_doc_urls 상태 ✅ 존재로 변경 (신규 추가 18→17개), 섹션 번호 수량 오류 4건 수정, set_care_review.php 중복 제거, 오탈자 교정, 변경 이력 날짜순 정렬, address_doc_urls 동기화 트리거 작업 추가 |
