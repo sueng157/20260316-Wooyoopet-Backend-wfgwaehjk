@@ -1,8 +1,8 @@
 # 우유펫 모바일 앱 백엔드 마이그레이션 설계서
 
-> 최종 업데이트: 2026-04-14 (Step 2 Supabase 스키마 보강 완료 — 신규 테이블 9개 + 컬럼 추가 6개 + RLS 79개 + Storage 버킷 6개)
+> 최종 업데이트: 2026-04-14 (Step 2.5 앱용 RPC 함수 설계 + API 전수조사 교정 — 실제 앱 호출 60개 대조, 미사용 19개 제거, 누락 3개 추가, Edge Functions 8→7개)
 > 목적: PHP/MariaDB → Supabase 전환을 위한 상세 설계 및 작업 추적
-> 관련 문서: `HANDOVER.md` (Phase 5), `MOBILE_APP_ANALYSIS.md` (앱 소스 분석)
+> 관련 문서: `HANDOVER.md` (Phase 5), `MOBILE_APP_ANALYSIS.md` (앱 소스 분석), `DB_MAPPING_REFERENCE.md` (테이블 대조표)
 
 ---
 
@@ -51,7 +51,7 @@
 | 3 | MariaDB 스키마 | 131테이블 (146KB) | ✅ 분류 완료 + API에서 참조하는 테이블 확인 완료 | legacy_mariadb_schema.sql |
 | 4 | WebSocket 채팅 서버 | server.py (61줄) + Docker | ✅ 분석 완료 | wooyoopet-backend/websocket/ |
 | 5 | 카카오 알림톡 | alimtalk.php | ✅ 수령 완료 | uploaded_files/api_extracted/ |
-| 6 | Firebase 서비스 키 | JSON | ⚠️ 노출됨, 교체 필요 | wooyoopet-backend/firebase/ |
+| 6 | Firebase 서비스 키 | JSON | ✅ 교체 완료 + Supabase Secret 등록 완료 (2026-04-14) | Supabase Secrets |
 | 7 | Supabase 현행 스키마 | SQL 40개 | ✅ 운영 중 | sql/ 폴더 |
 
 ### 2-2. MariaDB 131테이블 분류
@@ -61,9 +61,11 @@
 | 앱 커스텀 테이블 | 19개 | chat, payment_request, settlement_info 등 | 🎯 전환 대상 |
 | 앱 데이터 테이블 (g5_write_/g5_wzb_) | 39개 | animal, partner, booking 등 | 🎯 전환 대상 |
 | 그누보드 시스템 테이블 (g5_*) | 71개 | g5_config, g5_board 등 | ❌ 불필요 |
-| 지리 데이터 테이블 | 2개 | apt_buildings, buildings | ❓ 검토 필요 |
+| 지리 데이터 테이블 | 2개 | apt_buildings, buildings | ❌ 마이그레이션 불필요 (앱에서 카카오 주소 API 직접 호출, 네이버 역지오코딩 미사용 확인) |
 
 ### 2-3. PHP API 분류 (현행 95파일)
+
+> **2026-04-14 전수조사 결과**: 앱 소스코드(React Native)에서 실제 호출되는 PHP API는 **60개**. 기존 매핑표 85개 중 19개는 앱에서 미사용(레거시/관리자 전용), 3개는 누락 확인. 최종 전환 대상 **~47개**.
 
 | 분류 | 파일 수 | 설명 |
 |------|--------|------|
@@ -77,7 +79,7 @@
 
 ## 3. 작업 단계 상세
 
-### Step 1: 전수 분석 & 매핑 설계 (현재 단계)
+### Step 1: 전수 분석 & 매핑 설계 ✅ 완료
 
 **목표**: PHP API 95개와 MariaDB 58개 핵심 테이블을 전부 읽고, Supabase 전환 매핑표를 완성한다.
 
@@ -86,9 +88,9 @@
 | 1-1 | PHP API 95개 전수 읽기 | ✅ 완료 | API별 입출력·DB쿼리·비즈니스 로직 정리 (섹션 5) |
 | 1-2 | MariaDB 핵심 테이블 분석 | ✅ 완료 | API에서 참조하는 테이블·컬럼 전부 확인 |
 | 1-3 | MariaDB ↔ Supabase 테이블 매핑 | ✅ 완료 | 섹션 4 (테이블 매핑표) |
-| 1-4 | PHP API → Supabase 전환 매핑 | ✅ 완료 | 섹션 5 (API 전환 매핑표 — 62개 전체) |
+| 1-4 | PHP API → Supabase 전환 매핑 | ✅ 완료 | 섹션 5 (API 전환 매핑표 — 전수조사 후 ~47개로 교정) |
 | 1-5 | 누락 테이블·컬럼 식별 | ✅ 완료 | 섹션 6 (스키마 보강 목록 — 9개 신규 테이블) |
-| 1-6 | Edge Functions 설계 | ✅ 완료 | 섹션 7 (Edge Functions 8개 상세 설계) |
+| 1-6 | Edge Functions 설계 | ✅ 완료 | 섹션 7 (Edge Functions 7개 상세 설계) |
 
 ### Step 2: Supabase 스키마 보강 ✅ 완료
 
@@ -101,28 +103,93 @@
 | 2-3 | 앱 사용자용 RLS + Storage 정책 | ✅ 완료 | sql/43_01 (RLS 79개) + sql/43_02 (Storage 버킷 6개 + 정책 20개) |
 | 2-4 | 사장님이 Supabase에서 SQL 실행 | ✅ 완료 | 17개 파일 전체 실행 확인 (PR #123) |
 
-### Step 3: 앱 API 전환 가이드 작성
+### Step 2.5: 앱용 RPC 함수 생성 ⬜ 진행 예정
 
-**목표**: 외주 개발자가 모바일 앱 코드를 수정할 수 있도록 62개 API별 전환 지침서를 작성한다.
+> **추가 배경**: Step 2 완료 후 전수조사에서 Supabase에 존재하는 RPC 함수가 **관리자 페이지 전용(`get_dashboard_*`, `get_admin_*` 등)**뿐이며, **모바일 앱이 호출할 RPC 함수가 하나도 없음**을 확인했다. 섹션 5 API 매핑표에서 `RPC`로 분류된 API(유치원 상세, 보호자 목록, 예약 조회 등)가 실제로 동작하려면 앱용 RPC 함수를 먼저 생성해야 한다. 따라서 Step 3(앱 전환 가이드) 작업 전에 Step 2.5를 선행한다.
+
+**목표**: 모바일 앱에서 복잡한 JOIN/집계가 필요한 조회를 처리할 수 있도록 Supabase RPC 함수 11개를 작성하고 실행한다.
 
 | # | 세부 작업 | 상태 | 산출물 |
 |---|----------|------|--------|
-| 3-1 | apiClient 교체 가이드 (FormData → Supabase JS) | ⬜ 예정 | 섹션 8 또는 별도 문서 |
-| 3-2 | 인증 전환 가이드 (mb_id → Supabase Auth) | ⬜ 예정 | 섹션 9 또는 별도 문서 |
-| 3-3 | 채팅 전환 가이드 (WebSocket → Realtime) | ⬜ 예정 | 섹션 10 또는 별도 문서 |
-| 3-4 | 결제 전환 가이드 (PHP callback → Edge Functions) | ⬜ 예정 | 섹션 11 또는 별도 문서 |
+| 2.5-1 | 앱용 RPC 함수 SQL 작성 (11개) | ⬜ 예정 | sql/44_01~44_11_app_rpc_*.sql |
+| 2.5-2 | 사장님이 Supabase에서 SQL 실행 | ⬜ 예정 | 11개 RPC 함수 생성 확인 |
 
-### Step 4: Edge Functions 구현
+#### RPC 함수 설계 규칙
+
+- 파일명: `sql/44_01_app_rpc_[함수명].sql` ~ `sql/44_11_app_rpc_[함수명].sql`
+- 함수명: `app_` 접두어 (관리자용 `get_admin_*`/`get_dashboard_*`와 구분)
+- 보안: `SECURITY INVOKER` + `SET search_path = public` (RLS 자동 적용)
+- 인자: `p_` 접두어 (예: `p_member_id`, `p_page`)
+- 반환: `json` 또는 `TABLE` (앱에서 파싱 용이하게)
+- 페이지네이션: `p_page int DEFAULT 1`, `p_per_page int DEFAULT 20`
+- 오류 처리: `EXCEPTION` 블록 포함
+- 주석: 원본 PHP 파일명 명시 (예: `-- 원본: get_partner.php`)
+
+#### 앱용 RPC 함수 목록 (11개)
+
+| # | SQL 파일 | 함수명 | 원본 PHP | 용도 | 핵심 로직 |
+|---|---------|--------|---------|------|----------|
+| 1 | sql/44_01 | `app_get_kindergarten_detail` | get_partner.php | 유치원 상세 | kindergartens + members + favorite + settlement_infos + pets JOIN |
+| 2 | sql/44_02 | `app_get_kindergartens` | get_partner_list.php | 유치원 목록 | kindergartens + review COUNT + 위도/경도 거리 정렬 + 페이지네이션 |
+| 3 | sql/44_03 | `app_get_guardian_detail` | get_protector.php | 보호자 상세 | members + pets + favorite JOIN |
+| 4 | sql/44_04 | `app_get_guardians` | get_protector_list.php | 보호자 목록 | members + pets JOIN + 페이지네이션 |
+| 5 | sql/44_05 | `app_get_reservations` | get_payment_request.php | 예약 목록 | reservations + pets + kindergartens + members JOIN + 상태 필터 |
+| 6 | sql/44_06 | `app_get_reservation_detail` | get_payment_request_by_id.php | 예약 상세 | reservations + payments + pets + kindergartens + members JOIN |
+| 7 | sql/44_07 | `app_withdraw_member` | set_member_leave.php | 회원 탈퇴 | members UPDATE (soft delete) + 관련 데이터 정리 + Supabase Auth 연동 |
+| 8 | sql/44_08 | `app_set_representative_pet` | set_first_animal_set.php | 대표 반려동물 지정 | pets BATCH UPDATE (기존 firstYN='N' → 선택 firstYN='Y') |
+| 9 | sql/44_09 | `app_get_reviews` | get_review.php | 리뷰 목록 | guardian_reviews/kindergarten_reviews + 태그 집계 + pets + members JOIN |
+| 10 | sql/44_10 | `app_get_settlement_summary` | get_settlement.php | 정산 요약 | reservations 집계 (settled/unsettled) + 기간별 GROUP BY |
+| 11 | sql/44_11 | `app_get_education_with_progress` | get_education.php | 교육 + 이수현황 | education_topics + quizzes + completions LEFT JOIN |
+
+### Step 3: 앱 API 전환 가이드 작성 ⬜ 진행 예정 (Step 2.5 완료 후)
+
+**목표**: 외주 개발자가 모바일 앱 코드를 수정할 수 있도록 66개 API별 전환 지침서를 작성한다.
+
+> **전제 조건**: Step 2.5(앱용 RPC 함수 11개)가 Supabase에 배포된 상태여야 한다. RPC 함수가 없으면 RPC 방식으로 분류된 API의 전환 가이드를 작성할 수 없다.
+
+| # | 세부 작업 | 상태 | 산출물 |
+|---|----------|------|--------|
+| 3-1 | apiClient 교체 가이드 (FormData → Supabase JS) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
+| 3-2 | 인증 전환 가이드 (mb_id → Supabase Auth) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
+| 3-3 | 단순 CRUD 전환 코드 예시 (44개 자동 API) | ⬜ 예정 | APP_MIGRATION_CODE.md |
+| 3-4 | RPC 호출 전환 코드 예시 (13개 RPC) | ⬜ 예정 | APP_MIGRATION_CODE.md |
+| 3-5 | 채팅 전환 가이드 (WebSocket → Realtime) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
+| 3-6 | 결제/예약 전환 가이드 (PHP callback → Edge Functions) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
+| 3-7 | Edge Function 인터페이스 가이드 (7개 EF 호출 방법) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
+
+#### 전환 권장 순서
+
+```
+Phase A: 인증 + 단순 CRUD (가장 먼저, 영향도 낮음)
+  → auth_request, set_join, 자동 API 25개
+
+Phase B: RPC 조회 (Step 2.5 함수 사용)
+  → get_partner, get_protector, get_payment_request 등 7개
+
+Phase C: 채팅 (Realtime 전환, 복잡도 높음)
+  → chat.php 관련 8개
+
+Phase D: 결제/예약 + Edge Functions (가장 마지막, 위험도 높음)
+  → inicis_payment, set_payment_request, set_care_complete 등
+```
+
+### Step 4: Edge Functions 구현 ⬜ 예정
 
 **목표**: 앱에서 직접 처리할 수 없는 서버 사이드 로직을 Supabase Edge Functions로 구현한다.
 
 | # | 기능 | 상태 | 난이도 | 이유 |
 |---|------|------|--------|------|
-| 4-1 | 이니시스 결제 콜백 | ⬜ 예정 | 중 | PG사 → 서버 직접 호출 |
-| 4-2 | FCM 푸시 알림 발송 | ⬜ 예정 | 중 | Firebase Admin SDK 서버 전용 |
-| 4-3 | 카카오 알림톡 발송 | ⬜ 예정 | 중 | API 키 보호 |
-| 4-4 | 스케줄러 (자동 상태 변경) | ⬜ 예정 | 중 | scheduler.php 대체 |
-| 4-5 | 카카오 주소 검색 프록시 | ⬜ 예정 | 쉬움 | API 키 보호 (또는 앱 직접 호출) |
+| 4-1 | inicis-callback (이니시스 결제 콜백) | ⬜ 예정 | 상 | PG사 → 서버 직접 호출 |
+| 4-2 | send-chat-message (채팅 메시지 전송) | ⬜ 예정 | 상 | Storage + Realtime + FCM 복합 |
+| 4-3 | create-reservation (예약 생성) | ⬜ 예정 | 상 | 예약 + 채팅방 + 시스템 메시지 + FCM |
+| 4-4 | complete-care (돌봄 완료) | ⬜ 예정 | 중 | 상태 변경 + 시스템 메시지 + FCM |
+| 4-5 | send-alimtalk (카카오 알림톡) | ⬜ 예정 | 중 | 외부 API 키 보호 |
+| 4-6 | send-push (FCM 푸시) | ⬜ 예정 | 중 | Firebase Admin SDK 서버 전용 |
+| 4-7 | scheduler (스케줄러) | ⬜ 예정 | 상 | 자동 상태 변경 + 알림 (cron) |
+
+> **변경 사항 (2026-04-14)**:
+> - ~~address-proxy~~ 삭제: 앱에서 카카오 주소 API를 직접 호출하고 있으며(`kakao-address.php`는 단순 프록시), 네이버 역지오코딩은 앱에서 미사용 확인. 카카오 주소 검색은 앱 클라이언트에서 JavaScript API로 직접 처리 가능.
+> - `create-payment-request` → `create-reservation`으로 이름 변경 (Supabase 테이블명 `reservations`와 일치시킴)
 
 ### Step 5: 통합 테스트
 
@@ -197,6 +264,7 @@
 | 그누보드 쇼핑몰 | ~25개 | g5_shop_*, g5_wzb_* | 미사용 쇼핑몰/예약 모듈 |
 | SMS 모듈 | 6개 | sms5_* | 카카오 알림톡으로 대체 |
 | 레거시 채팅 | 1개 | g5_chat | 구버전 채팅 (새 chat 테이블 사용 중) |
+| 지리 데이터 | 2개 | apt_buildings, buildings | 앱에서 카카오 주소 API 직접 호출, 네이버 역지오코딩 미사용 |
 | 기타 미사용 | ~10개 | g5_write_mapv2, g5_write_gallery 등 | 앱에서 미참조 |
 
 ### 4-4. 주요 컬럼 매핑 (MariaDB → Supabase)
@@ -338,57 +406,78 @@
 
 ---
 
-## 5. API 전환 매핑표 (PHP → Supabase) ✅ 완료
+## 5. API 전환 매핑표 (PHP → Supabase) ✅ 교정 완료
 
-### 전환 방식 분류 (확정)
+> **2026-04-14 전수조사 교정**: React Native 앱 소스코드에서 실제 호출되는 PHP API 60개를 grep으로 전수 추출하여 기존 매핑표와 대조. 미사용 19개 제거, 누락 3개 추가, 번호 재정렬 완료.
+
+### 전환 방식 분류 (교정 후 확정)
 
 | 전환 방식 | 설명 | 확정 수량 |
 |----------|------|----------|
-| **자동 API** | Supabase PostgREST 직접 호출 (단순 CRUD) | 37개 |
-| **RPC** | Supabase RPC 함수 (복잡한 조회/JOIN/집계) | 10개 |
-| **Edge Function** | 서버 사이드 필수 (결제, FCM, 외부 API, 파일 업로드) | 8개 |
-| **Supabase Auth** | 인증 관련 (Phone OTP) | 2개 |
-| **Supabase Realtime** | WebSocket 대체 (채팅) | 3개 |
-| **제거** | toss_payment 등 | 2개 |
-| **합계** | | **62개** |
+| **자동 API** | Supabase PostgREST 직접 호출 (단순 CRUD + Storage 업로드) | 44개 |
+| **RPC** | Supabase RPC 함수 (복잡한 조회/JOIN/집계) — Step 2.5에서 생성 (11개) + 채팅 RPC (2개) | 13개 |
+| **Edge Function** | 서버 사이드 필수 (결제, FCM, 외부 API, 파일 업로드) | 7개 |
+| **Supabase Auth** | 인증 관련 (Phone OTP) | 1개 |
+| **앱 직접 호출** | 서버 경유 불필요 (카카오 주소 API 등) | 1개 |
+| **합계** | | **66개** |
 
-### 5-1. 인증/회원 (7개)
+> **참고**: 기존 85개 PHP API에서 미사용 19개를 제거하고, 누락 3개를 추가하면 앱 전환 대상 66개. 여기서 관리자 전용 3개와 제거 대상 5개(toss_payment 등)를 빼면 **실제 앱 코드 수정 대상은 ~58개**. 그 중 자동 API 44개는 비교적 단순 변환이므로, 핵심 작업은 RPC 13개 + Edge Function 7개 = **20개**에 집중된다.
+
+> **제거된 미사용 API 19개** (앱 소스에서 호출되지 않음):
+> `get_main_partner.php` (get_partner_list로 대체), `get_partner_status.php`, `get_partner_by_phone.php`, `set_partner_insert.php` (set_partner_update로 통합), `set_block_user_add.php` (set_block_user로 통합), `set_block_user_remove.php` (set_block_user로 통합), `get_notify_setting.php` (앱 로컬 상태만 사용), `set_notify_setting_update.php` (앱 로컬 상태만 사용), `get_setting.php`, `get_guide.php`, `get_kakaolink.php`, `set_suggest_insert.php` (UI만 존재, API 연결 없음), `get_educationN.php` (하드코딩 데이터), `get_review_string.php`, `set_animal_favorite_add.php` (set_user_favorite_add로 통합), `set_animal_favorite_remove.php` (set_user_favorite_remove로 통합), `buildings.php` (앱 미호출), `get_address.php` (테스트 코드), `set_care_request.php` (주석에만 존재)
+
+> **추가된 누락 API 3개** (앱에서 호출하나 기존 매핑표에 없었음):
+> `kakao-address.php`, `delete_message_template.php`, `update_message_template.php`
+
+### 5-1. 인증/회원 (6개)
 
 | # | PHP API | 방식 | Supabase 대응 | DB 테이블 | 난이도 |
 |---|---------|------|--------------|----------|--------|
 | 1 | alimtalk.php | Edge Function | 카카오 알림톡 API → auth_phone_log INSERT | — (Supabase Auth) | 중 |
 | 2 | auth_request.php | Supabase Auth | signInWithOtp() + verifyOtp() → members SELECT | members | 중 |
 | 3 | set_join.php | 자동 API | Supabase Auth signUp() → members UPSERT | members | 쉬움 |
-| 4 | set_member_leave.php | RPC | members UPDATE (탈퇴) + g5_member_leave 이력 → Edge Function으로 Auth 삭제 | members | 중 |
+| 4 | set_member_leave.php | RPC | `app_withdraw_member` — members UPDATE (탈퇴) + Auth 삭제 | members | 중 |
 | 5 | set_mypage_mode_update.php | 자동 API | members UPDATE (current_mode) | members | 쉬움 |
 | 6 | set_profile_update.php | 자동 API + Storage | members UPDATE + Storage 프로필 이미지 업로드 | members | 쉬움 |
-| 7 | set_address_verification.php | 자동 API + Storage | members UPDATE (address_doc_urls) + Storage 서류 업로드 | members | 쉬움 |
 
-### 5-2. 반려동물 (8개)
-
-| # | PHP API | 방식 | Supabase 대응 | 난이도 |
-|---|---------|------|--------------|--------|
-| 8 | get_my_animal.php | 자동 API | pets SELECT WHERE member_id=? AND deleted=false | 쉬움 |
-| 9 | get_animal_by_id.php | 자동 API | pets SELECT WHERE id=? + favorite 조인 | 쉬움 |
-| 10 | get_animal_by_mb_id.php | 자동 API | pets SELECT WHERE member_id=? | 쉬움 |
-| 11 | get_animal_kind.php | 자동 API | pet_breeds SELECT WHERE name ILIKE ? | 쉬움 |
-| 12 | set_animal_insert.php | 자동 API + Storage | pets INSERT + Storage 이미지 (최대 10개) + 4마리 제한 체크 | 쉬움 |
-| 13 | set_animal_update.php | 자동 API + Storage | pets UPDATE + Storage 이미지 교체 | 쉬움 |
-| 14 | set_animal_delete.php | 자동 API | pets UPDATE (soft delete: deleted=true) | 쉬움 |
-| 15 | set_first_animal_set.php | RPC | pets BATCH UPDATE (기존 firstYN='N' → 선택 firstYN='Y') | 쉬움 |
-
-### 5-3. 유치원/보호자 (6개)
+### 5-2. 주소 인증 (2개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 16 | get_partner.php | RPC | kindergartens SELECT + members JOIN + favorite JOIN + settlement JOIN + animal JOIN | 중 |
-| 17 | get_partner_list.php | RPC | kindergartens SELECT 전체 + favorite JOIN + review COUNT | 중 |
-| 18 | set_partner_update.php | 자동 API + Storage | kindergartens UPDATE + 이미지 + settlement_info UPSERT + 동물 UPSERT | 중 |
-| 19 | set_partner_insert.php | 자동 API + Storage | kindergartens INSERT + 동물 BATCH INSERT | 중 |
-| 20 | get_protector.php | RPC | members SELECT + pets JOIN + favorite JOIN (보호자 상세) | 중 |
-| 21 | get_protector_list.php | RPC | members SELECT 전체 + pets JOIN + favorite JOIN (보호자 목록) | 중 |
+| 7 | set_address_verification.php | 자동 API + Storage | members UPDATE (address_doc_urls) + Storage 서류 업로드 | 쉬움 |
+| 8 | kakao-address.php | 앱 직접 호출 | 카카오 주소 검색 JavaScript API → 앱 클라이언트에서 직접 처리 (Edge Function 불필요) | 쉬움 |
 
-### 5-4. 채팅 (8개) — **가장 복잡한 영역**
+### 5-3. 반려동물 (8개)
+
+| # | PHP API | 방식 | Supabase 대응 | 난이도 |
+|---|---------|------|--------------|--------|
+| 9 | get_my_animal.php | 자동 API | pets SELECT WHERE member_id=? AND deleted=false | 쉬움 |
+| 10 | get_animal_by_id.php | 자동 API | pets SELECT WHERE id=? + favorite 조인 | 쉬움 |
+| 11 | get_animal_by_mb_id.php | 자동 API | pets SELECT WHERE member_id=? | 쉬움 |
+| 12 | get_animal_kind.php | 자동 API | pet_breeds SELECT WHERE name ILIKE ? | 쉬움 |
+| 13 | set_animal_insert.php | 자동 API + Storage | pets INSERT + Storage 이미지 (최대 10개) + 4마리 제한 체크 | 쉬움 |
+| 14 | set_animal_update.php | 자동 API + Storage | pets UPDATE + Storage 이미지 교체 | 쉬움 |
+| 15 | set_animal_delete.php | 자동 API | pets UPDATE (soft delete: deleted=true) | 쉬움 |
+| 16 | set_first_animal_set.php | RPC | `app_set_representative_pet` — pets BATCH UPDATE (기존 firstYN='N' → 선택 firstYN='Y') | 쉬움 |
+
+### 5-4. 유치원/보호자 (4개)
+
+| # | PHP API | 방식 | Supabase 대응 | 난이도 |
+|---|---------|------|--------------|--------|
+| 17 | get_partner.php | RPC | `app_get_kindergarten_detail` — kindergartens + members + favorite + settlement + pets JOIN | 중 |
+| 18 | get_partner_list.php | RPC | `app_get_kindergartens` — kindergartens + review COUNT + 거리 정렬 | 중 |
+| 19 | get_protector.php | RPC | `app_get_guardian_detail` — members + pets + favorite JOIN | 중 |
+| 20 | get_protector_list.php | RPC | `app_get_guardians` — members + pets JOIN + 페이지네이션 | 중 |
+
+> **변경**: `set_partner_update.php`는 앱에서 호출되지만 단순 자동 API로 처리 가능 (kindergartens UPDATE). `set_partner_insert.php`는 앱에서 미호출 (set_partner_update가 UPSERT로 처리).
+
+### 5-5. 유치원 프로필 관리 (1개)
+
+| # | PHP API | 방식 | Supabase 대응 | 난이도 |
+|---|---------|------|--------------|--------|
+| 21 | set_partner_update.php | 자동 API + Storage | kindergartens UPDATE + 이미지 + settlement_info UPSERT | 중 |
+
+### 5-6. 채팅 (9개) — **가장 복잡한 영역**
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
@@ -400,125 +489,116 @@
 | 27 | chat.php → leave_room | 자동 API | chat_rooms UPDATE (deleted_at=NOW()) | 쉬움 |
 | 28 | chat.php → muted | 자동 API | chat_room_members UPDATE (is_muted) | 쉬움 |
 | 29 | read_chat.php | 자동 API | chat_room_members UPDATE (last_read_message_id) | 쉬움 |
+| 30 | get_message_template.php | 자동 API | chat_templates SELECT WHERE member_id=? AND type='custom' | 쉬움 |
 
 > **참고**: 구버전 채팅 API (get_chat_list.php, set_chat_insert.php)는 g5_chat 테이블 사용 → 폐기 대상.
 > 현행 채팅은 chat.php (router 패턴) + room/chat/room_members 테이블 사용.
 
-### 5-5. 결제 (5개)
+### 5-7. 채팅 템플릿 (3개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 30 | inicis_payment.php | Edge Function | PG사 콜백 수신 → set_inicis_approval 호출 → WebView 결과 반환 | 상 |
-| 31 | set_inicis_approval.php | Edge Function | payments UPSERT (oid 기준) + raw_response 저장 | 중 |
-| 32 | set_payment_request.php | Edge Function | reservations INSERT/UPDATE + payments 연결 + chat_messages INSERT (system) + Realtime + FCM | 상 |
-| 33 | get_payment_request.php | RPC | reservations SELECT + pets JOIN + kindergartens JOIN + members JOIN (목록) | 중 |
-| 34 | get_payment_request_by_id.php | RPC | reservations SELECT (단건) + approval_info JOIN + pets + kindergartens + members | 중 |
+| 31 | set_message_template.php | 자동 API | chat_templates INSERT (type='custom') | 쉬움 |
+| 32 | update_message_template.php | 자동 API | chat_templates UPDATE WHERE id=? AND member_id=? | 쉬움 |
+| 33 | delete_message_template.php | 자동 API | chat_templates DELETE WHERE id=? AND member_id=? | 쉬움 |
 
-### 5-6. 돌봄 상태 관리 (3개)
+### 5-8. 결제 (5개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 35 | set_care_request.php | 자동 API | reservations UPDATE (status='completed') | 쉬움 |
-| 36 | set_care_complete.php | Edge Function | reservations UPDATE + chat_messages INSERT (care_end, review) + Realtime + FCM | 상 |
-| 37 | set_care_review.php | 자동 API | guardian_reviews/kindergarten_reviews INSERT (후기 작성) | 쉬움 |
+| 34 | inicis_payment.php | Edge Function | PG사 콜백 수신 → set_inicis_approval 호출 → WebView 결과 반환 | 상 |
+| 35 | set_inicis_approval.php | Edge Function | payments UPSERT (oid 기준) + raw_response 저장 | 중 |
+| 36 | set_payment_request.php | Edge Function | reservations INSERT/UPDATE + payments 연결 + chat_messages INSERT (system) + Realtime + FCM | 상 |
+| 37 | get_payment_request.php | RPC | `app_get_reservations` — reservations + pets + kindergartens + members JOIN (목록) | 중 |
+| 38 | get_payment_request_by_id.php | RPC | `app_get_reservation_detail` — reservations (단건) + approval_info + pets + kindergartens + members | 중 |
 
-### 5-7. 정산 (5개)
-
-| # | PHP API | 방식 | Supabase 대응 | 난이도 |
-|---|---------|------|--------------|--------|
-| 38 | get_settlement.php | RPC | reservations 집계 (settled/unsettled) + 기간 필터 + members JOIN | 중 |
-| 39 | get_settlement_info.php | 자동 API | settlement_infos SELECT + kindergartens JOIN + members JOIN | 쉬움 |
-| 40 | get_settlement_list.php | RPC | settlements SELECT + 월별 GROUP BY + 상세 내역 | 중 |
-| 41 | set_settlement_info.php | 자동 API | settlement_infos UPSERT + 주민번호 뒷자리 암호화 (Edge Function) | 중 |
-| 42 | set_settlement_admin_approve.php | 자동 API | settlement_infos UPDATE (status='active') — 관리자 전용 | 쉬움 |
-
-### 5-8. 리뷰 (3개)
-
-> 참고: set_care_review.php는 5-6 돌봄 상태 관리 37번에서 처리 (후기 작성). 중복 제거.
+### 5-9. 돌봄 상태 관리 (2개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 43 | get_review.php | RPC | guardian_reviews/kindergarten_reviews SELECT + 태그 집계 (JSON 배열 파싱) + pets JOIN + kindergartens JOIN + is_guardian_only 필터 | 중 |
-| 44 | get_review_string.php | 자동 API | (리뷰 문구 마스터) → 별도 테이블 or 앱 내장 | 쉬움 |
-| 45 | set_review.php | 자동 API + Storage | guardian_reviews 또는 kindergarten_reviews INSERT (satisfaction, selected_tags jsonb, image_urls jsonb) + Storage 이미지 | 쉬움 |
+| 39 | set_care_complete.php | Edge Function | reservations UPDATE + chat_messages INSERT (care_end, review) + Realtime + FCM | 상 |
+| 40 | set_care_review.php | 자동 API | guardian_reviews/kindergarten_reviews INSERT (후기 작성) | 쉬움 |
 
-### 5-9. 즐겨찾기 (6개)
-
-| # | PHP API | 방식 | Supabase 대응 | 난이도 |
-|---|---------|------|--------------|--------|
-| 47 | set_animal_favorite_add.php | 자동 API | favorite_pets UPSERT (is_favorite='Y') — 유치원이 반려동물 찜 | 쉬움 |
-| 48 | set_animal_favorite_remove.php | 자동 API | favorite_pets UPDATE (is_favorite='N') | 쉬움 |
-| 49 | set_partner_favorite_add.php | 자동 API | favorite_kindergartens UPSERT (is_favorite='Y') | 쉬움 |
-| 50 | set_partner_favorite_remove.php | 자동 API | favorite_kindergartens UPDATE (is_favorite='N') | 쉬움 |
-| 51 | set_user_favorite_add.php | 자동 API | favorite_pets UPSERT — 보호자가 반려동물 찜 | 쉬움 |
-| 52 | set_user_favorite_remove.php | 자동 API | favorite_pets UPDATE (is_favorite='N') | 쉬움 |
-
-### 5-10. 알림/FCM (5개)
+### 5-10. 정산 (3개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 53 | fcm_token.php | 자동 API | fcm_tokens UPSERT (mb_id + token 중복 체크) | 쉬움 |
-| 54 | get_notification.php | 자동 API | notifications SELECT WHERE member_id=? ORDER BY created_at DESC | 쉬움 |
-| 55 | delete_notification.php | 자동 API | notifications DELETE (전체 or 단건) | 쉬움 |
-| 56 | get_notify_setting.php | 자동 API | members SELECT (chat_notify, reservation_notify, checkinout_notify, review_notify, new_kindergarten_notify) | 쉬움 |
-| 57 | set_notify_setting_update.php | 자동 API | members UPDATE (5개 알림 설정 컬럼) | 쉬움 |
+| 41 | get_settlement.php | RPC | `app_get_settlement_summary` — reservations 집계 (settled/unsettled) + 기간 필터 | 중 |
+| 42 | get_settlement_info.php | 자동 API | settlement_infos SELECT + kindergartens JOIN + members JOIN | 쉬움 |
+| 43 | set_settlement_info.php | 자동 API | settlement_infos UPSERT + 주민번호 뒷자리 암호화 (Edge Function) | 중 |
 
-### 5-11. 콘텐츠/기타 조회 (8개)
+### 5-11. 리뷰 (2개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 58 | get_banner.php | 자동 API | banners SELECT (페이징) | 쉬움 |
-| 59 | get_notice.php | 자동 API | notices SELECT WHERE visible=true (페이징) | 쉬움 |
-| 60 | get_notice_detail.php | 자동 API | notices SELECT WHERE id=? | 쉬움 |
-| 61 | get_faq.php | 자동 API | faqs SELECT (검색, 페이징) | 쉬움 |
-| 62 | get_policy.php | 자동 API | terms SELECT (카테고리 필터) | 쉬움 |
-| 63 | get_guide.php | 자동 API | chat_templates SELECT WHERE type='guide' (가이드) | 쉬움 |
-| 64 | get_kakaolink.php | 자동 API | (카카오링크 마스터) → app_settings or 앱 내장 | 쉬움 |
-| 65 | get_bank_list.php | 자동 API | banks SELECT WHERE use_yn=true ORDER BY sort_order | 쉬움 |
+| 44 | get_review.php | RPC | `app_get_reviews` — guardian_reviews/kindergarten_reviews + 태그 집계 + pets + members JOIN | 중 |
+| 45 | set_review.php | 자동 API + Storage | guardian_reviews 또는 kindergarten_reviews INSERT + Storage 이미지 | 쉬움 |
 
-### 5-12. 차단 (5개)
+### 5-12. 즐겨찾기 (4개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 66 | set_block_user.php | 자동 API | member_blocks INSERT/DELETE (토글) | 쉬움 |
-| 67 | set_block_user_add.php | 자동 API | member_blocks INSERT (blocker_id, blocked_id) | 쉬움 |
-| 68 | set_block_user_remove.php | 자동 API | member_blocks UPDATE (unblocked_at=NOW()) | 쉬움 |
-| 69 | get_block_user.php | 자동 API | member_blocks SELECT (차단 목록) | 쉬움 |
-| 70 | get_blocked_list.php | 자동 API | member_blocks SELECT + members JOIN (차단 상세) | 쉬움 |
+| 46 | set_partner_favorite_add.php | 자동 API | favorite_kindergartens UPSERT (is_favorite='Y') | 쉬움 |
+| 47 | set_partner_favorite_remove.php | 자동 API | favorite_kindergartens UPDATE (is_favorite='N') | 쉬움 |
+| 48 | set_user_favorite_add.php | 자동 API | favorite_pets UPSERT — 보호자가 반려동물 찜 | 쉬움 |
+| 49 | set_user_favorite_remove.php | 자동 API | favorite_pets UPDATE (is_favorite='N') | 쉬움 |
 
-### 5-13. 기타 (15개)
+### 5-13. 알림/FCM (3개)
 
 | # | PHP API | 방식 | Supabase 대응 | 난이도 |
 |---|---------|------|--------------|--------|
-| 71 | get_education.php | RPC | education_topics + quizzes JOIN + completions LEFT JOIN (풀이 여부) | 중 |
-| 72 | get_educationN.php | 자동 API | (하드코딩 교육 데이터) → education_quizzes SELECT or 앱 내장 | 쉬움 |
-| 73 | set_solved.php | 자동 API | education_completions INSERT (중복 체크) | 쉬움 |
-| 74 | get_setting.php | 자동 API | members SELECT (language, app_version) + app_settings SELECT | 쉬움 |
-| 75 | set_suggest_insert.php | 자동 API | feedbacks INSERT | 쉬움 |
-| 76 | get_main_partner.php | RPC | kindergartens SELECT 전체 + members JOIN (메인 화면 목록) | 중 |
-| 77 | get_message_template.php | 자동 API | chat_templates SELECT WHERE member_id=? AND type='custom' | 쉬움 |
-| 78 | set_message_template.php | 자동 API | chat_templates INSERT (type='custom') | 쉬움 |
-| 79 | get_partner_status.php | RPC | members + kindergartens LEFT JOIN (파트너 상태 요약) | 쉬움 |
-| 80 | get_partner_by_phone.php | RPC | members + kindergartens + pets JOIN (번호로 조회) | 쉬움 |
-| 81 | get_favorite_animal_list.php | 자동 API | favorite_pets SELECT + pets JOIN (유치원이 찜한 반려동물) | 쉬움 |
-| 82 | get_favorite_partner_list.php | 자동 API | favorite_kindergartens SELECT + kindergartens JOIN (보호자가 찜한 유치원) | 쉬움 |
-| 83 | scheduler.php | Edge Function | reservations 일괄 상태 변경 + FCM + Realtime (cron) | 상 |
-| 84 | buildings.php | Edge Function | 네이버 역지오코딩 + apt_buildings DB 조회 | 중 |
-| 85 | get_address.php | Edge Function | 행안부 주소 API 프록시 | 쉬움 |
+| 50 | fcm_token.php | 자동 API | fcm_tokens UPSERT (mb_id + token 중복 체크) | 쉬움 |
+| 51 | get_notification.php | 자동 API | notifications SELECT WHERE member_id=? ORDER BY created_at DESC | 쉬움 |
+| 52 | delete_notification.php | 자동 API | notifications DELETE (전체 or 단건) | 쉬움 |
 
-### 5-14. 관리자 전용 (이미 Supabase 연결, 앱과 무관)
+### 5-14. 콘텐츠 조회 (5개)
+
+| # | PHP API | 방식 | Supabase 대응 | 난이도 |
+|---|---------|------|--------------|--------|
+| 53 | get_banner.php | 자동 API | banners SELECT (페이징) | 쉬움 |
+| 54 | get_notice.php | 자동 API | notices SELECT WHERE visible=true (페이징) | 쉬움 |
+| 55 | get_notice_detail.php | 자동 API | notices SELECT WHERE id=? | 쉬움 |
+| 56 | get_faq.php | 자동 API | faqs SELECT (검색, 페이징) | 쉬움 |
+| 57 | get_policy.php | 자동 API | terms SELECT (카테고리 필터) | 쉬움 |
+
+### 5-15. 차단 (3개)
+
+| # | PHP API | 방식 | Supabase 대응 | 난이도 |
+|---|---------|------|--------------|--------|
+| 58 | set_block_user.php | 자동 API | member_blocks INSERT/DELETE (토글) | 쉬움 |
+| 59 | get_block_user.php | 자동 API | member_blocks SELECT (차단 여부 확인) | 쉬움 |
+| 60 | get_blocked_list.php | 자동 API | member_blocks SELECT + members JOIN (차단 목록) | 쉬움 |
+
+### 5-16. 기타 (5개)
+
+| # | PHP API | 방식 | Supabase 대응 | 난이도 |
+|---|---------|------|--------------|--------|
+| 61 | get_education.php | RPC | `app_get_education_with_progress` — education_topics + quizzes + completions LEFT JOIN | 중 |
+| 62 | set_solved.php | 자동 API | education_completions INSERT (중복 체크) | 쉬움 |
+| 63 | get_bank_list.php | 자동 API | banks SELECT WHERE use_yn=true ORDER BY sort_order | 쉬움 |
+| 64 | get_favorite_animal_list.php | 자동 API | favorite_pets SELECT + pets JOIN (유치원이 찜한 반려동물) | 쉬움 |
+| 65 | get_favorite_partner_list.php | 자동 API | favorite_kindergartens SELECT + kindergartens JOIN (보호자가 찜한 유치원) | 쉬움 |
+
+### 5-17. 서버 전용 (1개)
+
+| # | PHP API | 방식 | Supabase 대응 | 난이도 |
+|---|---------|------|--------------|--------|
+| 66 | scheduler.php | Edge Function | reservations 일괄 상태 변경 + FCM + Realtime (cron) | 상 |
+
+### 5-18. 관리자 전용 (이미 Supabase 연결, 앱과 무관)
 
 | PHP API | 현재 상태 | 비고 |
 |---------|----------|------|
 | get_admin_settlement_queue.php | 관리자 페이지에서 직접 Supabase RPC 사용 | 앱 전환 불필요 |
 | get_admin_settlement_detail.php | 관리자 페이지에서 직접 Supabase RPC 사용 | 앱 전환 불필요 |
+| set_settlement_admin_approve.php | 관리자 페이지에서 직접 Supabase 자동 API 사용 | 앱 전환 불필요 |
 
-### 5-15. 제거 대상
+### 5-19. 제거 대상
 
 | PHP API | 이유 |
 |---------|------|
-| toss_payment.php | 미구현, 사용 안 함 |
-| toss_payment_approval.php | 미구현, 사용 안 함 |
+| toss_payment.php | 앱 코드에 레거시 호출 존재 (`app/payment/approval.tsx:43`), 실제로는 이니시스만 사용. 앱 전환 시 이니시스로 통합하고 해당 호출 제거 |
+| toss_payment_approval.php | 미구현 |
 | get_chat_list.php (구버전) | g5_chat 사용 → 폐기 (새 chat.php 사용 중) |
 | set_chat_insert.php (구버전) | g5_chat 사용 → 폐기 |
 | 백업 파일 14개 (*260111.php 등) | 구버전 |
@@ -563,20 +643,21 @@
 
 ---
 
-## 7. Edge Functions 설계 ✅ 완료
+## 7. Edge Functions 설계 ✅ 교정 완료
 
-### 7-1. 함수 목록 (8개)
+### 7-1. 함수 목록 (7개)
+
+> **2026-04-14 교정**: `address-proxy` 삭제 (앱에서 카카오 주소 API 직접 호출, 네이버 역지오코딩 미사용), `create-payment-request` → `create-reservation`으로 이름 변경.
 
 | # | 함수명 | 용도 | PHP 원본 | 트리거 | 난이도 |
 |---|--------|------|---------|--------|--------|
 | 1 | **inicis-callback** | 이니시스 결제 콜백 → 결과를 DB 저장 → WebView HTML 반환 | inicis_payment.php | PG사 POST 호출 | 상 |
 | 2 | **send-chat-message** | 채팅 메시지 저장 + Storage 파일 + Realtime 브로드캐스트 + FCM 푸시 | chat.php → send_message | 앱 호출 | 상 |
-| 3 | **create-payment-request** | 결제 요청 생성 + 채팅방 자동 생성/연결 + system 메시지 + FCM | set_payment_request.php | 앱 호출 | 상 |
+| 3 | **create-reservation** | 예약 생성 + 채팅방 자동 생성/연결 + system 메시지 + FCM | set_payment_request.php | 앱 호출 | 상 |
 | 4 | **complete-care** | 돌봄 완료 처리 + care_end/review 시스템 메시지 + Realtime + FCM | set_care_complete.php, scheduler.php 일부 | 앱 호출 | 중 |
 | 5 | **send-alimtalk** | 카카오 알림톡 SMS 발송 (인증번호) | alimtalk.php | 앱 호출 | 중 |
 | 6 | **send-push** | FCM 푸시 알림 발송 (범용) | chat.php/scheduler.php 내부 | DB 트리거 or 다른 Edge Function에서 호출 | 중 |
 | 7 | **scheduler** | 등원/하원 30분 전 알림 + 돌봄 시작/종료 자동 처리 | scheduler.php | pg_cron (5분 간격) or 외부 cron | 상 |
-| 8 | **address-proxy** | 행안부 주소 API + 네이버 역지오코딩 프록시 | get_address.php, buildings.php, naver-address.php | 앱 호출 | 쉬움 |
 
 ### 7-2. 상세 설계
 
@@ -595,7 +676,7 @@
 #### 7-2-2. send-chat-message (채팅 메시지 전송)
 
 ```
-입력: room_id, mb_id, content, message_type, file(선택)
+입력: room_id, member_id, content, message_type, file(선택)
 처리:
   1. 채팅방 멤버 검증
   2. 파일 있으면 Storage 업로드 → URL 획득
@@ -606,10 +687,10 @@
 출력: 성공/실패
 ```
 
-#### 7-2-3. create-payment-request (결제 요청 생성)
+#### 7-2-3. create-reservation (예약 생성)
 
 ```
-입력: mb_id, to_mb_id, pet_id, start/end date/time, price, payment_approval_id, room_id(선택)
+입력: member_id, kindergarten_id, pet_id, start/end date/time, price, payment_approval_id, room_id(선택)
 처리:
   1. reservations INSERT (status='pending')
   2. payments 연결 (payment_approval_id)
@@ -619,11 +700,45 @@
   6. Realtime 브로드캐스트
   7. 상대방 FCM 푸시
   8. notifications INSERT
-업데이트 모드: payment_request_id 있으면 UPDATE만 (status, reject_reason, penalty 등)
+업데이트 모드: reservation_id 있으면 UPDATE만 (status, reject_reason, penalty 등)
   - status='canceled'/'completed' 시 시스템 메시지 + FCM 추가 발송
 ```
 
-#### 7-2-4. scheduler (자동 상태 변경)
+#### 7-2-4. complete-care (돌봄 완료)
+
+```
+입력: reservation_id, member_id
+처리:
+  1. reservations UPDATE (status='care_completed', checkout_actual=NOW())
+  2. chat_messages INSERT (message_type='care_end') + Realtime 브로드캐스트
+  3. chat_messages INSERT (message_type='review') — 후기 작성 유도 메시지
+  4. FCM 푸시 (상대방에게 돌봄 완료 알림)
+  5. notifications INSERT
+출력: 성공/실패
+```
+
+#### 7-2-5. send-alimtalk (카카오 알림톡)
+
+```
+입력: phone, template_code, variables
+처리:
+  1. 루나소프트 API 호출 (KAKAO_ALIMTALK_API_KEY, KAKAO_ALIMTALK_USER_ID)
+  2. 발송 결과 로깅
+출력: 성공/실패
+```
+
+#### 7-2-6. send-push (FCM 푸시)
+
+```
+입력: member_id (또는 member_ids), title, body, data(선택)
+처리:
+  1. fcm_tokens에서 대상 토큰 조회
+  2. Firebase Admin SDK로 멀티캐스트 발송
+  3. 실패 토큰 정리 (expired/invalid → 삭제)
+출력: 발송 결과 (성공/실패 수)
+```
+
+#### 7-2-7. scheduler (자동 상태 변경)
 
 ```
 실행 주기: 5분 간격 (pg_cron 또는 외부 cron)
@@ -647,8 +762,9 @@
 |------|------|
 | 원인 | wooyoopet-backend 저장소를 Public 전환 시 민감 파일 포함 |
 | 노출 정보 | Firebase 서비스 키 (6ad25285...), FTP 비밀번호, 서버 root 비밀번호, SSL 인증서 |
-| 조치 | 즉시 Private 전환 완료 |
-| 후속 필요 | Firebase 키 교체 (외주 개발자 협조), 서버 비밀번호 변경 |
+| 조치 | 즉시 Private 전환 완료 → 저장소 삭제 완료 (2026-04-14) |
+| 후속 조치 완료 | ✅ Firebase 키 교체 완료 (2026-04-14), ✅ wooyoopet-backend 저장소 삭제 완료 |
+| 후속 조치 예정 | 기존 서버(스마일서브) 해지 시 비밀번호 문제 자동 해소 (Phase 6) |
 | 피해 | 노출 시간 극히 짧아 실피해 가능성 낮음, GitHub 자동 스캔이 감지 |
 
 ---
@@ -661,12 +777,14 @@
 - 테이블 구조 변경 시 관리자 페이지 JS 코드에도 영향이 있는지 확인
 - RLS 정책은 관리자(admin)와 앱 사용자(authenticated)를 분리
 - 관리자 전용 RPC 함수는 `SECURITY DEFINER + is_admin()` 체크 유지
+- 앱용 RPC 함수는 `SECURITY INVOKER` 사용 (RLS 자동 적용)
 
 ### 9-2. 앱 코드 수정 범위 최소화
 
 외주 개발자의 작업량을 줄이기 위해:
 - Supabase 자동 API로 대체 가능한 건 자동 API 사용 (앱에서 `supabase.from('table').select()` 호출)
 - PHP에서만 가능한 서버 로직은 Edge Functions로 구현 (앱에서 `supabase.functions.invoke()` 호출)
+- 복잡한 JOIN/집계는 RPC 함수로 구현 (앱에서 `supabase.rpc('app_함수명', { params })` 호출)
 - DB 구조를 가능한 한 PHP 응답 형태와 유사하게 맞춰서 앱 UI 코드 변경을 최소화
 
 ### 9-3. 단계적 전환
@@ -684,6 +802,41 @@
 - 키·비밀번호는 카카오톡·이메일 등 안전한 채널로만 전달
 - 저장소 Public 전환 전 민감 파일 유무 반드시 확인
 
+### 9-5. Supabase Edge Function Secrets 관리
+
+Edge Functions에서 사용하는 외부 API 키는 Supabase Secrets에 저장하고, 코드에서는 `Deno.env.get('SECRET_NAME')`으로 참조한다.
+
+#### 등록 완료 (2026-04-14)
+
+| Secret Name | 용도 | 사용하는 Edge Function | 상태 | 등록일 |
+|-------------|------|----------------------|------|--------|
+| `KAKAO_ALIMTALK_API_KEY` | 카카오 알림톡 API 키 (루나소프트) | send-alimtalk | ✅ 활성 | 2026-04-14 |
+| `KAKAO_ALIMTALK_USER_ID` | 카카오 알림톡 사용자 ID | send-alimtalk | ✅ 활성 | 2026-04-14 |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | FCM 푸시 알림용 Firebase 서비스 계정 (JSON 전체) | send-push, send-chat-message, create-reservation, complete-care, scheduler | ✅ 활성 | 2026-04-14 |
+| `INICIS_MID` | 이니시스 상점 ID (`wooyoope79`) | inicis-callback | ✅ 활성 | 2026-04-14 |
+| `JUSO_CONFM_KEY` | 행안부 주소 API 승인키 | ~~address-proxy~~ | ⚠️ 미사용 (보관) | 2026-04-14 |
+| `NAVER_MAP_CLIENT_ID` | 네이버 역지오코딩 API Client ID (NCP) | ~~address-proxy~~ | ⚠️ 미사용 (보관) | 2026-04-14 |
+| `NAVER_MAP_CLIENT_SECRET` | 네이버 역지오코딩 API Client Secret (NCP) | ~~address-proxy~~ | ⚠️ 미사용 (보관) | 2026-04-14 |
+
+> **참고**:
+> - `SUPABASE_URL`과 `SUPABASE_ANON_KEY`는 Supabase가 기본 제공하므로 별도 등록 불필요.
+> - `INICIS_SIGN_KEY`는 불필요. 기존 PHP 코드에서 signKey/hashKey를 사용하지 않았으며, 모바일 결제(INIpay Mobile)의 hashKey는 앱 클라이언트 측에서 생성하는 값이므로 서버 Secret이 아님. 이니시스 PEM 파일(mcert.pem, mpriv.pem)은 PC 웹결제(INIpay Standard) 전용이므로 보관만 하면 됨.
+> - `JUSO_CONFM_KEY`, `NAVER_MAP_CLIENT_ID`, `NAVER_MAP_CLIENT_SECRET`은 address-proxy Edge Function 삭제로 현재 미사용. 향후 필요 시 활성화할 수 있도록 Supabase Secrets에 보관만 한다. 삭제하지 않는 이유: Secret 삭제 후 재등록 시 키값을 다시 확인해야 하므로.
+
+#### Edge Function 코드에서의 사용 예시
+
+```typescript
+// send-alimtalk Edge Function
+const apiKey = Deno.env.get('KAKAO_ALIMTALK_API_KEY');
+const userId = Deno.env.get('KAKAO_ALIMTALK_USER_ID');
+
+// send-push Edge Function
+const firebaseJson = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON')!);
+
+// inicis-callback Edge Function
+const inicisMid = Deno.env.get('INICIS_MID');
+```
+
 ---
 
 ## 변경 이력
@@ -696,3 +849,6 @@
 | 2026-04-13 | **테이블·컬럼명 전수 교정** — 실제 Supabase DB와 대조하여 85개 불일치 수정: 신규 테이블 12→09개 (이름변경 4, 삭제 3), 컬럼명 오류 15개 수정, 불필요 매핑 8개 제거, 누락 컬럼 49개 보완, 신규 추가 컬럼 18개 확정 (members 11 + kindergartens 3 + reservations 4) |
 | 2026-04-13 | **매니저 검토 반영** — 실제 DB 대조 후 누락 컬럼 추가 (reservations 3개, payments 1개, kindergartens 1개, chat_messages 1개), members.address_doc_urls 상태 ✅ 존재로 변경 (신규 추가 18→17개), 섹션 번호 수량 오류 4건 수정, set_care_review.php 중복 제거, 오탈자 교정, 변경 이력 날짜순 정렬, address_doc_urls 동기화 트리거 작업 추가 |
 | 2026-04-14 | **Step 2 Supabase 스키마 보강 완료** — 신규 테이블 9개(sql/41_01~41_09) 생성, 기존 테이블 컬럼 추가 6개(sql/42_01~42_06), 앱 사용자 RLS 79개(sql/43_01, 39테이블), Storage 버킷 6개 + 정책 20개(sql/43_02) 작성·실행 완료. members 알림 컬럼 text→boolean DEFAULT true 변경, education-images 정책 admin 전용 전환, pets 테이블에 is_birth_date_unknown/is_draft 2개 컬럼 추가(14→16), DB_MAPPING_REFERENCE.md wr_1~wr_11 매핑 확정 (PR #123) |
+| 2026-04-14 | **보안 조치 완료** — wooyoopet-backend 저장소 삭제, Firebase 서비스 키 교체 완료, Supabase Secrets 3개 등록 (KAKAO_ALIMTALK_API_KEY, KAKAO_ALIMTALK_USER_ID, FIREBASE_SERVICE_ACCOUNT_JSON), 추가 등록 필요 Secret 5개 식별, 섹션 9-5 Secrets 관리 가이드 추가 |
+| 2026-04-14 | **Supabase Secrets 전체 등록 완료 (8개)** — JUSO_CONFM_KEY + NAVER_MAP_CLIENT_ID/SECRET + INICIS_MID 추가 등록. INICIS_SIGN_KEY는 기존 PHP에서 미사용 확인되어 불필요 판단 (모바일 결제 hashKey는 앱 클라이언트에서 생성). PEM 파일은 PC 웹결제 전용으로 보관만 |
+| 2026-04-14 | **앱 API 전수조사 + Step 2.5 설계** — React Native 소스에서 실제 호출 PHP API 60개 grep 추출, 기존 매핑 85개와 대조: 미사용 19개 제거 + 누락 3개(kakao-address, delete_message_template, update_message_template) 추가. Supabase RPC 함수가 관리자 전용뿐임을 확인 → Step 2.5(앱용 RPC 11개) 신규 삽입. Edge Functions 8→7개(address-proxy 삭제, create-reservation 이름변경). 섹션 2-2 지리 데이터 테이블 마이그레이션 불필요 확정. toss_payment.php 앱 레거시 호출 확인. Secrets 3개(JUSO/NAVER) 미사용 표기 |
