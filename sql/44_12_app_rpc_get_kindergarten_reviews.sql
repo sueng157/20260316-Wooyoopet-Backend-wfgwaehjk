@@ -171,15 +171,15 @@ BEGIN
   --    (비공개는 내용이지 통계가 아님)
   --    → WHERE 조건에 is_guardian_only 필터 없음
   -- ──────────────────────────────────────────────────────
-  WITH base_tags(tag) AS (
+  WITH base_tags(ord, tag) AS (
     VALUES
-      ('사람을 좋아하고 애교가 많아요'),
-      ('거의 짖지 않았어요'),
-      ('낯선 강아지/사람에게 공격성이 없어요'),
-      ('아이 청결상태가 좋아요'),
-      ('유치원에서 안정적으로 잘 있어요'),
-      ('편식이나 남기는것 없이 사료 잘 먹어요'),
-      ('다음에도 맡아주고 싶어요')
+      (1, '사람을 좋아하고 애교가 많아요'),
+      (2, '거의 짖지 않았어요'),
+      (3, '낯선 강아지/사람에게 공격성이 없어요'),
+      (4, '아이 청결상태가 좋아요'),
+      (5, '유치원에서 안정적으로 잘 있어요'),
+      (6, '편식이나 남기는것 없이 사료 잘 먹어요'),
+      (7, '다음에도 맡아주고 싶어요')
   ),
   review_tags AS (
     SELECT jsonb_array_elements_text(kr.selected_tags) AS tag
@@ -190,11 +190,12 @@ BEGIN
   )
   SELECT COALESCE(json_agg(
     json_build_object('tag', bt.tag, 'count', COUNT(rt.tag))
+    ORDER BY bt.ord
   ), '[]'::json)
   INTO v_tags_json
   FROM base_tags bt
   LEFT JOIN review_tags rt ON bt.tag = rt.tag
-  GROUP BY bt.tag;
+  GROUP BY bt.ord, bt.tag;
 
   -- ──────────────────────────────────────────────────────
   -- 4. 총 건수

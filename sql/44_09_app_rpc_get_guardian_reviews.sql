@@ -150,15 +150,15 @@ BEGIN
   --
   --    집계 대상: is_hidden = false (숨김 후기 제외)
   -- ──────────────────────────────────────────────────────
-  WITH base_tags(tag) AS (
+  WITH base_tags(ord, tag) AS (
     VALUES
-      ('상담이 친절하고 편안했어요'),
-      ('사진과 영상을 자주 보내주셨어요'),
-      ('아이 상태를 자세히 알려주셨어요'),
-      ('아이 컨디션 변화에 빠르게 대응해 주셨어요'),
-      ('시설이 깨끗하고 관리가 잘 되어있어요'),
-      ('예약한 돌봄 일정을 잘 지켜주셨어요'),
-      ('다음에도 맡기고 싶어요')
+      (1, '상담이 친절하고 편안했어요'),
+      (2, '사진과 영상을 자주 보내주셨어요'),
+      (3, '아이 상태를 자세히 알려주셨어요'),
+      (4, '아이 컨디션 변화에 빠르게 대응해 주셨어요'),
+      (5, '시설이 깨끗하고 관리가 잘 되어있어요'),
+      (6, '예약한 돌봄 일정을 잘 지켜주셨어요'),
+      (7, '다음에도 맡기고 싶어요')
   ),
   review_tags AS (
     SELECT jsonb_array_elements_text(gr.selected_tags) AS tag
@@ -168,11 +168,12 @@ BEGIN
   )
   SELECT COALESCE(json_agg(
     json_build_object('tag', bt.tag, 'count', COUNT(rt.tag))
+    ORDER BY bt.ord
   ), '[]'::json)
   INTO v_tags_json
   FROM base_tags bt
   LEFT JOIN review_tags rt ON bt.tag = rt.tag
-  GROUP BY bt.tag;
+  GROUP BY bt.ord, bt.tag;
 
   -- ──────────────────────────────────────────────────────
   -- 4. 총 건수 (is_hidden = false 기준)
