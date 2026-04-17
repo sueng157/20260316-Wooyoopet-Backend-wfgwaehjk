@@ -212,12 +212,20 @@ CREATE POLICY "settlement_infos_update_app" ON settlement_infos
 
 
 -- ── settlements ──────────────────────────────────────────────
--- 본인 정산 내역 조회
+-- 정산 내역 조회: 결제 보호자(member_id) OR 유치원 운영자(kindergarten_id)
+-- 보강 사유: settlements.member_id는 결제자(보호자)이므로
+--           유치원 운영자가 자기 유치원 정산 내역을 조회하려면
+--           kindergarten_id 기반 조건 필요 (reservations/payments/refunds와 동일 패턴)
 DROP POLICY IF EXISTS "settlements_select_app" ON settlements;
 
 CREATE POLICY "settlements_select_app" ON settlements
   FOR SELECT
-  USING (member_id = auth.uid());
+  USING (
+    member_id = auth.uid()
+    OR kindergarten_id IN (
+      SELECT id FROM kindergartens WHERE member_id = auth.uid()
+    )
+  );
 
 
 -- ============================================================
