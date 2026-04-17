@@ -250,7 +250,8 @@ TODO placeholder 112개(GUIDE 45 + CODE 67)를 실제 내용으로 채우는 작
 >   2. MIGRATION_PLAN.md의 Step 3 "본문 작성 계획" 표에서 R{N}의 대상 범위를 확인할 것.
 >
 > ■ 참조 문서: MIGRATION_PLAN.md, MOBILE_APP_ANALYSIS.md, DB_MAPPING_REFERENCE.md, RPC_PHP_MAPPING.md
-> ■ 작업 브랜치: genspark_ai_developer (main 절대 금지, PR은 별도 요청 시에만)
+> ■ 작업 브랜치: genspark_ai_developer (main 절대 금지, PR은 별도 요청할 때에만 develop 브랜치로)
+> ■ 작업 방식 : 매 작업이 끝나면 genspark_ai_developer 브랜치에 커밋 푸시하여 검토할 수 있게 할 것 
 > ```
 >
 > **현재 진행 상황**: 3-0 뼈대 초안 완료 (PR #139 merge). R1부터 본문 작성 시작 예정.
