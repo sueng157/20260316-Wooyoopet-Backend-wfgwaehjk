@@ -1,7 +1,7 @@
 # 우유펫 모바일 앱 API 전환 가이드
 
 > **작성일**: 2026-04-17
-> **최종 업데이트**: 2026-04-17 (초안 — 구조 및 규칙 확정, 본문 작성 예정)
+> **최종 업데이트**: 2026-04-17 (R1 본문 작성 — §1 인증 전환 + §2 apiClient 교체 완료)
 > **대상 독자**: 외주 개발자 (React Native/Expo 앱 코드 수정 담당)
 > **전제 조건**: Supabase 프로젝트 설정 완료, Step 2.5 RPC 13개 배포 완료
 > **관련 문서**: `MIGRATION_PLAN.md` (설계서), `APP_MIGRATION_CODE.md` (코드 예시), `RPC_PHP_MAPPING.md` (RPC 매핑), `DB_MAPPING_REFERENCE.md` (테이블 대조표)
@@ -196,8 +196,8 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 | 장 | 제목 | 작성 라운드 | API 수 | 상태 |
 |----|------|-----------|--------|------|
 | 0 | 문서 규칙 및 표기법 | 3-0 (완료) | — | ✅ 확정 |
-| 1 | 인증 전환 (mb_id → Supabase Auth) | 3-1 / R1 | 3개 (#1~#3) | ⬜ 예정 |
-| 2 | apiClient 교체 (FormData → Supabase JS) | 3-1 / R1 | — (공통) | ⬜ 예정 |
+| 1 | 인증 전환 (mb_id → Supabase Auth) | 3-1 / R1 | 3개 (#1~#3) | ✅ 완료 |
+| 2 | apiClient 교체 (FormData → Supabase JS) | 3-1 / R1 | — (공통) | ✅ 완료 |
 | 3 | 반려동물 CRUD | 3-2 / R2 | 8개 (#9~#16) | ⬜ 예정 |
 | 4 | 즐겨찾기 CRUD | 3-2 / R2 (CODE: R6) | 4개 (#46~#49) | ⬜ 예정 |
 | 5 | 알림/FCM | 3-2 / R2 (CODE: R6) | 3개 (#50~#52) | ⬜ 예정 |
@@ -229,31 +229,237 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ### 1-1. 현재 인증 흐름 vs 전환 후 흐름
 
-<!-- TODO: 현재 흐름 다이어그램 (alimtalk → auth_request → set_join) -->
-<!-- TODO: 전환 후 흐름 다이어그램 (signInWithOtp → verifyOtp → members UPSERT) -->
+**현재 흐름 (PHP/MariaDB)**:
+
+```
+┌─────────┐   ① 폰번호 입력    ┌─────────────────┐
+│  앱 화면  │ ──────────────→ │ alimtalk.php     │  ← 카카오 알림톡으로 6자리 인증번호 발송
+│          │                  │ (GET)            │
+│          │   ② 인증번호 입력  │                  │
+│          │ ──────────────→ │ auth_request.php │  ← 인증번호 일치 확인 (DB 대조)
+│          │                  │ (GET)            │     → 일치 시 {"result":"Y"} 반환
+│          │   ③ 회원정보 저장  │                  │
+│          │ ──────────────→ │ set_join.php     │  ← members UPSERT (가입/주소 업데이트)
+│          │                  │ (POST, FormData) │
+│          │   ④ 로그인 완료   │                  │
+│          │ ←────────────── │ {"result":"Y"}   │  → userAtom에 mb_id(폰번호) 저장 (MMKV)
+└─────────┘                  └─────────────────┘
+
+⚠️ 문제점:
+  - 인증 후 JWT 토큰이 없음 → mb_id(폰번호)만으로 모든 API 호출
+  - mb_id를 알면 누구나 타인의 API 호출 가능 (Authorization 헤더 없음)
+  - 세션/리프레시 토큰 없음 → 만료/갱신 개념 자체가 없음
+```
+
+**전환 후 흐름 (Supabase Auth)**:
+
+```
+┌─────────┐   ① 폰번호 입력      ┌──────────────────────────┐
+│  앱 화면  │ ──────────────→   │ Supabase Auth             │
+│          │                    │ signInWithOtp({ phone })  │  ← Supabase가 자체 OTP 발송
+│          │   ② OTP 입력       │                            │     (※ 카카오 알림톡 사용 시
+│          │ ──────────────→   │ verifyOtp({ phone, token })│      send-alimtalk EF 연동)
+│          │                    │                            │
+│          │   ③ JWT 세션 수신   │                            │
+│          │ ←────────────────  │ { session, user }          │  → access_token + refresh_token
+│          │                    │                            │     MMKV에 자동 저장 (어댑터)
+│          │   ④ 회원정보 확인   │                            │
+│          │ ──────────────→   │ members UPSERT             │  ← 신규 회원이면 INSERT
+│          │                    │ (자동 API, JWT 포함)        │     기존 회원이면 SELECT
+└─────────┘                    └──────────────────────────┘
+
+✅ 개선사항:
+  - 모든 API 호출에 JWT access_token이 자동 포함 (Authorization 헤더)
+  - RLS(Row Level Security)로 본인 데이터만 접근 가능
+  - refresh_token으로 세션 자동 갱신 (autoRefreshToken: true)
+  - mb_id 파라미터가 완전히 제거됨 → auth.uid()가 서버에서 자동 추출
+```
+
+> **핵심 차이**: 기존에는 `mb_id`(폰번호)를 **매 요청마다 파라미터로 전달**했지만, 전환 후에는 Supabase가 **JWT에서 `auth.uid()`를 자동 추출**합니다. 앱 코드에서 `mb_id` 파라미터를 일일이 전달하는 코드를 **모두 제거**해야 합니다.
 
 ### 1-2. API #1. alimtalk.php → Edge Function `send-alimtalk`
 
-<!-- TODO: Before/After 코드, 변환 포인트 -->
-<!-- 참조: APP_MIGRATION_CODE.md #1 -->
+**전환 방식**: Edge Function | **난이도**: 중
+
+기존 `alimtalk.php`는 카카오 알림톡(루나소프트 API)을 통해 SMS 인증번호를 발송하는 PHP 서버 로직입니다.
+
+**Supabase Auth의 Phone OTP를 사용하면 인증번호 발송이 Supabase 내부에서 처리**되므로, 앱에서 `alimtalk.php`를 직접 호출하던 코드는 제거됩니다. 다만, Supabase Phone OTP가 카카오 알림톡을 발송 채널로 사용하려면 커스텀 SMS 훅을 설정해야 합니다.
+
+- **Supabase 기본 SMS**: Twilio 등 해외 SMS 프로바이더 사용 → 한국 사용자에게 부적합
+- **커스텀 훅 방식**: Supabase Auth → `send-alimtalk` Edge Function → 루나소프트 API → 카카오 알림톡 발송
+
+따라서 `send-alimtalk` Edge Function은 Supabase Auth의 SMS 훅으로 동작하며, **앱 코드에서 직접 호출하지 않습니다**.
+
+**변환 포인트**:
+- 앱에서 `apiClient.get('api/alimtalk.php', { ... })` 호출 코드 **삭제**
+- `supabase.auth.signInWithOtp({ phone })` 한 줄로 대체 (인증번호 발송이 Supabase Auth 내부에서 자동 처리)
+- 루나소프트 API 키는 Supabase Secrets에 등록됨 (앱 코드에 노출 안 됨)
+- Edge Function `send-alimtalk`은 Step 4에서 구현 예정 (앱 개발자는 신경 쓸 필요 없음)
+
+> 📝 코드 예시: `APP_MIGRATION_CODE.md` #1 참조
 
 ### 1-3. API #2. auth_request.php → Supabase Auth `signInWithOtp` + `verifyOtp`
 
-<!-- TODO: Before/After 코드, 변환 포인트 -->
-<!-- 참조: APP_MIGRATION_CODE.md #2 -->
+**전환 방식**: Supabase Auth | **난이도**: 중
+
+기존 `auth_request.php`는 두 가지 역할을 수행합니다:
+1. **인증번호 발송 요청** (`type=send`): `alimtalk.php`를 내부 호출하여 SMS 발송
+2. **인증번호 확인** (`type=verify`): DB에 저장된 인증번호와 비교
+
+전환 후에는 이 두 역할이 Supabase Auth의 두 메서드로 분리됩니다:
+
+| 기존 역할 | 기존 호출 | 전환 후 호출 |
+|-----------|----------|------------|
+| 인증번호 발송 | `apiClient.get('api/alimtalk.php', { phone, code })` | `supabase.auth.signInWithOtp({ phone })` |
+| 인증번호 확인 | `apiClient.get('api/auth_request.php', { mb_id, auth_no })` | `supabase.auth.verifyOtp({ phone, token, type: 'sms' })` |
+
+**변환 포인트**:
+- 기존: 인증번호 발송과 확인이 별도 PHP 파일 → 전환 후: `signInWithOtp` / `verifyOtp` 2개 메서드로 명확히 분리
+- 기존: 인증 성공 시 `{"result":"Y"}` 반환 → 전환 후: `{ data: { session, user }, error }` 반환
+- 전환 후 `verifyOtp` 성공 시 **즉시 JWT 세션이 발급**됨 (기존에는 인증 확인 후 별도로 `set_join.php`를 호출해야 했음)
+- 전화번호 포맷: Supabase Auth는 국제번호 형식 필요 (`+821012345678`). 기존 `01012345678` → `+82` 접두사 추가 필요
+
+> 📝 코드 예시: `APP_MIGRATION_CODE.md` #2 참조
 
 ### 1-4. API #3. set_join.php → Supabase Auth + members UPSERT
 
-<!-- TODO: Before/After 코드, 변환 포인트 -->
-<!-- 참조: APP_MIGRATION_CODE.md #3 -->
+**전환 방식**: 자동 API | **난이도**: 쉬움
+
+기존 `set_join.php`는 회원가입 + 주소 업데이트를 FormData POST로 처리합니다. 전환 후에는 `verifyOtp` 성공 시 Supabase Auth에 사용자가 자동 생성되므로, 앱에서는 `members` 테이블에 추가 프로필 정보를 UPSERT하면 됩니다.
+
+**주의**: Supabase Auth의 `auth.users` 테이블과 `public.members` 테이블은 별도입니다.
+- `auth.users`: Supabase Auth가 관리 (phone, 인증 메타데이터). 앱에서 직접 조회/수정 불가
+- `public.members`: 앱 프로필 정보 (name, nickname, address, mode 등). RLS로 보호
+- `members.id`는 `auth.users.id`와 동일한 UUID를 사용 (FK 관계)
+
+**변환 포인트**:
+- 기존: `apiClient.post('api/set_join.php', formData)` → 전환 후: `supabase.from('members').upsert({ ... })`
+- 기존: FormData에 `mb_id`(폰번호)로 식별 → 전환 후: JWT의 `auth.uid()`로 자동 식별 (RLS)
+- 기존: PHP에서 가입/업데이트 분기 → 전환 후: `.upsert()` 한 줄로 통합 (있으면 UPDATE, 없으면 INSERT)
+- `mb_5` → `current_mode`: 값도 변경 (`'1'` → `'보호자'`, `'2'` → `'유치원'`)
+- `mb_2` (주민번호 앞 6자리) → `birth_date` (date 타입): 포맷 변환 필요
+
+> 📝 코드 예시: `APP_MIGRATION_CODE.md` #3 참조
 
 ### 1-5. 인증 상태 관리 (userAtom 변경)
 
-<!-- TODO: userAtom 구조 변경 (mb_id → Supabase session), onAuthStateChange 리스너 -->
+기존 앱은 `userAtom` (Jotai atom + MMKV)에 `mb_id`(폰번호)를 저장하고, 앱 재시작 시 MMKV에서 복원하여 자동 로그인합니다.
+
+전환 후에는 **Supabase Auth 세션이 MMKV에 자동 저장**됩니다 (§0-4의 MMKV 어댑터).
+
+**기존 userAtom 구조** (추정):
+
+```typescript
+// states/userAtom.ts (기존)
+interface UserState {
+  mb_id: string          // 폰번호 (핵심 식별자)
+  mb_no: number          // 회원 번호 (정수 PK)
+  mb_name: string        // 이름
+  mb_nick: string        // 닉네임
+  mb_5: string           // '1'=보호자, '2'=유치원
+  mb_profile1: string    // 프로필 이미지 파일명
+  // ... 기타 필드
+}
+```
+
+**전환 후 userAtom 구조**:
+
+```typescript
+// states/userAtom.ts (전환 후)
+import { Session } from '@supabase/supabase-js'
+
+interface UserState {
+  session: Session | null   // Supabase Auth 세션 (access_token, refresh_token 포함)
+  id: string                // UUID (= auth.uid())
+  phone: string             // 폰번호
+  name: string              // 이름
+  nickname: string          // 닉네임
+  nickname_tag: string      // '#1001' 형식 태그
+  current_mode: string      // '보호자' | '유치원'
+  profile_image: string     // Storage URL (전체 URL)
+  // ... 기타 필드 (members 테이블 컬럼에 맞춤)
+}
+```
+
+**onAuthStateChange 리스너** — 앱 루트(`_layout.tsx` 등)에 설정:
+
+```typescript
+// app/_layout.tsx (또는 적절한 루트 컴포넌트)
+import { supabase } from '@/lib/supabase'
+
+useEffect(() => {
+  // Supabase Auth 상태 변화 감지 (로그인, 로그아웃, 토큰 갱신)
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // members 테이블에서 프로필 조회 → userAtom 업데이트
+        const { data: member } = await supabase
+          .from('members')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        setUser({
+          session,
+          id: session.user.id,
+          phone: session.user.phone ?? '',
+          name: member?.name ?? '',
+          nickname: member?.nickname ?? '',
+          nickname_tag: member?.nickname_tag ?? '',
+          current_mode: member?.current_mode ?? '보호자',
+          profile_image: member?.profile_image ?? '',
+        })
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)  // userAtom 초기화
+      }
+      // 'TOKEN_REFRESHED' 이벤트는 자동 처리됨 (별도 로직 불필요)
+    }
+  )
+
+  return () => subscription.unsubscribe()
+}, [])
+```
+
+**변환 포인트**:
+- `mb_id` → `id` (UUID): 모든 곳에서 폰번호 대신 UUID 사용
+- `mb_5` → `current_mode`: 값 형태도 변경 (`'1'`→`'보호자'`, `'2'`→`'유치원'`)
+- `mb_profile1` (파일명) → `profile_image` (Storage 전체 URL)
+- `mb_no` (정수) → `id` (UUID): PK 타입 자체가 변경
+- 기존에는 MMKV에 직접 `mb_id`를 저장/복원했으나, 전환 후에는 Supabase Auth 세션이 MMKV 어댑터를 통해 자동 관리됨
 
 ### 1-6. 인증 전환 후 영향 범위
 
-<!-- TODO: 모든 API 호출에서 mb_id 파라미터 제거 → auth.uid() 자동 적용 설명 -->
+인증 전환은 **앱 전체에 영향**을 미칩니다. 모든 API 호출에서 `mb_id` 파라미터가 제거되고, Supabase RLS가 `auth.uid()`를 자동 적용합니다.
+
+**제거해야 하는 패턴**:
+
+```typescript
+// ❌ 기존: 매 API 호출마다 mb_id를 수동으로 전달
+const response = await apiClient.get('api/get_my_animal.php', {
+  mb_id: user.mb_id,  // ← 이 줄 제거
+})
+
+// ✅ 전환 후: mb_id 전달 불필요 (JWT에서 auth.uid() 자동 추출)
+const { data, error } = await supabase
+  .from('pets')
+  .select('*')
+  .eq('member_id', user.id)  // user.id = UUID (auth.uid()와 동일)
+  .eq('deleted', false)
+```
+
+**영향 범위 요약**:
+
+| 항목 | 기존 | 전환 후 | 영향도 |
+|------|------|--------|--------|
+| 사용자 식별 | `mb_id` (폰번호) 파라미터 전달 | JWT `auth.uid()` 자동 적용 | **모든 API** |
+| API 호출 라이브러리 | `apiClient.get/post` | `supabase.from/rpc/functions` | **모든 API** |
+| 인증 헤더 | 없음 | `Authorization: Bearer <access_token>` 자동 포함 | **자동** |
+| 데이터 접근 제어 | 없음 (mb_id만 알면 접근 가능) | RLS 정책으로 본인 데이터만 접근 | **자동** |
+| 세션 만료 | 없음 (영구) | access_token 1시간 → refresh_token으로 자동 갱신 | **자동** |
+| 로그아웃 | MMKV에서 mb_id 삭제 | `supabase.auth.signOut()` | 로그아웃 화면 |
+| 앱 재시작 | MMKV에서 mb_id 복원 | MMKV 어댑터가 세션 자동 복원 | **자동** |
+
+> **작업 순서 권장**: 인증 전환(§1)과 apiClient 교체(§2)를 가장 먼저 완료하면, 이후 모든 API 전환 작업에서 `supabase` 클라이언트를 사용할 수 있습니다. 이 두 작업은 `apiClient.ts`와 `lib/supabase.ts`가 공존하는 형태로 점진적 전환이 가능합니다 (§2-3 참조).
 
 ---
 
@@ -265,23 +471,257 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ### 2-1. 현재 apiClient 구조
 
-<!-- TODO: apiClient.ts 분석 (BASE_URL, get/post 메서드, FormData 변환, 에러 처리) -->
+기존 `utils/apiClient.ts`의 구조와 특징:
+
+```typescript
+// utils/apiClient.ts (기존 — 분석 결과)
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL
+// → https://woo1020.iwinv.net
+
+// GET 요청: query string 방식
+apiClient.get(endpoint, payload)
+// → GET https://woo1020.iwinv.net/{endpoint}?key1=value1&key2=value2
+// → 응답: JSON
+
+// POST 요청: FormData 방식 (JSON body가 아님!)
+apiClient.post(endpoint, payload)
+// → POST https://woo1020.iwinv.net/{endpoint}
+// → Content-Type: multipart/form-data
+// → body: FormData (key-value 쌍, 파일 포함 가능)
+// → 응답: JSON
+```
+
+**주요 특징**:
+- 모든 POST는 `FormData`로 전송 (JSON body 아님)
+- 인증 헤더(`Authorization`) 없음
+- `mb_id`(폰번호)를 매번 파라미터에 포함하여 사용자 식별
+- 에러 처리: try/catch에서 `Alert.alert()` 호출 (기존 패턴 유지)
+- 파일 업로드: FormData에 이미지 파일을 직접 append
 
 ### 2-2. Supabase JS 호출 패턴 요약
 
-<!-- TODO: 4가지 패턴 비교표 (자동 API, RPC, Edge Function, Storage) -->
+Supabase JS 클라이언트(`lib/supabase.ts`)는 5가지 호출 패턴을 제공합니다. 기존 `apiClient`의 모든 역할을 대체합니다.
+
+| # | 패턴 | 용도 | 대응하는 기존 코드 | API 수 |
+|---|------|------|-------------------|--------|
+| ① | `supabase.from('table').select/insert/update/delete()` | 단순 CRUD (자동 API) | `apiClient.get/post('api/get_*.php')` | 44개 |
+| ② | `supabase.rpc('function_name', { params })` | 복잡한 조회/JOIN/집계 (RPC) | `apiClient.get('api/get_partner.php')` 등 | 14개 |
+| ③ | `supabase.functions.invoke('edge-fn', { body })` | 서버 로직 필수 (Edge Function) | `apiClient.post('api/inicis_payment.php')` 등 | 7개 |
+| ④ | `supabase.storage.from('bucket').upload/getPublicUrl()` | 파일 업로드/다운로드 | FormData의 이미지 파일 append | Storage용 |
+| ⑤ | `supabase.auth.signInWithOtp/verifyOtp/signOut()` | 인증 | `apiClient.get('api/auth_request.php')` | 1개 |
+
+**패턴 ①: 자동 API (가장 많이 사용)**
+
+```typescript
+// 조회 (SELECT)
+const { data, error } = await supabase
+  .from('pets')
+  .select('*')                      // 전체 컬럼 또는 'id, name, breed'
+  .eq('member_id', user.id)         // WHERE member_id = ?
+  .eq('deleted', false)             // AND deleted = false
+  .order('created_at', { ascending: false })  // ORDER BY
+
+// 등록 (INSERT)
+const { data, error } = await supabase
+  .from('pets')
+  .insert({ member_id: user.id, name: '멍멍이', breed: '말티즈' })
+  .select()                         // INSERT 후 결과 반환
+
+// 수정 (UPDATE)
+const { data, error } = await supabase
+  .from('pets')
+  .update({ name: '새이름' })
+  .eq('id', petId)
+  .eq('member_id', user.id)         // RLS 보조 (본인 데이터만)
+  .select()
+
+// 삭제 (DELETE 또는 soft delete)
+const { error } = await supabase
+  .from('pets')
+  .update({ deleted: true })        // soft delete
+  .eq('id', petId)
+
+// UPSERT (있으면 UPDATE, 없으면 INSERT)
+const { data, error } = await supabase
+  .from('members')
+  .upsert({
+    id: user.id,  // PK 기준으로 중복 판단
+    name: '홍길동',
+    current_mode: '보호자',
+  })
+  .select()
+```
+
+**패턴 ②: RPC**
+
+```typescript
+const { data, error } = await supabase.rpc('app_get_kindergarten_detail', {
+  p_kindergarten_member_id: memberId,
+})
+```
+
+**패턴 ③: Edge Function**
+
+```typescript
+const { data, error } = await supabase.functions.invoke('create-reservation', {
+  body: {
+    kindergarten_id: kgId,
+    pet_id: petId,
+    checkin_scheduled: startDate,
+    checkout_scheduled: endDate,
+  },
+})
+```
+
+**패턴 ④: Storage**
+
+```typescript
+// 업로드
+const filePath = `${user.id}/${Date.now()}.jpg`
+const { data, error } = await supabase.storage
+  .from('pet-images')       // 버킷명
+  .upload(filePath, file, {
+    contentType: 'image/jpeg',
+    upsert: true,            // 같은 경로면 덮어쓰기
+  })
+
+// 공개 URL 획득
+const { data: { publicUrl } } = supabase.storage
+  .from('pet-images')
+  .getPublicUrl(filePath)
+```
 
 ### 2-3. 점진적 전환 전략
 
-<!-- TODO: Phase별 apiClient와 supabase 공존 방법, import 가이드 -->
+`apiClient.ts`와 `lib/supabase.ts`는 **공존 가능**합니다. 모든 API를 한 번에 전환하지 않고, Phase별로 점진적으로 교체합니다.
+
+```
+Phase A: lib/supabase.ts 생성 + 인증 전환 + 단순 CRUD
+  ├─ apiClient.ts: 아직 사용 중 (전환 안 된 API)
+  └─ lib/supabase.ts: 새로 전환된 API에서 사용
+
+Phase B ~ D: 나머지 API 전환
+  ├─ apiClient.ts: 점점 사용 감소
+  └─ lib/supabase.ts: 점점 사용 증가
+
+Phase 완료: apiClient.ts 삭제
+  └─ lib/supabase.ts: 모든 API 호출 담당
+```
+
+**import 가이드**:
+
+```typescript
+// 기존 (전환 전)
+import { apiClient } from '@/utils/apiClient'
+
+// 전환 후 (supabase 사용)
+import { supabase } from '@/lib/supabase'
+
+// 전환 중 (두 파일 공존 가능 — 같은 파일에서 양쪽 import 가능)
+import { apiClient } from '@/utils/apiClient'  // 아직 전환 안 된 API용
+import { supabase } from '@/lib/supabase'       // 전환 완료된 API용
+```
+
+**주의사항**:
+- 한 API를 전환할 때, 관련된 hook 파일 전체에서 해당 API 호출을 교체
+- 예: `hooks/usePetList.ts`에서 `fetchPets()`만 전환하고 `deletePet()`은 남겨두면 안 됨 → 같은 hook 안의 모든 API를 한 번에 전환 권장
+- 전환 시 기존 `apiClient` 호출부를 주석 처리하지 말고 **삭제** (주석이 쌓이면 혼란)
 
 ### 2-4. 에러 처리 통합
 
-<!-- TODO: apiClient 에러 형식 vs Supabase 에러 형식, 공통 에러 핸들러 -->
+**기존 apiClient 에러 형식**:
+
+```typescript
+// 기존: try/catch + HTTP 에러
+try {
+  const response = await apiClient.get('api/get_my_animal.php', { mb_id })
+  if (response.result !== 'Y') {
+    Alert.alert('오류', response.message ?? '요청 실패')
+    return
+  }
+  // 성공 처리
+} catch (error) {
+  Alert.alert('오류', '서버와 통신할 수 없습니다')
+}
+```
+
+**Supabase 에러 형식**:
+
+```typescript
+// Supabase: { data, error } 패턴 (예외를 throw하지 않음!)
+const { data, error } = await supabase
+  .from('pets')
+  .select('*')
+  .eq('member_id', user.id)
+
+if (error) {
+  // error.message: 'Row level security policy violation'
+  // error.code: '42501' (PostgreSQL 에러 코드)
+  // error.details: 상세 정보
+  Alert.alert('오류', error.message)
+  return
+}
+// data: 성공 결과 (배열 또는 객체)
+```
+
+**공통 에러 핸들러** (선택사항 — 기존 Alert.alert 패턴 유지 가능):
+
+```typescript
+// utils/handleSupabaseError.ts (신규 생성 — 선택사항)
+import { Alert } from 'react-native'
+import { PostgrestError } from '@supabase/supabase-js'
+
+export const handleSupabaseError = (
+  error: PostgrestError | null,
+  context?: string
+): boolean => {
+  if (!error) return false  // 에러 없음
+
+  const message = (() => {
+    switch (error.code) {
+      case '42501': return '접근 권한이 없습니다'
+      case '23505': return '이미 존재하는 데이터입니다'
+      case '23503': return '참조하는 데이터가 존재하지 않습니다'
+      case 'PGRST116': return '데이터를 찾을 수 없습니다'
+      default: return error.message
+    }
+  })()
+
+  Alert.alert('오류', context ? `${context}: ${message}` : message)
+  return true  // 에러 있었음
+}
+
+// 사용 예시:
+const { data, error } = await supabase.from('pets').select('*')
+if (handleSupabaseError(error, '반려동물 조회')) return
+```
+
+**핵심 차이점 요약**:
+
+| 항목 | 기존 apiClient | Supabase |
+|------|---------------|----------|
+| 에러 전달 방식 | `throw` (try/catch 필요) | `{ error }` 객체 반환 (throw 안 함) |
+| 성공 판단 | `response.result === 'Y'` | `error === null` |
+| 에러 상세 | `response.message` (PHP에서 설정) | `error.message`, `error.code` (PostgreSQL 표준) |
+| 네트워크 에러 | catch 블록 | catch 블록 (네트워크 단절 시에만) |
 
 ### 2-5. apiClient.ts 제거 시점
 
-<!-- TODO: 모든 API 전환 완료 후 apiClient.ts 삭제 체크리스트 -->
+모든 API 전환이 완료되면 `utils/apiClient.ts`를 삭제합니다.
+
+**삭제 전 체크리스트**:
+
+- [ ] **Phase A**: 인증 (#1~#3) + 단순 CRUD (#4~#16, #21, #24~#33, #40, #42~#43, #45~#65) 전환 완료
+- [ ] **Phase B**: RPC (#17~#20, #37~#38, #41, #44, #44b, #61) 전환 완료
+- [ ] **Phase C**: 채팅 (#22~#29) Realtime 전환 완료
+- [ ] **Phase D**: 결제/예약 (#34~#36, #39, #66) Edge Function 전환 완료
+- [ ] 전체 소스에서 `apiClient` import 검색 → **0건** 확인
+- [ ] 전체 소스에서 `EXPO_PUBLIC_API_URL` 참조 검색 → **0건** 확인
+- [ ] 전체 소스에서 `EXPO_PUBLIC_WEBSOCKET_URL` 참조 검색 → **0건** 확인 (채팅 Realtime 전환 후)
+- [ ] `utils/apiClient.ts` 파일 삭제
+- [ ] `.env`에서 `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_WEBSOCKET_URL` 제거
+- [ ] `package.json`에서 `react-use-websocket` 제거 (채팅 Realtime 전환 후)
+- [ ] 빌드 테스트 통과 확인
 
 ---
 
@@ -831,3 +1271,4 @@ const { data, error } = await supabase.functions.invoke('function-name', {
 |------|------|
 | 2026-04-17 | 초안 — 문서 구조, 규칙, 목차, 섹션 플레이스홀더 확정 |
 | 2026-04-17 | 리뷰 반영 — Issue 1~4 (16-8 번호 명시, 9장/10장 API 재배치, 13장 #16 제거, 12장 #5b 명확화) + R1~R3,R5,R6 (쿼리 규칙, 응답 매핑 규칙, 문서 역할 분담, MMKV 어댑터, 코드 블록 렌더링) |
+| 2026-04-17 | **R1 본문 작성** — §1 인증 전환 (1-1~1-6: 인증 흐름 다이어그램, API #1~#3 설명, userAtom 변경, 영향 범위) + §2 apiClient 교체 (2-1~2-5: 4패턴 비교, 점진적 전환, 에러 처리, 삭제 체크리스트) |

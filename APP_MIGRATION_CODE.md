@@ -1,7 +1,7 @@
 # 우유펫 모바일 앱 API 전환 코드 예시
 
 > **작성일**: 2026-04-17
-> **최종 업데이트**: 2026-04-17 (초안 — 구조 확정, 코드 작성 예정)
+> **최종 업데이트**: 2026-04-17 (R1 본문 작성 — §1 인증/회원 #1~#6 + §2 주소 #7~#8 완료)
 > **대상 독자**: 외주 개발자 (React Native/Expo 앱 코드 수정 담당)
 > **관련 문서**: `APP_MIGRATION_GUIDE.md` (전환 가이드 — 규칙/표기법/아키텍처 설명), `MIGRATION_PLAN.md` (설계서)
 > **표기 규칙**: `APP_MIGRATION_GUIDE.md §0`의 규칙을 따릅니다
@@ -44,85 +44,369 @@
 
 ### API #1. alimtalk.php → Edge Function `send-alimtalk`
 
-**전환 방식**: Edge Function | **난이도**: 중
-**관련 파일**: `hooks/useJoin.ts` (추정)
-**Supabase 대응**: Edge Function `send-alimtalk`
+**전환 방식**: Edge Function (Supabase Auth 내부 훅) | **난이도**: 중
+**관련 파일**: `hooks/useJoin.ts`, `app/authentication/authNumber.tsx`
+**Supabase 대응**: `supabase.auth.signInWithOtp()` 내부에서 자동 호출 (앱 코드에서 직접 호출 없음)
 
 **Before**:
 ```typescript
-// TODO: 기존 PHP 호출 코드
+// 파일: hooks/useJoin.ts 또는 app/authentication/authNumber.tsx
+// 인증번호 발송 (카카오 알림톡)
+const sendAuthCode = async (phone: string) => {
+  try {
+    const authCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const response = await apiClient.get('api/alimtalk.php', {
+      phone: phone,        // 수신 폰번호 (01012345678)
+      auth_code: authCode, // 6자리 인증번호
+    })
+    if (response.result === 'Y') {
+      // 인증번호 발송 성공 → 타이머 시작
+      setAuthCode(authCode)  // 로컬에 저장 (확인용)
+      startTimer()
+    } else {
+      Alert.alert('오류', '인증번호 발송에 실패했습니다')
+    }
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **After**:
 ```typescript
-// TODO: supabase.functions.invoke('send-alimtalk', { body: { phone, template_code, variables } })
+// 파일: hooks/useAuth.ts (신규) 또는 hooks/useJoin.ts (수정)
+import { supabase } from '@/lib/supabase'
+
+// 인증번호 발송 (Supabase Auth Phone OTP)
+// → Supabase Auth가 send-alimtalk Edge Function을 내부적으로 호출
+// → 앱에서 alimtalk.php를 직접 호출하지 않음
+const sendOtp = async (phone: string) => {
+  try {
+    // 국제번호 형식 변환: '01012345678' → '+821012345678'
+    const formattedPhone = phone.startsWith('+82')
+      ? phone
+      : `+82${phone.replace(/^0/, '')}`
+
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: formattedPhone,
+    })
+
+    if (error) {
+      Alert.alert('오류', error.message)
+      return
+    }
+    // OTP 발송 성공 → 타이머 시작
+    startTimer()
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **변환 포인트**:
-<!-- TODO -->
+- **앱 코드에서 `alimtalk.php` 호출 완전 삭제** → `signInWithOtp` 한 줄로 대체
+- 기존: 인증번호를 앱에서 생성하여 PHP로 전달 → 전환 후: Supabase Auth가 내부적으로 생성·발송
+- 기존: 인증번호를 로컬 변수에 저장 (`setAuthCode`) → 전환 후: 저장 불필요 (Supabase가 서버에서 관리)
+- 전화번호 포맷: `01012345678` → `+821012345678` 변환 필요
+- `send-alimtalk` Edge Function은 Supabase Auth SMS 훅으로 동작 → 앱 개발자는 구현 불필요
+
+**응답 매핑**:
+
+| PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
+|---|---|---|
+| `result` (`'Y'`/`'N'`) | `error` (`null`이면 성공) | 예 — `result === 'Y'` → `error === null` |
+| `message` (에러 메시지) | `error.message` | 아니오 |
+| `auth_code` (로컬 저장) | — (서버에서 관리, 앱에서 저장 불필요) | 예 — 삭제 |
 
 ---
 
 ### API #2. auth_request.php → Supabase Auth
 
 **전환 방식**: Supabase Auth | **난이도**: 중
-**관련 파일**: `hooks/useJoin.ts`, 인증 관련 화면
-**Supabase 대응**: `supabase.auth.signInWithOtp()` + `supabase.auth.verifyOtp()`
+**관련 파일**: `hooks/useJoin.ts`, `app/authentication/authNumber.tsx`
+**Supabase 대응**: `supabase.auth.verifyOtp({ phone, token, type: 'sms' })`
 
 **Before**:
 ```typescript
-// TODO: 기존 PHP 호출 코드 (auth_request.php)
+// 파일: hooks/useJoin.ts 또는 app/authentication/authNumber.tsx
+// 인증번호 확인
+const verifyAuthCode = async (phone: string, inputCode: string) => {
+  try {
+    const response = await apiClient.get('api/auth_request.php', {
+      mb_id: phone,        // 폰번호 (= mb_id)
+      auth_no: inputCode,  // 사용자가 입력한 인증번호
+    })
+    if (response.result === 'Y') {
+      // 인증 성공 → 다음 단계(회원가입 또는 로그인)로 이동
+      return true
+    } else {
+      Alert.alert('오류', '인증번호가 일치하지 않습니다')
+      return false
+    }
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+    return false
+  }
+}
 ```
 
 **After**:
 ```typescript
-// TODO: Supabase Auth Phone OTP 흐름
+// 파일: hooks/useAuth.ts (신규) 또는 hooks/useJoin.ts (수정)
+import { supabase } from '@/lib/supabase'
+
+// OTP 인증번호 확인 → 성공 시 즉시 JWT 세션 발급
+const verifyOtp = async (phone: string, otpCode: string) => {
+  try {
+    const formattedPhone = phone.startsWith('+82')
+      ? phone
+      : `+82${phone.replace(/^0/, '')}`
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: formattedPhone,
+      token: otpCode,     // 사용자가 입력한 6자리 OTP
+      type: 'sms',
+    })
+
+    if (error) {
+      Alert.alert('오류', '인증번호가 일치하지 않습니다')
+      return null
+    }
+
+    // ✅ 인증 성공 → data.session에 JWT가 포함됨
+    // onAuthStateChange 리스너가 자동으로 userAtom 업데이트
+    return data.session  // { access_token, refresh_token, user }
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+    return null
+  }
+}
 ```
 
 **변환 포인트**:
-<!-- TODO -->
+- 기존: 인증 확인 후 `{"result":"Y"}` → 앱에서 별도로 `set_join.php` 호출해야 로그인 완료
+- 전환 후: `verifyOtp` 성공 → **즉시 JWT 세션 발급** → `onAuthStateChange`가 자동으로 상태 업데이트
+- `mb_id` 파라미터 → `phone` 파라미터 (국제번호 형식)
+- `auth_no` → `token` (파라미터 이름 변경)
+- 반환값: `boolean` → `Session | null` (JWT 세션 객체)
+
+**응답 매핑**:
+
+| PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
+|---|---|---|
+| `result` (`'Y'`/`'N'`) | `error` (`null`이면 성공) | 예 — `result === 'Y'` → `error === null` |
+| `message` | `error.message` | 아니오 |
+| — | `data.session` (JWT 세션) | 예 — 신규 필드. access_token, refresh_token 포함 |
+| — | `data.session.user.id` (UUID) | 예 — 기존 `mb_id`(폰번호)를 대체하는 사용자 식별자 |
+| — | `data.session.user.phone` (폰번호) | 예 — 기존 `mb_id`와 동일한 값 (국제번호 형식) |
 
 ---
 
 ### API #3. set_join.php → Supabase Auth + members UPSERT
 
 **전환 방식**: 자동 API | **난이도**: 쉬움
-**관련 파일**: `utils/updateJoin.ts`
-**Supabase 대응**: `supabase.auth.signUp()` → `members` UPSERT
+**관련 파일**: `utils/updateJoin.ts`, `hooks/useJoin.ts`, `app/authentication/selectMode.tsx`
+**Supabase 대응**: `supabase.from('members').upsert({ ... })`
 
 **Before**:
 ```typescript
-// TODO: 기존 updateJoin() 코드
+// 파일: utils/updateJoin.ts
+// 회원가입 또는 주소 업데이트 (FormData POST)
+const updateJoin = async (params: {
+  mb_id: string        // 폰번호 (필수)
+  mb_name?: string     // 이름
+  mb_nick?: string     // 닉네임
+  mb_2?: string        // 주민번호 앞 6자리 → 생년월일
+  mb_sex?: string      // 성별 ('남' | '여')
+  mb_5?: string        // 모드 ('1'=보호자, '2'=유치원)
+  mb_1?: string        // 통신사 코드
+  mb_4?: string        // 아파트/단지명
+  mb_addr1?: string    // 도로명주소
+  dong?: string        // 동
+  ho?: string          // 호
+}) => {
+  try {
+    const formData = new FormData()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) formData.append(key, value)
+    })
+
+    const response = await apiClient.post('api/set_join.php', formData)
+    if (response.result === 'Y') {
+      // 가입/업데이트 성공 → userAtom 업데이트
+      return response.data  // 회원 정보
+    } else {
+      Alert.alert('오류', response.message ?? '회원정보 저장 실패')
+      return null
+    }
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+    return null
+  }
+}
 ```
 
 **After**:
 ```typescript
-// TODO: Supabase Auth signUp + members upsert
+// 파일: utils/updateJoin.ts (수정)
+import { supabase } from '@/lib/supabase'
+
+// 회원 프로필 정보 UPSERT
+// ※ verifyOtp 성공 후 auth.users에 사용자가 이미 생성된 상태에서 호출
+const updateMemberProfile = async (params: {
+  name?: string
+  nickname?: string
+  birth_date?: string        // 'YYYY-MM-DD' 형식 (기존 mb_2에서 변환)
+  gender?: string            // '남성' | '여성' (기존 '남'/'여'에서 변환)
+  current_mode?: string      // '보호자' | '유치원' (기존 '1'/'2'에서 변환)
+  carrier?: string           // 통신사 코드
+  address_complex?: string   // 아파트/단지명
+  address_road?: string      // 도로명주소
+  address_building_dong?: string  // 동
+  address_building_ho?: string    // 호
+}) => {
+  try {
+    // 현재 로그인된 사용자의 UUID 획득
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      Alert.alert('오류', '로그인이 필요합니다')
+      return null
+    }
+
+    const { data, error } = await supabase
+      .from('members')
+      .upsert({
+        id: user.id,            // auth.uid() — PK 기준 UPSERT
+        phone: user.phone ?? '',
+        ...params,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      Alert.alert('오류', error.message)
+      return null
+    }
+    return data  // 저장된 회원 정보
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+    return null
+  }
+}
 ```
 
 **변환 포인트**:
-<!-- TODO -->
+- `FormData` POST → `supabase.from('members').upsert()` (JSON)
+- `mb_id` 파라미터 제거 → `user.id` (auth.uid()) 사용
+- 컬럼명 전면 변경 (§0-1 용어 매핑표 참조):
+  - `mb_name` → `name`, `mb_nick` → `nickname`
+  - `mb_2` → `birth_date` (포맷 변환: `'960101'` → `'1996-01-01'`)
+  - `mb_sex` → `gender` (값 변환: `'남'` → `'남성'`, `'여'` → `'여성'`)
+  - `mb_5` → `current_mode` (값 변환: `'1'` → `'보호자'`, `'2'` → `'유치원'`)
+  - `mb_4` → `address_complex`, `mb_addr1` → `address_road`
+  - `dong` → `address_building_dong`, `ho` → `address_building_ho`
+- `.upsert()` + `.select().single()`: 결과를 단일 객체로 반환
+- verifyOtp 성공 후 호출하는 순서 유지 (기존: alimtalk → auth_request → set_join → 전환 후: signInWithOtp → verifyOtp → members upsert)
+
+**응답 매핑**:
+
+| PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
+|---|---|---|
+| `result` (`'Y'`/`'N'`) | `error` (`null`이면 성공) | 예 |
+| `data.mb_id` | `data.phone` | 예 — 키 이름 변경 |
+| `data.mb_no` | `data.id` (UUID) | 예 — 정수 → UUID |
+| `data.mb_name` | `data.name` | 예 — 키 이름 변경 |
+| `data.mb_nick` | `data.nickname` | 예 — 키 이름 변경 |
+| `data.mb_2` | `data.birth_date` | 예 — `'960101'` → `'1996-01-01'` |
+| `data.mb_sex` | `data.gender` | 예 — `'남'` → `'남성'` |
+| `data.mb_5` | `data.current_mode` | 예 — `'1'` → `'보호자'` |
+| `data.mb_1` | `data.carrier` | 예 — 키 이름 변경 |
+| `data.mb_4` | `data.address_complex` | 예 — 키 이름 변경 |
+| `data.mb_addr1` | `data.address_road` | 예 — 키 이름 변경 |
+| `data.dong` | `data.address_building_dong` | 예 — 키 이름 변경 |
+| `data.ho` | `data.address_building_ho` | 예 — 키 이름 변경 |
+| `data.mb_profile1` | `data.profile_image` | 예 — 파일명 → Storage URL |
+| — | `data.nickname_tag` | 예 — 신규 필드 (`'#1001'` 형식) |
+| — | `data.created_at` | 예 — 신규 필드 |
 
 ---
 
 ### API #4. set_member_leave.php → RPC `app_withdraw_member`
 
 **전환 방식**: RPC | **난이도**: 중
-**관련 파일**: `app/user/withdraw/index.tsx` (추정)
+**관련 파일**: `app/user/withdraw/index.tsx`
 **Supabase 대응**: `supabase.rpc('app_withdraw_member', { p_reason })`
+**Supabase 테이블**: `members`, `pets`, `kindergartens`
 
 **Before**:
 ```typescript
-// TODO
+// 파일: app/user/withdraw/index.tsx
+// 회원 탈퇴
+const withdrawMember = async (reason: string) => {
+  try {
+    const formData = new FormData()
+    formData.append('mb_id', user.mb_id)    // 폰번호
+    formData.append('reason', reason)        // 탈퇴 사유
+
+    const response = await apiClient.post('api/set_member_leave.php', formData)
+    if (response.result === 'Y') {
+      // 탈퇴 성공 → 로그아웃 처리
+      resetUserAtom()
+      router.replace('/authentication/login')
+    } else {
+      Alert.alert('오류', response.message ?? '탈퇴 처리 실패')
+    }
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **After**:
 ```typescript
-// TODO
+// 파일: app/user/withdraw/index.tsx (수정)
+import { supabase } from '@/lib/supabase'
+
+// 회원 탈퇴 (RPC: soft delete + Auth 삭제)
+const withdrawMember = async (reason: string) => {
+  try {
+    // RPC: members.status→'탈퇴', pets.deleted=true,
+    //       kindergartens.registration_status='withdrawn'
+    const { error: rpcError } = await supabase.rpc('app_withdraw_member', {
+      p_reason: reason,
+    })
+
+    if (rpcError) {
+      Alert.alert('오류', rpcError.message)
+      return
+    }
+
+    // Supabase Auth 로그아웃 (세션 삭제)
+    await supabase.auth.signOut()
+
+    // userAtom 초기화 → 로그인 화면으로 이동
+    resetUserAtom()
+    router.replace('/authentication/login')
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **변환 포인트**:
-<!-- TODO -->
+- FormData POST → `supabase.rpc()` (JSON)
+- `mb_id` 파라미터 제거 → RPC 내부에서 `auth.uid()` 자동 사용
+- `reason` → `p_reason` (RPC 파라미터 네이밍 규칙: `p_` 접두사)
+- RPC가 수행하는 작업: `members.status='탈퇴'`, `members.withdrawn_at=NOW()`, `members.withdraw_reason=p_reason`, `pets.deleted=true`, `kindergartens.registration_status='withdrawn'`
+- RPC 호출 후 반드시 `supabase.auth.signOut()` 호출하여 로컬 세션 정리
+- Auth 사용자 삭제는 관리자 Edge Function에서 후속 처리 (앱에서 직접 삭제 불가)
+
+**응답 매핑**:
+
+| PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
+|---|---|---|
+| `result` (`'Y'`/`'N'`) | `error` (`null`이면 성공) | 예 |
+| `message` | `error.message` | 아니오 |
 
 ---
 
@@ -131,40 +415,199 @@
 **전환 방식**: 자동 API | **난이도**: 쉬움
 **관련 파일**: `app/(tabs)/mypage.tsx`
 **Supabase 대응**: `supabase.from('members').update({ current_mode }).eq('id', userId)`
+**Supabase 테이블**: `members`
 
 **Before**:
 ```typescript
-// TODO
+// 파일: app/(tabs)/mypage.tsx
+// 보호자 ↔ 유치원 모드 전환
+const toggleMode = async (newMode: '1' | '2') => {
+  try {
+    const formData = new FormData()
+    formData.append('mb_id', user.mb_id)
+    formData.append('mb_5', newMode)  // '1'=보호자, '2'=유치원
+
+    const response = await apiClient.post('api/set_mypage_mode_update.php', formData)
+    if (response.result === 'Y') {
+      // 모드 변경 성공 → userAtom 업데이트
+      setUser(prev => ({ ...prev, mb_5: newMode }))
+    } else {
+      Alert.alert('오류', response.message ?? '모드 변경 실패')
+    }
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **After**:
 ```typescript
-// TODO
+// 파일: app/(tabs)/mypage.tsx (수정)
+import { supabase } from '@/lib/supabase'
+
+// 보호자 ↔ 유치원 모드 전환
+const toggleMode = async (newMode: '보호자' | '유치원') => {
+  try {
+    const { data, error } = await supabase
+      .from('members')
+      .update({ current_mode: newMode })
+      .eq('id', user.id)
+      .select('current_mode')
+      .single()
+
+    if (error) {
+      Alert.alert('오류', error.message)
+      return
+    }
+    // 모드 변경 성공 → userAtom 업데이트
+    setUser(prev => prev ? { ...prev, current_mode: data.current_mode } : prev)
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **변환 포인트**:
-<!-- TODO -->
+- `mb_id` 파라미터 제거 → `.eq('id', user.id)` (UUID)
+- `mb_5` → `current_mode`: 값도 변경 (`'1'` → `'보호자'`, `'2'` → `'유치원'`)
+- FormData → `.update()` 메서드
+- `.select().single()`: UPDATE 후 변경된 값 확인
+
+**응답 매핑**:
+
+| PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
+|---|---|---|
+| `result` (`'Y'`/`'N'`) | `error` (`null`이면 성공) | 예 |
+| — | `data.current_mode` | 예 — 신규. UPDATE 후 변경된 값 반환 |
 
 ---
 
 ### API #6. set_profile_update.php → members UPDATE + Storage
 
 **전환 방식**: 자동 API + Storage | **난이도**: 쉬움
-**관련 파일**: `app/user/profile/edit.tsx` (추정)
-**Supabase 대응**: Storage 업로드 → `members` UPDATE
+**관련 파일**: `app/protector/[id]/updateProfile.tsx` (보호자 프로필 수정)
+**Supabase 대응**: Storage `profile-images` 업로드 → `members` UPDATE
+**Supabase 테이블**: `members`
 
 **Before**:
 ```typescript
-// TODO
+// 파일: app/protector/[id]/updateProfile.tsx (추정)
+// 프로필 수정 (닉네임 + 이미지)
+const updateProfile = async (nickname: string, imageFile?: any) => {
+  try {
+    const formData = new FormData()
+    formData.append('mb_id', user.mb_id)
+    formData.append('mb_nick', nickname)
+
+    if (imageFile) {
+      formData.append('mb_profile1', {
+        uri: imageFile.uri,
+        type: 'image/jpeg',
+        name: 'profile.jpg',
+      } as any)
+    }
+
+    const response = await apiClient.post('api/set_profile_update.php', formData)
+    if (response.result === 'Y') {
+      // 프로필 업데이트 성공 → userAtom 업데이트
+      setUser(prev => ({
+        ...prev,
+        mb_nick: nickname,
+        mb_profile1: response.data?.mb_profile1 ?? prev.mb_profile1,
+      }))
+    } else {
+      Alert.alert('오류', response.message ?? '프로필 수정 실패')
+    }
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **After**:
 ```typescript
-// TODO
+// 파일: app/protector/[id]/updateProfile.tsx (수정) 또는 해당 프로필 수정 화면
+import { supabase } from '@/lib/supabase'
+
+// 프로필 수정 (닉네임 + 이미지)
+const updateProfile = async (nickname: string, imageFile?: { uri: string }) => {
+  try {
+    let profileImageUrl: string | undefined
+
+    // Step 1: 이미지 업로드 (변경된 경우만)
+    if (imageFile) {
+      const fileExt = 'jpg'
+      const filePath = `${user.id}/profile.${fileExt}`
+
+      // 파일을 fetch → blob 변환 (React Native에서 Storage 업로드 방식)
+      const response = await fetch(imageFile.uri)
+      const blob = await response.blob()
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, blob, {
+          contentType: 'image/jpeg',
+          upsert: true,  // 기존 이미지 덮어쓰기
+        })
+
+      if (uploadError) {
+        Alert.alert('오류', '이미지 업로드 실패: ' + uploadError.message)
+        return
+      }
+
+      // 공개 URL 획득
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath)
+
+      profileImageUrl = publicUrl
+    }
+
+    // Step 2: members 테이블 업데이트
+    const updateData: Record<string, any> = { nickname }
+    if (profileImageUrl) {
+      updateData.profile_image = profileImageUrl
+    }
+
+    const { data, error } = await supabase
+      .from('members')
+      .update(updateData)
+      .eq('id', user.id)
+      .select('nickname, profile_image')
+      .single()
+
+    if (error) {
+      Alert.alert('오류', error.message)
+      return
+    }
+
+    // 프로필 업데이트 성공 → userAtom 업데이트
+    setUser(prev => prev ? {
+      ...prev,
+      nickname: data.nickname,
+      profile_image: data.profile_image ?? prev.profile_image,
+    } : prev)
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **변환 포인트**:
-<!-- TODO -->
+- FormData 이미지 → Storage `profile-images` 버킷 업로드 후 공개 URL 저장
+- `mb_id` 제거 → `.eq('id', user.id)`
+- `mb_nick` → `nickname`, `mb_profile1` (파일명) → `profile_image` (전체 URL)
+- 이미지 업로드와 DB 업데이트가 2단계로 분리됨 (기존 PHP는 1회 요청으로 처리)
+- Storage 경로: `profile-images/{user.id}/profile.jpg` (사용자별 고정 경로, upsert로 덮어쓰기)
+- `fetch()` → `blob()` 변환: React Native에서 Supabase Storage 업로드 시 필요
+
+**응답 매핑**:
+
+| PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
+|---|---|---|
+| `result` (`'Y'`/`'N'`) | `error` (`null`이면 성공) | 예 |
+| `data.mb_nick` | `data.nickname` | 예 — 키 이름 변경 |
+| `data.mb_profile1` (파일명) | `data.profile_image` (Storage URL) | 예 — 파일명 → 전체 URL |
 
 ---
 
@@ -175,42 +618,210 @@
 ### API #7. set_address_verification.php → members UPDATE + Storage
 
 **전환 방식**: 자동 API + Storage | **난이도**: 쉬움
-**관련 파일**: 주소 인증 화면
+**관련 파일**: `app/authentication/addressVerify.tsx`
 **Supabase 대응**: Storage `address-docs` 업로드 → `members` UPDATE (`address_doc_urls`)
+**Supabase 테이블**: `members`
 
 **Before**:
 ```typescript
-// TODO
+// 파일: app/authentication/addressVerify.tsx
+// 위치 인증 서류 업로드
+const submitAddressVerification = async (
+  images: { uri: string }[],  // 인증 서류 이미지 (1~3장)
+  addressInfo: {
+    mb_addr1: string    // 도로명주소
+    mb_4: string        // 단지명
+    dong: string        // 동
+    ho: string          // 호
+  }
+) => {
+  try {
+    const formData = new FormData()
+    formData.append('mb_id', user.mb_id)
+    formData.append('mb_addr1', addressInfo.mb_addr1)
+    formData.append('mb_4', addressInfo.mb_4)
+    formData.append('dong', addressInfo.dong)
+    formData.append('ho', addressInfo.ho)
+
+    // 이미지 파일 추가
+    images.forEach((img, index) => {
+      formData.append(`file${index + 1}`, {
+        uri: img.uri,
+        type: 'image/jpeg',
+        name: `address_doc_${index + 1}.jpg`,
+      } as any)
+    })
+
+    const response = await apiClient.post('api/set_address_verification.php', formData)
+    if (response.result === 'Y') {
+      Alert.alert('완료', '위치 인증이 요청되었습니다')
+    } else {
+      Alert.alert('오류', response.message ?? '위치 인증 요청 실패')
+    }
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **After**:
 ```typescript
-// TODO
+// 파일: app/authentication/addressVerify.tsx (수정)
+import { supabase } from '@/lib/supabase'
+
+// 위치 인증 서류 업로드
+const submitAddressVerification = async (
+  images: { uri: string }[],
+  addressInfo: {
+    address_road: string
+    address_complex: string
+    address_building_dong: string
+    address_building_ho: string
+  }
+) => {
+  try {
+    // Step 1: 인증 서류 이미지 업로드 (Storage)
+    const uploadedUrls: string[] = []
+
+    for (let i = 0; i < images.length; i++) {
+      const filePath = `${user.id}/address_doc_${Date.now()}_${i}.jpg`
+      const response = await fetch(images[i].uri)
+      const blob = await response.blob()
+
+      const { error: uploadError } = await supabase.storage
+        .from('address-docs')
+        .upload(filePath, blob, {
+          contentType: 'image/jpeg',
+          upsert: false,  // 고유 파일명 사용
+        })
+
+      if (uploadError) {
+        Alert.alert('오류', `이미지 ${i + 1} 업로드 실패: ${uploadError.message}`)
+        return
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('address-docs')
+        .getPublicUrl(filePath)
+
+      uploadedUrls.push(publicUrl)
+    }
+
+    // Step 2: members 테이블 업데이트 (주소 + 서류 URL + 인증 상태)
+    const { error } = await supabase
+      .from('members')
+      .update({
+        address_road: addressInfo.address_road,
+        address_complex: addressInfo.address_complex,
+        address_building_dong: addressInfo.address_building_dong,
+        address_building_ho: addressInfo.address_building_ho,
+        address_doc_urls: uploadedUrls,          // text[] 배열
+        address_auth_status: '인증요청',           // 관리자 승인 대기
+        address_auth_date: new Date().toISOString(),
+      })
+      .eq('id', user.id)
+
+    if (error) {
+      Alert.alert('오류', error.message)
+      return
+    }
+
+    Alert.alert('완료', '위치 인증이 요청되었습니다')
+  } catch (error) {
+    Alert.alert('오류', '서버와 통신할 수 없습니다')
+  }
+}
 ```
 
 **변환 포인트**:
-<!-- TODO -->
+- FormData 파일 업로드 → Storage `address-docs` 버킷 + `members.address_doc_urls` (text[] 배열)
+- `mb_id` 제거 → `.eq('id', user.id)`
+- 주소 컬럼명 변경: `mb_addr1` → `address_road`, `mb_4` → `address_complex`, `dong` → `address_building_dong`, `ho` → `address_building_ho`
+- `address_auth_status`: 인증 요청 상태를 DB에 직접 저장 (관리자가 승인/거절)
+- Storage 경로: `address-docs/{user.id}/address_doc_{timestamp}_{index}.jpg`
+- 여러 이미지를 순차 업로드 후 URL 배열을 `text[]` 타입 컬럼에 저장
+
+**응답 매핑**:
+
+| PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
+|---|---|---|
+| `result` (`'Y'`/`'N'`) | `error` (`null`이면 성공) | 예 |
+| `message` | `error.message` | 아니오 |
 
 ---
 
 ### API #8. kakao-address.php → 앱 직접 호출
 
 **전환 방식**: 앱 직접 호출 | **난이도**: 쉬움
-**관련 파일**: 주소 검색 화면
-**Supabase 대응**: 없음 (서버 경유 불필요 — 앱에서 카카오 API 직접 호출)
+**관련 파일**: `app/authentication/address.tsx`, `app/authentication/addressDetail.tsx`, `app/authentication/location.tsx`
+**Supabase 대응**: 없음 (서버 경유 불필요 — 앱에서 카카오 주소 API 직접 호출)
 
 **Before**:
 ```typescript
-// TODO: apiClient.get('api/kakao-address.php', { keyword })
+// 파일: app/authentication/address.tsx 등
+// 카카오 주소 검색 (PHP 프록시 경유)
+const searchAddress = async (keyword: string) => {
+  try {
+    const response = await apiClient.get('api/kakao-address.php', {
+      keyword: keyword,
+    })
+    if (response.results) {
+      setAddressList(response.results)
+    }
+  } catch (error) {
+    Alert.alert('오류', '주소 검색에 실패했습니다')
+  }
+}
 ```
 
 **After**:
 ```typescript
-// TODO: 카카오 주소 JavaScript API 직접 호출 (WebView 또는 REST)
+// 파일: app/authentication/address.tsx (수정)
+// 카카오 주소 검색 (앱에서 직접 호출 — PHP 프록시 제거)
+
+const KAKAO_REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY!
+
+const searchAddress = async (keyword: string) => {
+  try {
+    // 카카오 주소 검색 REST API 직접 호출
+    const response = await fetch(
+      `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(keyword)}`,
+      {
+        headers: {
+          Authorization: `KakaoAK ${KAKAO_REST_API_KEY}`,
+        },
+      }
+    )
+    const json = await response.json()
+
+    if (json.documents) {
+      setAddressList(json.documents)
+    }
+  } catch (error) {
+    Alert.alert('오류', '주소 검색에 실패했습니다')
+  }
+}
 ```
 
 **변환 포인트**:
-<!-- TODO -->
+- **PHP 프록시 완전 제거** → 앱에서 카카오 REST API 직접 호출
+- 기존: `apiClient.get('api/kakao-address.php')` → 전환 후: `fetch('https://dapi.kakao.com/v2/...')`
+- 카카오 REST API 키를 `.env`에 추가 필요: `EXPO_PUBLIC_KAKAO_REST_API_KEY`
+- PHP가 숨겨주던 API 키가 앱에 노출됨 → **카카오 개발자 콘솔에서 앱 플랫폼 등록(번들 ID) 필수** (도메인 제한 설정)
+- 응답 형식이 약간 다를 수 있음 (PHP 프록시가 가공했을 가능성) → 카카오 API 원본 응답 사용
+
+**응답 매핑**:
+
+| PHP 프록시 응답 필드 | 카카오 API 원본 응답 필드 | 변환 필요 |
+|---|---|---|
+| `results` (배열) | `documents` (배열) | 예 — 키 이름 변경 |
+| `results[].address_name` | `documents[].address_name` | 아니오 |
+| `results[].road_address_name` | `documents[].road_address.address_name` | 예 — 중첩 구조 |
+| `results[].building_name` | `documents[].road_address.building_name` | 예 — 중첩 구조 |
+| `results[].x` (경도) | `documents[].x` | 아니오 |
+| `results[].y` (위도) | `documents[].y` | 아니오 |
+
+> **주의**: PHP 프록시가 카카오 API 응답을 가공하여 평탄화(flatten)했을 수 있습니다. 전환 후 카카오 API 원본 응답의 중첩 구조(`road_address.address_name` 등)에 맞게 파싱 코드를 수정해야 합니다. 실제 `kakao-address.php` 소스를 확인하여 가공 여부를 판단하세요.
 
 ---
 
@@ -1514,3 +2125,4 @@ pg_cron 또는 외부 cron → supabase.functions.invoke('scheduler')
 |------|------|
 | 2026-04-17 | 초안 — 66개 API 전체 플레이스홀더 확정, 번호 체계 `MIGRATION_PLAN.md §5`와 동기화 |
 | 2026-04-17 | 리뷰 반영 — R4: 즐겨찾기 #46~#49 전환방식 수정 (DELETE→UPDATE is_favorite=false, INSERT→UPSERT is_favorite=true) |
+| 2026-04-17 | **R1 본문 작성** — §1 인증/회원 (#1~#6) Before/After 코드 + 응답 매핑 + §2 주소 인증 (#7~#8) Before/After 코드 + 응답 매핑. 총 8개 API 전환 코드 완성 |

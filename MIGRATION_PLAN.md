@@ -1,6 +1,6 @@
 # 우유펫 모바일 앱 백엔드 마이그레이션 설계서
 
-> 최종 업데이트: 2026-04-17 (Step 3 진행 중 — 뼈대 초안 완료 PR #139 merge, 본문 6라운드 작성 계획 확정. R1부터 시작 예정)
+> 최종 업데이트: 2026-04-17 (Step 3 진행 중 — R1 본문 작성 완료: §1 인증 전환 + §2 apiClient 교체 + CODE §1~§2)
 > 목적: PHP/MariaDB → Supabase 전환을 위한 상세 설계 및 작업 추적
 > 관련 문서: `HANDOVER.md` (Phase 5), `MOBILE_APP_ANALYSIS.md` (앱 소스 분석), `DB_MAPPING_REFERENCE.md` (테이블 대조표)
 
@@ -216,7 +216,7 @@
 | # | 라운드 | 세부 작업 | 상태 | 산출물 |
 |---|--------|----------|------|--------|
 | 3-0 | — | 문서 뼈대 초안 (§0 규칙, 전체 목차, API 번호 부여, placeholder) | ✅ 완료 | GUIDE.md + CODE.md (PR #139) |
-| 3-1 | R1 | 인증 + apiClient 교체 (mb_id → Supabase Auth, FormData → Supabase JS) | ⬜ 예정 | GUIDE §1~2 + CODE §1~2 |
+| 3-1 | R1 | 인증 + apiClient 교체 (mb_id → Supabase Auth, FormData → Supabase JS) | ✅ 완료 | GUIDE §1~2 + CODE §1~2 |
 | 3-2 | R2 | 단순 CRUD 핵심 (반려동물·유치원·보호자·주소·회원·채팅템플릿) | ⬜ 예정 | GUIDE §3~10 + CODE §3~4 |
 | 3-3 | R3 | RPC 조회 (13개 + 5b) | ⬜ 예정 | GUIDE §11~13 + CODE §7~8,§13 |
 | 3-4 | R4 | 채팅 Realtime (WebSocket → Realtime) | ⬜ 예정 | GUIDE §14 + CODE §5 |
@@ -253,7 +253,7 @@ TODO placeholder 112개(GUIDE 45 + CODE 67)를 실제 내용으로 채우는 작
 > ■ 작업 브랜치: genspark_ai_developer (main 절대 금지, PR은 별도 요청 시에만)
 > ```
 >
-> **현재 진행 상황**: 3-0 뼈대 초안 완료 (PR #139 merge). R1부터 본문 작성 시작 예정.
+> **현재 진행 상황**: R1 본문 작성 완료. GUIDE §1~2 (인증 전환 + apiClient 교체) + CODE §1~2 (API #1~#8 Before/After + 응답 매핑). R2부터 다음 라운드 시작 예정.
 
 #### 전환 권장 순서 (외주 개발자 실제 작업 순서)
 
@@ -956,3 +956,4 @@ const inicisMid = Deno.env.get('INICIS_MID');
 | 2026-04-15 | **Step 2.5 진행 시작** — 공개 VIEW 3개(members_public_profile, pets_public_info, settlement_infos_public) 생성(sql/44_00), RPC #8 app_set_representative_pet 완료(sql/44_08). RLS 충돌 해결 방안 A(VIEW) 확정, 방안 B(SECURITY DEFINER) 제외. 리뷰 RPC 2개 분리(app_get_guardian_reviews + app_get_kindergarten_reviews) → 총 RPC 11→12개 |
 | 2026-04-16 | **Step 2.5 RPC 대량 완성 (10/13)** — #5 app_get_reservations(보호자 예약목록), #5b app_get_reservations_kindergarten(유치원 예약목록, 신규 분리), #6 app_get_reservation_detail(예약상세 + payments + refunds), #9 app_get_guardian_reviews(보호자 후기 + 태그 집계 7개), #12 app_get_kindergarten_reviews(유치원 후기 + is_guardian_only 필터 + 태그 집계 7개), #10 app_get_settlement_summary(정산 요약 + period_summary + details) 완료. settlements RLS 보강(kindergarten_id 운영자 조건 추가, sql/43_01). #10은 get_settlement_list.php 기능 흡수. 총 RPC 12→13개(#5b 추가). 미완료 3개: #3, #4, #7 |
 | 2026-04-17 | **Step 2.5 완료 (13/13)** — #3 app_get_guardian_detail + #4 app_get_guardians 완료(VIEW/RPC 일괄 리팩터링: members_public_profile 11→9컬럼, owner→operator 키 변경, PR #136). #7 app_withdraw_member 완료(soft delete: members.status→'탈퇴', pets.deleted=true, kindergartens.registration_status='withdrawn', DDL ALTER sql/44_00a, PR #137). 외주개발자 RPC_PHP_MAPPING.md 확인 완료 반영. 문서 일괄 업데이트(RPC_PHP_MAPPING, DB_FUNCTIONS, MIGRATION_PLAN, HANDOVER, DB_MAPPING_REFERENCE) |
+| 2026-04-17 | **Step 3 R1 본문 작성 완료** — APP_MIGRATION_GUIDE.md §1 인증 전환 (1-1~1-6: 인증 흐름 다이어그램, API #1~#3 설명, userAtom 변경, 영향 범위) + §2 apiClient 교체 (2-1~2-5: 5패턴 비교, 점진적 전환 전략, 에러 처리 통합, 삭제 체크리스트). APP_MIGRATION_CODE.md §1 인증/회원 (#1~#6: Before/After 코드 + 응답 매핑 테이블) + §2 주소 인증 (#7~#8: Before/After 코드 + 응답 매핑 테이블). TODO 20개 해소, 8개 API 전환 코드 완성 |
