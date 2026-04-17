@@ -1,6 +1,6 @@
 # 우유펫 모바일 앱 백엔드 마이그레이션 설계서
 
-> 최종 업데이트: 2026-04-17 (Step 3 진행 중 — R1 본문 작성 완료: §1 인증 전환 + §2 apiClient 교체 + CODE §1~§2)
+> 최종 업데이트: 2026-04-17 (Step 3 진행 중 — R1 리뷰 반영 완료 (Issue 2~8), R2부터 다음 라운드 예정)
 > 목적: PHP/MariaDB → Supabase 전환을 위한 상세 설계 및 작업 추적
 > 관련 문서: `HANDOVER.md` (Phase 5), `MOBILE_APP_ANALYSIS.md` (앱 소스 분석), `DB_MAPPING_REFERENCE.md` (테이블 대조표)
 
@@ -253,7 +253,7 @@ TODO placeholder 112개(GUIDE 45 + CODE 67)를 실제 내용으로 채우는 작
 > ■ 작업 브랜치: genspark_ai_developer (main 절대 금지, PR은 별도 요청 시에만)
 > ```
 >
-> **현재 진행 상황**: R1 본문 작성 완료. GUIDE §1~2 (인증 전환 + apiClient 교체) + CODE §1~2 (API #1~#8 Before/After + 응답 매핑). R2부터 다음 라운드 시작 예정.
+> **현재 진행 상황**: R1 본문 작성 + 리뷰 반영(Issue 2~8) 완료. GUIDE §1~2 + CODE §1~2 확정. R2부터 다음 라운드 시작 예정.
 
 #### 전환 권장 순서 (외주 개발자 실제 작업 순서)
 
@@ -957,3 +957,4 @@ const inicisMid = Deno.env.get('INICIS_MID');
 | 2026-04-16 | **Step 2.5 RPC 대량 완성 (10/13)** — #5 app_get_reservations(보호자 예약목록), #5b app_get_reservations_kindergarten(유치원 예약목록, 신규 분리), #6 app_get_reservation_detail(예약상세 + payments + refunds), #9 app_get_guardian_reviews(보호자 후기 + 태그 집계 7개), #12 app_get_kindergarten_reviews(유치원 후기 + is_guardian_only 필터 + 태그 집계 7개), #10 app_get_settlement_summary(정산 요약 + period_summary + details) 완료. settlements RLS 보강(kindergarten_id 운영자 조건 추가, sql/43_01). #10은 get_settlement_list.php 기능 흡수. 총 RPC 12→13개(#5b 추가). 미완료 3개: #3, #4, #7 |
 | 2026-04-17 | **Step 2.5 완료 (13/13)** — #3 app_get_guardian_detail + #4 app_get_guardians 완료(VIEW/RPC 일괄 리팩터링: members_public_profile 11→9컬럼, owner→operator 키 변경, PR #136). #7 app_withdraw_member 완료(soft delete: members.status→'탈퇴', pets.deleted=true, kindergartens.registration_status='withdrawn', DDL ALTER sql/44_00a, PR #137). 외주개발자 RPC_PHP_MAPPING.md 확인 완료 반영. 문서 일괄 업데이트(RPC_PHP_MAPPING, DB_FUNCTIONS, MIGRATION_PLAN, HANDOVER, DB_MAPPING_REFERENCE) |
 | 2026-04-17 | **Step 3 R1 본문 작성 완료** — APP_MIGRATION_GUIDE.md §1 인증 전환 (1-1~1-6: 인증 흐름 다이어그램, API #1~#3 설명, userAtom 변경, 영향 범위) + §2 apiClient 교체 (2-1~2-5: 5패턴 비교, 점진적 전환 전략, 에러 처리 통합, 삭제 체크리스트). APP_MIGRATION_CODE.md §1 인증/회원 (#1~#6: Before/After 코드 + 응답 매핑 테이블) + §2 주소 인증 (#7~#8: Before/After 코드 + 응답 매핑 테이블). TODO 20개 해소, 8개 API 전환 코드 완성 |
+| 2026-04-17 | **Step 3 R1 리뷰 반영 (Issue 2~8)** — GUIDE: §2-2 Auth API 수량 보충 설명(Issue 2), §0-5 Phase A #4 RPC 예외 주석(Issue 8). CODE: §1 #4~#6 선행 작성 사유 노트(Issue 3), #3 convertBirthDate/convertGender 유틸 추가+CHECK 제약 명시(Issue 4,5), #8 카카오 API 키 보안 경고 강조 박스(Issue 6). 양쪽 문서 변경 이력 업데이트(Issue 7) |

@@ -1,7 +1,7 @@
 # 우유펫 모바일 앱 API 전환 코드 예시
 
 > **작성일**: 2026-04-17
-> **최종 업데이트**: 2026-04-17 (R1 본문 작성 — §1 인증/회원 #1~#6 + §2 주소 #7~#8 완료)
+> **최종 업데이트**: 2026-04-17 (R1 리뷰 반영 — Issue 2~8 일괄 수정)
 > **대상 독자**: 외주 개발자 (React Native/Expo 앱 코드 수정 담당)
 > **관련 문서**: `APP_MIGRATION_GUIDE.md` (전환 가이드 — 규칙/표기법/아키텍처 설명), `MIGRATION_PLAN.md` (설계서)
 > **표기 규칙**: `APP_MIGRATION_GUIDE.md §0`의 규칙을 따릅니다
@@ -41,6 +41,8 @@
 ## 1. 인증/회원
 
 > **가이드 참조**: `APP_MIGRATION_GUIDE.md §1 인증 전환`
+>
+> **#4~#6 선행 작성 사유**: 본 섹션의 #1~#3은 인증 전환 API이고, #4~#6은 GUIDE 기준으로는 §9(주소 인증/프로필/회원 관리)에 속합니다. 그러나 #4(회원 탈퇴)는 `supabase.auth.signOut()`과 밀접하고, #5(모드 전환)와 #6(프로필 수정)은 인증 완료 직후 호출되는 `members` 테이블 CRUD로서, **인증 흐름을 이해한 상태에서 바로 적용할 수 있는 자동 API 패턴 예시**입니다. Phase A에서 인증과 함께 전환하는 것을 권장하므로, R1에서 선행 작성합니다.
 
 ### API #1. alimtalk.php → Edge Function `send-alimtalk`
 
@@ -251,13 +253,50 @@ const updateJoin = async (params: {
 // 파일: utils/updateJoin.ts (수정)
 import { supabase } from '@/lib/supabase'
 
-// 회원 프로필 정보 UPSERT
+// ── 변환 유틸리티 ──────────────────────────────────────────
+
+/**
+ * 주민번호 앞 6자리(mb_2)를 'YYYY-MM-DD' 형식의 date 문자열로 변환
+ * DB 컬럼: members.birth_date (date 타입)
+ *
+ * @example convertBirthDate('960315')  → '1996-03-15'
+ * @example convertBirthDate('040101')  → '2004-01-01'
+ * @example convertBirthDate('1996-03-15') → '1996-03-15' (이미 변환된 경우 그대로)
+ */
+const convertBirthDate = (raw: string): string => {
+  // 이미 'YYYY-MM-DD' 형식이면 그대로 반환
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
+
+  // 6자리 → YYMMDD 파싱
+  const yy = parseInt(raw.slice(0, 2), 10)
+  const mm = raw.slice(2, 4)
+  const dd = raw.slice(4, 6)
+  // 00~30 → 2000년대, 31~99 → 1900년대 (한국 주민번호 관례)
+  const yyyy = yy <= 30 ? 2000 + yy : 1900 + yy
+  return `${yyyy}-${mm}-${dd}`
+}
+
+/**
+ * 기존 성별 값을 Supabase members.gender CHECK 제약에 맞는 값으로 변환
+ * DB CHECK 제약: gender IN ('남성', '여성')
+ *
+ * @example convertGender('남')  → '남성'
+ * @example convertGender('여')  → '여성'
+ * @example convertGender('남성') → '남성' (이미 변환된 경우 그대로)
+ */
+const convertGender = (raw: string): string => {
+  const map: Record<string, string> = { '남': '남성', '여': '여성' }
+  return map[raw] ?? raw  // 매핑에 없으면 원본 반환
+}
+
+// ── 회원 프로필 UPSERT ─────────────────────────────────────
+
 // ※ verifyOtp 성공 후 auth.users에 사용자가 이미 생성된 상태에서 호출
 const updateMemberProfile = async (params: {
   name?: string
   nickname?: string
-  birth_date?: string        // 'YYYY-MM-DD' 형식 (기존 mb_2에서 변환)
-  gender?: string            // '남성' | '여성' (기존 '남'/'여'에서 변환)
+  birth_date?: string        // 'YYYY-MM-DD' 형식 (기존 mb_2에서 convertBirthDate로 변환)
+  gender?: string            // '남성' | '여성' (기존 '남'/'여'에서 convertGender로 변환)
   current_mode?: string      // '보호자' | '유치원' (기존 '1'/'2'에서 변환)
   carrier?: string           // 통신사 코드
   address_complex?: string   // 아파트/단지명
@@ -273,12 +312,21 @@ const updateMemberProfile = async (params: {
       return null
     }
 
+    // 기존 값을 Supabase 스키마에 맞게 변환
+    const converted = { ...params }
+    if (converted.birth_date) {
+      converted.birth_date = convertBirthDate(converted.birth_date)
+    }
+    if (converted.gender) {
+      converted.gender = convertGender(converted.gender)
+    }
+
     const { data, error } = await supabase
       .from('members')
       .upsert({
         id: user.id,            // auth.uid() — PK 기준 UPSERT
         phone: user.phone ?? '',
-        ...params,
+        ...converted,
       })
       .select()
       .single()
@@ -300,13 +348,14 @@ const updateMemberProfile = async (params: {
 - `mb_id` 파라미터 제거 → `user.id` (auth.uid()) 사용
 - 컬럼명 전면 변경 (§0-1 용어 매핑표 참조):
   - `mb_name` → `name`, `mb_nick` → `nickname`
-  - `mb_2` → `birth_date` (포맷 변환: `'960101'` → `'1996-01-01'`)
-  - `mb_sex` → `gender` (값 변환: `'남'` → `'남성'`, `'여'` → `'여성'`)
+  - `mb_2` → `birth_date`: **`convertBirthDate()` 유틸리티 사용**. 주민번호 앞 6자리(`'960101'`)를 date 타입(`'1996-01-01'`)으로 변환. YY≤30 → 2000년대, YY≥31 → 1900년대 기준
+  - `mb_sex` → `gender`: **`convertGender()` 유틸리티 사용**. `'남'`→`'남성'`, `'여'`→`'여성'`. DB에 `CHECK (gender IN ('남성', '여성'))` 제약이 있으므로 반드시 변환 필요
   - `mb_5` → `current_mode` (값 변환: `'1'` → `'보호자'`, `'2'` → `'유치원'`)
   - `mb_4` → `address_complex`, `mb_addr1` → `address_road`
   - `dong` → `address_building_dong`, `ho` → `address_building_ho`
 - `.upsert()` + `.select().single()`: 결과를 단일 객체로 반환
 - verifyOtp 성공 후 호출하는 순서 유지 (기존: alimtalk → auth_request → set_join → 전환 후: signInWithOtp → verifyOtp → members upsert)
+- **주의**: `convertBirthDate`와 `convertGender`는 별도 유틸 파일(`utils/convertMemberFields.ts`)로 분리하거나, `updateJoin.ts` 내 로컬 함수로 둘 수 있음. 다른 화면에서도 재사용한다면 별도 파일 권장
 
 **응답 매핑**:
 
@@ -807,8 +856,19 @@ const searchAddress = async (keyword: string) => {
 - **PHP 프록시 완전 제거** → 앱에서 카카오 REST API 직접 호출
 - 기존: `apiClient.get('api/kakao-address.php')` → 전환 후: `fetch('https://dapi.kakao.com/v2/...')`
 - 카카오 REST API 키를 `.env`에 추가 필요: `EXPO_PUBLIC_KAKAO_REST_API_KEY`
-- PHP가 숨겨주던 API 키가 앱에 노출됨 → **카카오 개발자 콘솔에서 앱 플랫폼 등록(번들 ID) 필수** (도메인 제한 설정)
 - 응답 형식이 약간 다를 수 있음 (PHP 프록시가 가공했을 가능성) → 카카오 API 원본 응답 사용
+
+> **\u26a0\ufe0f 보안 경고 — 카카오 REST API 키 노출**
+>
+> 기존에는 PHP 서버가 API 키를 숨겨주었으나, 전환 후에는 `EXPO_PUBLIC_` 접두사 환경 변수가 **앱 번들에 포함**되어 디컴파일 시 노출됩니다.
+>
+> **필수 조치 사항**:
+> 1. **카카오 개발자 콘솔 → 내 애플리케이션 → 플랫폼 등록**: Android 패키지명(`com.wooyoopet.app`) + iOS 번들 ID 등록
+> 2. **허용 IP/도메인 제한**: 카카오 개발자 콘솔에서 API 호출 허용 범위를 앱 플랫폼으로 제한
+> 3. **API 키 종류 확인**: `REST API 키`(서버용)가 아닌 `JavaScript 키` 또는 `Native 앱 키` 사용 검토
+> 4. **사용량 모니터링**: 카카오 API 일일 호출 한도 확인 (무료 기본 300,000건/일)
+>
+> 이 조치를 하지 않으면 API 키가 악용되어 할당량이 소진되거나, 카카오 측에서 키를 정지시킬 수 있습니다.
 
 **응답 매핑**:
 
@@ -2126,3 +2186,4 @@ pg_cron 또는 외부 cron → supabase.functions.invoke('scheduler')
 | 2026-04-17 | 초안 — 66개 API 전체 플레이스홀더 확정, 번호 체계 `MIGRATION_PLAN.md §5`와 동기화 |
 | 2026-04-17 | 리뷰 반영 — R4: 즐겨찾기 #46~#49 전환방식 수정 (DELETE→UPDATE is_favorite=false, INSERT→UPSERT is_favorite=true) |
 | 2026-04-17 | **R1 본문 작성** — §1 인증/회원 (#1~#6) Before/After 코드 + 응답 매핑 + §2 주소 인증 (#7~#8) Before/After 코드 + 응답 매핑. 총 8개 API 전환 코드 완성 |
+| 2026-04-17 | **R1 리뷰 반영 (Issue 2~8)** — §1 #4~#6 선행 작성 사유 노트 추가(Issue 3), #3 `convertBirthDate` 유틸 추가+params 변환 반영(Issue 4), #3 `convertGender` 유틸+CHECK 제약 명시+upsert 변환 적용 반영(Issue 5), #8 카카오 REST API 키 보안 경고 강조 박스 추가(Issue 6) |
