@@ -193,27 +193,27 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 목차
 
-| 장 | 제목 | 대응 서브태스크 | API 수 | 상태 |
-|----|------|---------------|--------|------|
-| 0 | 문서 규칙 및 표기법 | — | — | ✅ 확정 |
-| 1 | 인증 전환 (mb_id → Supabase Auth) | 3-2 | 3개 (#1~#3) | ⬜ 예정 |
-| 2 | apiClient 교체 (FormData → Supabase JS) | 3-1 | — (공통) | ⬜ 예정 |
-| 3 | 반려동물 CRUD | 3-3 | 8개 (#9~#16) | ⬜ 예정 |
-| 4 | 즐겨찾기 CRUD | 3-3 | 4개 (#46~#49) | ⬜ 예정 |
-| 5 | 알림/FCM | 3-3 | 3개 (#50~#52) | ⬜ 예정 |
-| 6 | 콘텐츠 조회 | 3-3 | 5개 (#53~#57) | ⬜ 예정 |
-| 7 | 차단/신고 | 3-3 | 3개 (#58~#60) | ⬜ 예정 |
-| 8 | 채팅 템플릿 | 3-3 | 4개 (#30~#33) | ⬜ 예정 |
-| 9 | 주소 인증 / 프로필 / 회원 관리 | 3-3 | 6개 (#4~#8, #21) | ⬜ 예정 |
-| 10 | 기타 자동 API | 3-3 | 12개 (#24, #26~#29, #40, #42~#43, #45, #62~#65) | ⬜ 예정 |
-| 11 | 유치원/보호자 RPC | 3-4 | 4개 (#17~#20) | ⬜ 예정 |
-| 12 | 예약 조회 RPC | 3-4 | 2개 (#37, #38) | ⬜ 예정 |
-| 13 | 리뷰/정산/교육 RPC | 3-4 | 4개 (#41, #44, #44b, #61) | ⬜ 예정 |
-| 14 | 채팅 전환 (WebSocket → Realtime) | 3-5 | 9개 (#22~#30) | ⬜ 예정 |
-| 15 | 결제/예약 전환 | 3-6 | 5개 (#34~#38) | ⬜ 예정 |
-| 16 | Edge Function 인터페이스 | 3-7 | 7개 (#25, #34~#36, #39, #1, #66) | ⬜ 예정 |
-| A | 부록: 타입 정의 변경 총정리 | — | — | ⬜ 예정 |
-| B | 부록: 환경 변수 / 패키지 체크리스트 | — | — | ⬜ 예정 |
+| 장 | 제목 | 작성 라운드 | API 수 | 상태 |
+|----|------|-----------|--------|------|
+| 0 | 문서 규칙 및 표기법 | 3-0 (완료) | — | ✅ 확정 |
+| 1 | 인증 전환 (mb_id → Supabase Auth) | 3-1 / R1 | 3개 (#1~#3) | ⬜ 예정 |
+| 2 | apiClient 교체 (FormData → Supabase JS) | 3-1 / R1 | — (공통) | ⬜ 예정 |
+| 3 | 반려동물 CRUD | 3-2 / R2 | 8개 (#9~#16) | ⬜ 예정 |
+| 4 | 즐겨찾기 CRUD | 3-2 / R2 (CODE: R6) | 4개 (#46~#49) | ⬜ 예정 |
+| 5 | 알림/FCM | 3-2 / R2 (CODE: R6) | 3개 (#50~#52) | ⬜ 예정 |
+| 6 | 콘텐츠 조회 | 3-2 / R2 (CODE: R6) | 5개 (#53~#57) | ⬜ 예정 |
+| 7 | 차단/신고 | 3-2 / R2 (CODE: R6) | 3개 (#58~#60) | ⬜ 예정 |
+| 8 | 채팅 템플릿 | 3-2 / R2 | 4개 (#30~#33) | ⬜ 예정 |
+| 9 | 주소 인증 / 프로필 / 회원 관리 | 3-2 / R2 | 6개 (#4~#8, #21) | ⬜ 예정 |
+| 10 | 기타 자동 API | 3-2 / R2 | 12개 (#24, #26~#29, #40, #42~#43, #45, #62~#65) | ⬜ 예정 |
+| 11 | 유치원/보호자 RPC | 3-3 / R3 | 4개 (#17~#20) | ⬜ 예정 |
+| 12 | 예약 조회 RPC | 3-3 / R3 | 2개 (#37, #38) | ⬜ 예정 |
+| 13 | 리뷰/정산/교육 RPC | 3-3 / R3 | 4개 (#41, #44, #44b, #61) | ⬜ 예정 |
+| 14 | 채팅 전환 (WebSocket → Realtime) | 3-4 / R4 | 9개 (#22~#30) | ⬜ 예정 |
+| 15 | 결제/예약 전환 | 3-5 / R5 | 5개 (#34~#38) | ⬜ 예정 |
+| 16 | Edge Function 인터페이스 | 3-5 / R5 | 7개 (#25, #34~#36, #39, #1, #66) | ⬜ 예정 |
+| A | 부록: 타입 정의 변경 총정리 | 3-6 / R6 | — | ⬜ 예정 |
+| B | 부록: 환경 변수 / 패키지 체크리스트 | 3-6 / R6 | — | ⬜ 예정 |
 
 > **참고**: 일부 API는 여러 장에서 다룹니다 (예: #37~#38은 12장 RPC + 15장 결제 양쪽에서 참조).
 > 해당 API의 코드 예시는 `APP_MIGRATION_CODE.md`에서 한 번만 작성하고, 이 문서에서는 교차 참조합니다.
@@ -222,7 +222,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 1. 인증 전환 (mb_id → Supabase Auth)
 
-> **서브태스크**: 3-2
+> **작성 라운드**: 3-1 / R1
 > **관련 API**: #1 alimtalk.php, #2 auth_request.php, #3 set_join.php
 > **핵심 변경**: 폰번호 기반 수동 인증 → Supabase Phone OTP
 > **영향 범위**: 모든 API 호출의 사용자 식별 방식 변경
@@ -259,7 +259,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 2. apiClient 교체 (FormData → Supabase JS)
 
-> **서브태스크**: 3-1
+> **작성 라운드**: 3-1 / R1
 > **핵심 변경**: `utils/apiClient.ts` → `lib/supabase.ts`
 > **전환 전략**: 점진적 교체 (공존 → 전체 전환 → apiClient.ts 삭제)
 
@@ -287,7 +287,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 3. 반려동물 CRUD
 
-> **서브태스크**: 3-3 (자동 API)
+> **작성 라운드**: 3-2 / R2
 > **관련 API**: #9~#16 (8개)
 > **Supabase 테이블**: `pets`, `pet_breeds`, `favorite_pets`
 > **관련 파일**: `hooks/usePetList.ts`, `types/petType.ts`
@@ -334,7 +334,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 4. 즐겨찾기 CRUD
 
-> **서브태스크**: 3-3 (자동 API)
+> **작성 라운드**: 3-2 / R2 (CODE: 3-6 / R6)
 > **관련 API**: #46~#49 (4개)
 > **Supabase 테이블**: `favorite_kindergartens`, `favorite_pets`
 > **관련 파일**: `utils/handleFavorite.ts`
@@ -359,7 +359,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 5. 알림/FCM
 
-> **서브태스크**: 3-3 (자동 API)
+> **작성 라운드**: 3-2 / R2 (CODE: 3-6 / R6)
 > **관련 API**: #50~#52 (3개)
 > **Supabase 테이블**: `fcm_tokens`, `notifications`
 > **관련 파일**: `hooks/useFcmToken.ts`, `hooks/useNotification.ts`
@@ -380,7 +380,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 6. 콘텐츠 조회
 
-> **서브태스크**: 3-3 (자동 API)
+> **작성 라운드**: 3-2 / R2 (CODE: 3-6 / R6)
 > **관련 API**: #53~#57 (5개)
 > **Supabase 테이블**: `banners`, `notices`, `faqs`, `terms`
 
@@ -408,7 +408,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 7. 차단/신고
 
-> **서브태스크**: 3-3 (자동 API)
+> **작성 라운드**: 3-2 / R2 (CODE: 3-6 / R6)
 > **관련 API**: #58~#60 (3개)
 > **Supabase 테이블**: `member_blocks`
 > **관련 파일**: `hooks/useBlock.ts`
@@ -429,7 +429,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 8. 채팅 템플릿
 
-> **서브태스크**: 3-3 (자동 API)
+> **작성 라운드**: 3-2 / R2
 > **관련 API**: #30~#33 (4개, #30 get + #31 insert + #32 update + #33 delete)
 > **Supabase 테이블**: `chat_templates`
 
@@ -453,7 +453,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 9. 주소 인증 / 프로필 / 회원 관리
 
-> **서브태스크**: 3-3 (자동 API)
+> **작성 라운드**: 3-2 / R2
 > **관련 API**: #4~#8, #21 (6개)
 > **Supabase 테이블**: `members`, `kindergartens`
 > **관련 파일**: `utils/updateJoin.ts`, 프로필/주소 관련 화면
@@ -486,7 +486,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 10. 기타 자동 API
 
-> **서브태스크**: 3-3 (자동 API)
+> **작성 라운드**: 3-2 / R2
 > **관련 API**: #24, #26~#29, #40, #42~#43, #45, #62~#65 (12개)
 
 ### 10-1. 채팅 관련 자동 API
@@ -551,7 +551,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 11. 유치원/보호자 RPC
 
-> **서브태스크**: 3-4 (RPC 호출)
+> **작성 라운드**: 3-3 / R3
 > **관련 API**: #17~#20 (4개)
 > **RPC 함수**: `app_get_kindergarten_detail`, `app_get_kindergartens`, `app_get_guardian_detail`, `app_get_guardians`
 > **관련 파일**: `hooks/useKinderGarten.ts`, `utils/fetchPartnerList.ts`, `hooks/useProtector.ts`, `utils/fetchProtectorList.ts`
@@ -581,7 +581,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 12. 예약 조회 RPC
 
-> **서브태스크**: 3-4 (RPC 호출)
+> **작성 라운드**: 3-3 / R3
 > **관련 API**: #37, #38 (2개)
 > **RPC 함수**: `app_get_reservations`, `app_get_reservations_kindergarten`, `app_get_reservation_detail`
 > **관련 파일**: `hooks/usePaymentRequestList.ts`, `hooks/usePaymentRequest.ts`
@@ -610,7 +610,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 13. 리뷰/정산/교육 RPC
 
-> **서브태스크**: 3-4 (RPC 호출)
+> **작성 라운드**: 3-3 / R3
 > **관련 API**: #41, #44, #44b, #61 (4개, #16은 3장 반려동물 CRUD에 배치)
 > **RPC 함수**: `app_get_settlement_summary`, `app_get_guardian_reviews`, `app_get_kindergarten_reviews`, `app_get_education_with_progress`
 
@@ -635,7 +635,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 14. 채팅 전환 (WebSocket → Realtime)
 
-> **서브태스크**: 3-5
+> **작성 라운드**: 3-4 / R4
 > **관련 API**: #22~#30 (9개)
 > **핵심 변경**: WebSocket (`react-use-websocket`) → Supabase Realtime (`supabase.channel()`)
 > **관련 파일**: `hooks/useChat.ts` (대규모 리팩터링), `components/ChatMessage.tsx`
@@ -678,7 +678,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 15. 결제/예약 전환
 
-> **서브태스크**: 3-6
+> **작성 라운드**: 3-5 / R5
 > **관련 API**: #34~#39 (6개)
 > **핵심 변경**: PHP 콜백 → Edge Function, WebView 콜백 URL 변경
 > **관련 파일**: `app/payment/inicisPayment.tsx`, `app/payment/inicisApproval.tsx`, `app/payment/request.tsx`
@@ -716,7 +716,7 @@ yarn remove react-use-websocket   // WebSocket → Supabase Realtime
 
 ## 16. Edge Function 인터페이스 가이드
 
-> **서브태스크**: 3-7
+> **작성 라운드**: 3-5 / R5
 > **관련 Edge Function**: 7개
 > **핵심**: `supabase.functions.invoke()` 호출 규격 정의 (입력/출력 스펙만, 구현은 Step 4)
 

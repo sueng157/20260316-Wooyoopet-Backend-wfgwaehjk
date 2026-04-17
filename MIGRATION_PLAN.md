@@ -1,6 +1,6 @@
 # 우유펫 모바일 앱 백엔드 마이그레이션 설계서
 
-> 최종 업데이트: 2026-04-17 (Step 2.5 완료 — 앱용 RPC 13/13 + VIEW 3개 + DDL ALTER 1개, 총 15개 SQL 파일. PR #133~#137 merge 완료. Step 3 진행 예정)
+> 최종 업데이트: 2026-04-17 (Step 3 진행 중 — 뼈대 초안 완료 PR #139 merge, 본문 6라운드 작성 계획 확정. R1부터 시작 예정)
 > 목적: PHP/MariaDB → Supabase 전환을 위한 상세 설계 및 작업 추적
 > 관련 문서: `HANDOVER.md` (Phase 5), `MOBILE_APP_ANALYSIS.md` (앱 소스 분석), `DB_MAPPING_REFERENCE.md` (테이블 대조표)
 
@@ -192,23 +192,70 @@
 | 11 | 4 | `app_get_guardians` | ★★☆ | ❌ | ✅ 완료 — PHP 소스 없음, 목록 버전 |
 | 12 | 7 | `app_withdraw_member` | ★★★ | ✅ | ✅ 완료 — soft delete + DDL ALTER + 데이터 정리 |
 
-### Step 3: 앱 API 전환 가이드 작성 🔜 진행 예정 (Step 2.5 완료 → 전제조건 충족)
+### Step 3: 앱 API 전환 가이드 작성 🔄 진행 중
 
-**목표**: 외주 개발자가 모바일 앱 코드를 수정할 수 있도록 66개 API별 전환 지침서를 작성한다.
+**목표**: 외주 개발자가 모바일 앱(React Native/Expo) 코드를 PHP→Supabase로 전환할 수 있도록 66개 API별 전환 지침서를 작성한다.
 
-> **전제 조건**: Step 2.5(앱용 RPC 함수 13개)가 Supabase에 배포된 상태여야 한다. RPC 함수가 없으면 RPC 방식으로 분류된 API의 전환 가이드를 작성할 수 없다.
+> **전제 조건**: Step 2.5(앱용 RPC 함수 13개)가 Supabase에 배포된 상태여야 한다. ✅ 충족 (PR #133~#137)
 
-| # | 세부 작업 | 상태 | 산출물 |
-|---|----------|------|--------|
-| 3-1 | apiClient 교체 가이드 (FormData → Supabase JS) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
-| 3-2 | 인증 전환 가이드 (mb_id → Supabase Auth) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
-| 3-3 | 단순 CRUD 전환 코드 예시 (44개 자동 API) | ⬜ 예정 | APP_MIGRATION_CODE.md |
-| 3-4 | RPC 호출 전환 코드 예시 (13개 RPC) | ⬜ 예정 | APP_MIGRATION_CODE.md |
-| 3-5 | 채팅 전환 가이드 (WebSocket → Realtime) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
-| 3-6 | 결제/예약 전환 가이드 (PHP callback → Edge Functions) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
-| 3-7 | Edge Function 인터페이스 가이드 (7개 EF 호출 방법) | ⬜ 예정 | APP_MIGRATION_GUIDE.md |
+#### 산출물 2개 — 문서 역할 분담
 
-#### 전환 권장 순서
+| 문서 | 역할 | 내용 |
+|------|------|------|
+| **APP_MIGRATION_GUIDE.md** | **이해용** (읽고 파악) | §0 규칙/표기법, 용어 매핑 18항, 코드 표기 12항, `lib/supabase.ts` MMKV 어댑터, 마이그레이션 Phase A→D 순서, 16개 장별 개념 설명·Before/After 흐름·전환 포인트, 부록(타입 정의·env 체크리스트). **각 API에 #1~#66 번호를 부여하고, CODE.md에서 동일 번호로 코드를 참조하도록 안내.** |
+| **APP_MIGRATION_CODE.md** | **복붙용** (코드 참조) | GUIDE.md가 부여한 API 번호(#1~#66)를 **코드 블록 주석에 그대로 명시**하여, 개발자가 GUIDE→CODE 순서로 번호를 추적하며 실제 코드를 복사·적용할 수 있도록 구성. 13개 분류 섹션, 각 API별 마이그레이션 방식·난이도·Before/After 코드 블록·전환 포인트, 부록(공통 스토리지 업로드 패턴·6개 버킷 매핑) |
+
+> 두 문서는 동일한 API 번호 체계(MIGRATION_PLAN.md §5 #1~#66)를 공유한다.
+> GUIDE.md에서 개념을 이해한 뒤, CODE.md에서 해당 번호의 실제 코드를 복사하여 적용하는 흐름이다.
+
+#### 세부 작업 — 라운드(R1~R6) 기준
+
+> 세부 작업 번호(3-0~3-6)를 본문 작성 라운드(R1~R6)와 1:1 대응시켜,
+> **각 라운드 완료 = 해당 세부 작업 ✅** 로 추적할 수 있도록 구성했다.
+
+| # | 라운드 | 세부 작업 | 상태 | 산출물 |
+|---|--------|----------|------|--------|
+| 3-0 | — | 문서 뼈대 초안 (§0 규칙, 전체 목차, API 번호 부여, placeholder) | ✅ 완료 | GUIDE.md + CODE.md (PR #139) |
+| 3-1 | R1 | 인증 + apiClient 교체 (mb_id → Supabase Auth, FormData → Supabase JS) | ⬜ 예정 | GUIDE §1~2 + CODE §1~2 |
+| 3-2 | R2 | 단순 CRUD 핵심 (반려동물·유치원·보호자·주소·회원·채팅템플릿) | ⬜ 예정 | GUIDE §3~10 + CODE §3~4 |
+| 3-3 | R3 | RPC 조회 (13개 + 5b) | ⬜ 예정 | GUIDE §11~13 + CODE §7~8,§13 |
+| 3-4 | R4 | 채팅 Realtime (WebSocket → Realtime) | ⬜ 예정 | GUIDE §14 + CODE §5 |
+| 3-5 | R5 | 결제/예약 + Edge Functions (7개 EF 인터페이스 포함) | ⬜ 예정 | GUIDE §15~16 + CODE §6 |
+| 3-6 | R6 | 나머지 CRUD + 부록 + 교차검증 (즐겨찾기·알림·콘텐츠·차단·기타) | ⬜ 예정 | CODE §9~12, 부록 A·B |
+
+#### 본문 작성 계획 — 6라운드
+
+TODO placeholder 112개(GUIDE 45 + CODE 67)를 실제 내용으로 채우는 작업.
+각 라운드는 Phase A→D 순서를 따르며, GUIDE + CODE를 동시에 작성한다.
+
+| 라운드 | 세부작업 | Phase | 대상 | GUIDE 장 | CODE 섹션 | TODO 수 | 핵심 내용 | 주요 참조 |
+|--------|----------|-------|------|----------|-----------|---------|-----------|-----------|
+| **R1** | 3-1 | A (기반) | 인증 + apiClient 교체 | 1, 2장 | §1 인증/회원, §2 주소 | ~20개 | Supabase Auth 흐름, apiClient→supabase 4패턴, MMKV 세션, mb_id 제거 | MOBILE_APP_ANALYSIS.md §인증, DB_MAPPING_REFERENCE.md members |
+| **R2** | 3-2 | A (CRUD) | 단순 CRUD 핵심 | 3~10장 | §3 반려동물, §4 유치원/보호자 | ~16개 | 44개 자동 API 패턴, wr_1~wr_11 컬럼 매핑, Storage 업로드 | MOBILE_APP_ANALYSIS.md §API, DB_MAPPING_REFERENCE.md 전체 |
+| **R3** | 3-3 | B | RPC 조회 | 11~13장 | §7 정산, §8 리뷰, §13 기타 | ~14개 | supabase.rpc() 호출, 파라미터·응답 매핑, 보호자/유치원 분기 | RPC_PHP_MAPPING.md, sql/44_01~44_12 |
+| **R4** | 3-4 | C | 채팅 Realtime | 14장 | §5 채팅 | ~19개 | WebSocket→Realtime 전환, 채팅방 구독, 메시지 CRUD, 파일 전송 | MOBILE_APP_ANALYSIS.md §채팅 |
+| **R5** | 3-5 | D | 결제/예약 + Edge Functions | 15, 16장 | §6 결제/돌봄 | ~25개 | Edge Function 7개 인터페이스, 이니시스 콜백, 예약 생성 흐름 | MIGRATION_PLAN.md §7, MOBILE_APP_ANALYSIS.md §결제 |
+| **R6** | 3-6 | 마무리 | 나머지 + 부록 + 교차검증 | 부록 A,B | §9~§12, 부록 | ~18개 | 즐겨찾기·알림·콘텐츠·차단, 타입 정의, env/패키지 체크리스트, 문서 간 일관성 검증 | 전체 문서 교차검증 |
+
+> **작업 방식**: 각 라운드는 **별도 채팅방**에서 진행한다. GUIDE.md + CODE.md를 같은 라운드에서 동시에 채우며, 라운드 완료 시마다 `genspark_ai_developer` 브랜치에 커밋→푸시→리뷰 후 다음 라운드로 진행한다.
+>
+> **새 채팅방 프롬프트 템플릿**:
+> ```
+> R{N} 라운드 문서 작성해줘.
+> APP_MIGRATION_GUIDE.md + APP_MIGRATION_CODE.md를 같은 라운드에서 동시에 채우는 형태로 작업 진행.
+>
+> ■ 필수 선행:
+>   1. APP_MIGRATION_GUIDE.md의 "0. 문서 규칙 및 표기법" (§0-1 ~ §0-8)을 먼저 읽고,
+>      그 규칙(용어 매핑, 코드 표기, Before/After 형식, 응답 매핑 등)을 반드시 준수하여 작성할 것.
+>   2. MIGRATION_PLAN.md의 Step 3 "본문 작성 계획" 표에서 R{N}의 대상 범위를 확인할 것.
+>
+> ■ 참조 문서: MIGRATION_PLAN.md, MOBILE_APP_ANALYSIS.md, DB_MAPPING_REFERENCE.md, RPC_PHP_MAPPING.md
+> ■ 작업 브랜치: genspark_ai_developer (main 절대 금지, PR은 별도 요청 시에만)
+> ```
+>
+> **현재 진행 상황**: 3-0 뼈대 초안 완료 (PR #139 merge). R1부터 본문 작성 시작 예정.
+
+#### 전환 권장 순서 (외주 개발자 실제 작업 순서)
 
 ```
 Phase A: 인증 + 단순 CRUD (가장 먼저, 영향도 낮음)
