@@ -32,7 +32,8 @@
   - 교차 검증 완료 → DB_MAPPING_REFERENCE.md (PR #118~#121)
   - Step 2 SQL 실행 완료 → 신규 테이블 9개 + 컬럼 추가 6개 + RLS 79개 + Storage 버킷 6개 (PR #123)
   - Step 2.5 앱용 RPC 완료 → RPC 13개 + VIEW 3개 + DDL ALTER 1개, 총 15개 SQL 파일 (PR #133~#137)
-  - 확정: 기존 24테이블 + 신규 9테이블 + 신규 19컬럼 + API 66개 + Edge Functions 7개 + 앱용 RPC 13개
+  - Step 3 앱 API 전환 가이드 완료 → APP_MIGRATION_GUIDE.md (2,804줄) + APP_MIGRATION_CODE.md (6,374줄), 66개 API Before/After 코드 + 전수 검수 REVIEW_REPORT.md
+  - 확정: 기존 24테이블 + 신규 9테이블 + 신규 19컬럼 + API 66개 + Edge Functions 7개 + 앱용 RPC 13개 + Step 4 예정 RPC 3개·EF 7개
   ↓
 [예정] Phase 6: 기존 서버 해지 및 정리
 ```
@@ -43,7 +44,7 @@
 ### 1-3. 저장소 정보
 
 - **프로젝트**: 우유펫 관리자 백오피스 대시보드
-- **현재 단계**: Phase 1~3 완료 (PR #48~#57) → DB 연결 보완 및 UI 개선 완료 (PR #59~#112) → Phase 4 완료 (PR #114~#116) → Phase 5 진행중 (Step 1~2 완료, Step 2.5 완료, PR #118~#137)
+- **현재 단계**: Phase 1~3 완료 (PR #48~#57) → DB 연결 보완 및 UI 개선 완료 (PR #59~#112) → Phase 4 완료 (PR #114~#116) → Phase 5 진행중 (Step 1~2 완료, Step 2.5 완료, Step 3 완료, PR #118~#137)
 - **저장소**: `https://github.com/sueng157/wooyoopet-admin.git`
 - **브랜치 전략**: `main` (배포용, Cloudflare Pages 자동 배포) / `develop` (개발 완료·테스트용) / `genspark_ai_developer` (AI 작업용)
 - **배포 URL**: `https://admin.wooyoopet.com` (Cloudflare Pages)
@@ -1117,7 +1118,7 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 
 ### Phase 5: 모바일 앱 백엔드 전환
 
-> 참조 문서: `MOBILE_APP_ANALYSIS.md` (앱 소스 분석 보고서), `MIGRATION_PLAN.md` (마이그레이션 상세 설계), `DB_MAPPING_REFERENCE.md` (DB 전체 매핑 대조표), `DB_FUNCTIONS.md` (Supabase RPC 함수 목록), `legacy_php_api_all.txt` (PHP API 소스 전문 8,034줄)
+> 참조 문서: `MOBILE_APP_ANALYSIS.md` (앱 소스 분석 보고서), `MIGRATION_PLAN.md` (마이그레이션 상세 설계), `DB_MAPPING_REFERENCE.md` (DB 전체 매핑 대조표), `DB_FUNCTIONS.md` (Supabase RPC 함수 목록), `RPC_PHP_MAPPING.md` (RPC↔PHP 대응표 16개), `APP_MIGRATION_GUIDE.md` (앱 전환 가이드 66개 API), `APP_MIGRATION_CODE.md` (앱 전환 코드 66개 API), `REVIEW_REPORT.md` (Step 3 전수 검수 보고서), `legacy_php_api_all.txt` (PHP API 소스 전문 8,034줄)
 
 #### 수집 자료 현황
 
@@ -1149,7 +1150,8 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 | 5-6f | API 전수조사 + Step 2.5 설계 | ✅ 완료 | 앱 소스 실제 호출 60개 대조 → 미사용 19개 제거, 누락 3개 추가, API 매핑 66개 재정렬. 앱용 RPC 함수 13개 설계 삽입 (리뷰 2분리 + 예약목록 2분리). Edge Functions 8→7개 교정 (PR #128, #130) |
 | 5-7 | 앱용 RPC 함수 SQL 작성 (Step 2.5) | ✅ 13/13 완료 | sql/44_00 (VIEW 3개) + sql/44_00a (DDL ALTER) + sql/44_01~44_12 + sql/44_05b — 앱용 RPC 13개 전체 완료. PR #133(초기 4개), #135(추가 6개), #136(#3,#4 + 리팩터링), #137(#7 + DDL). RLS 충돌 해결: VIEW 방식(방안 A) 확정. settlements RLS 보강(sql/43_01) |
 | 5-7a | 외주개발자 PHP 용도 확인 | ✅ 확인 완료 | RPC_PHP_MAPPING.md 전달 → 확인 완료 (2026-04-17). 확인 내용 대로 Step 2.5 작업 반영 완료 |
-| 5-8 | 앱 API 전환 가이드 작성 (Step 3) | ⬜ 예정 | 66개 API별 전환 지침서 (외주 개발자용), Step 2.5 완료 후 진행 |
+| 5-8 | 앱 API 전환 가이드 작성 (Step 3) | ✅ 완료 | APP_MIGRATION_GUIDE.md (2,804줄, §0~16 + 부록 A·B) + APP_MIGRATION_CODE.md (6,374줄, §1~13 + 부록). 66개 API Before/After 코드 완성, TODO 0건. R1~R6 6라운드 작성 + 라운드별 리뷰 반영 |
+| 5-8a | Step 3 전수 검수 (REVIEW_REPORT) | ✅ 완료 | REVIEW_REPORT.md 작성. 4대 점검(코드 명확성, 일관성 R1~R6, DB 스키마 정합성, Step 4 함수 추적) 완료. 발견 이슈: [치명] 3건 + [중요] 2건 → 전체 수정 완료. DDL 대조 컬럼 불일치 5건 교정, 응답 매핑 보강 |
 | 5-9 | Edge Functions 구현 (Step 4) | ⬜ 예정 | 7개: inicis-callback, send-chat-message, create-reservation, complete-care, send-alimtalk, send-push, scheduler |
 | 5-10 | 인증 전환 | ⬜ 예정 | mb_id 파라미터 → Supabase Auth Phone OTP |
 | 5-11 | 채팅 전환 | ⬜ 예정 | 카페24 WebSocket → Supabase Realtime |
@@ -1159,6 +1161,13 @@ Phase 3 완료 후 전체 페이지의 DB 연결 오류 수정 및 UI 개선 작
 > 상세 작업 내용·분석 결과·매핑표는 `MIGRATION_PLAN.md` 참조.
 > **Step 2.5 완료 (2026-04-17)**: 앱용 RPC 13/13 전체 완료. VIEW 3개(sql/44_00) + DDL ALTER(sql/44_00a) + RPC 13개(sql/44_01~44_12 + 44_05b). settlements RLS 보강(sql/43_01). 외주개발자 RPC_PHP_MAPPING.md 확인 완료.
 > PR #133(4개) + PR #135(6개) + PR #136(2개 + VIEW/RPC 리팩터링) + PR #137(1개 + DDL ALTER) → 전체 merge 완료.
+>
+> **Step 3 완료 (2026-04-18)**: 앱 API 전환 가이드 66개 API 전체 완성 + 전수 검수 완료.
+> - APP_MIGRATION_GUIDE.md (2,804줄): §0 규칙 + §1~16 장별 개념·전환 포인트 + 부록 A(타입 정의 7종)·B(env/패키지 체크리스트)
+> - APP_MIGRATION_CODE.md (6,374줄): 66개 API Before/After 코드 + 응답 매핑 테이블 + 부록(Storage 업로드 공통 유틸)
+> - REVIEW_REPORT.md: 4대 점검 완료 — [치명] 3건 + [중요] 2건 전체 수정 완료 (C1: #62 education_completions UPSERT 재작성, C2: #63 banks use_yn 교정, C3: #43 settlement_infos onConflict 교정, I1: #57 term_versions version_number 교정, I3: #42 응답 매핑 코드 예시 추가)
+> - R1~R6 6라운드 작성 + 라운드별 리뷰 반영, TODO 0건, 외주 개발자 복사-붙여넣기 가능 수준 확인
+> - 다음 단계: Step 4 (Edge Functions 7개 + RPC 3개 구현) → Step 4 완료 후 Step 3 문서 크로스체크 예정
 
 #### Phase 5 진행 이력
 

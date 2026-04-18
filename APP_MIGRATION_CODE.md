@@ -4226,19 +4226,40 @@ const fetchSettlementInfo = async () => {
 - `mb_id` → `member_id` (UUID)
 - `.maybeSingle()`: 정산 정보가 아직 등록되지 않은 유치원도 있으므로, 결과 없을 때 에러 대신 null 반환
 - 컬럼명 변경: `account_number`, `account_holder`, `account_bank`, `business_type`, `business_reg_number`, `operator_email` 등
+- **⚠️ `.select('*')` 사용 시 Supabase는 DB 컬럼명을 그대로 반환합니다.** 기존 앱에서 PHP 응답 키로 접근하던 코드를 아래와 같이 변경해야 합니다:
+
+```typescript
+// ────────────────────────────────────────────
+// 앱 코드에서 반드시 변경해야 하는 키 접근 예시
+// ────────────────────────────────────────────
+
+// ❌ Before (PHP 응답 키 기준 — 더 이상 동작하지 않음)
+setInicisStatus(data.status)
+setBusinessRegNo(data.business_reg_no)
+setEmail(data.settlement_email)
+const hasBusinessFlag = data.has_business === 'Y'
+
+// ✅ After (Supabase DB 컬럼명 기준 — .select('*') 반환값)
+setInicisStatus(data.inicis_status)           // status → inicis_status
+setBusinessRegNo(data.business_reg_number)    // business_reg_no → business_reg_number
+setEmail(data.operator_email)                 // settlement_email → operator_email
+const businessType = data.business_type       // has_business('Y'/'N') → business_type('개인사업자'/'비사업자' 등)
+const ssnMasked = data.operator_ssn_masked    // rrn_front_enc+rrn_back_enc → operator_ssn_masked ('960315-*******')
+```
 
 **응답 매핑**:
 
-| PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
+| PHP 응답 필드 | Supabase 응답 필드 (DB 컬럼명 그대로) | 변환 필요 |
 |---|---|---|
 | `data.mb_id` | `data.member_id` (UUID) | 예 |
-| `data.has_business` | `data.business_type` | 예 — `'Y'`/`'N'` → `'개인사업자'`/`'비사업자'` 등 |
+| `data.has_business` (`'Y'`/`'N'`) | `data.business_type` (`'개인사업자'`/`'법인사업자'`/`'비사업자'`) | 예 — 타입+키 변경 |
 | `data.business_reg_no` | `data.business_reg_number` | 예 — 키 이름 변경 |
 | `data.settlement_email` | `data.operator_email` | 예 — 키 이름 변경 |
 | `data.account_number` | `data.account_number` | 아니오 |
 | `data.account_holder` | `data.account_holder` | 아니오 |
-| `data.status` | `data.inicis_status` | 예 — 키 이름 변경 |
-| `data.rrn_front_enc` + `rrn_back_enc` | `data.operator_ssn_masked` | 예 — 암호화→마스킹 |
+| `data.bank` | `data.account_bank` | 예 — 키 이름 변경 |
+| `data.status` | `data.inicis_status` | 예 — 키 이름 변경 (**앱 코드 접근 시 반드시 변경**) |
+| `data.rrn_front_enc` + `rrn_back_enc` | `data.operator_ssn_masked` (`'960315-*******'`) | 예 — 암호화→마스킹 |
 
 ---
 
@@ -4321,7 +4342,7 @@ const saveSettlementInfo = async (info: {
         account_number: info.account_number,
         account_holder: info.account_holder,
         inicis_status: '작성중',
-      }, { onConflict: 'member_id' })
+      }, { onConflict: 'kindergarten_id' })  // UNIQUE 제약: uq_settlement_infos_kindergarten_id
       .select()
       .single()
 
@@ -4337,7 +4358,7 @@ const saveSettlementInfo = async (info: {
 ```
 
 **변환 포인트**:
-- FormData → `.upsert()` (JSON), `onConflict: 'member_id'`로 중복 시 UPDATE
+- FormData → `.upsert()` (JSON), `onConflict: 'kindergarten_id'`로 중복 시 UPDATE (DB UNIQUE 제약: `uq_settlement_infos_kindergarten_id`)
 - `mb_id` → `member_id` (UUID)
 - `has_business` (`'Y'`/`'N'`) → `business_type` (`'개인사업자'`/`'법인사업자'`/`'비사업자'`)
 - `rrn_front` + `rrn_back` (암호화) → `operator_ssn_masked` (마스킹: `'960315-*******'`)
@@ -5538,7 +5559,7 @@ const fetchTerms = async () => {
         effective_date,
         term_versions (
           id,
-          version,
+          version_number,
           content,
           effective_date
         )
@@ -5563,6 +5584,7 @@ const fetchTerms = async () => {
 - 구조 변경: `terms` 테이블은 약관 메타정보(제목, 필수 여부), `term_versions` 테이블이 실제 내용(본문 HTML)을 버전별 관리
 - 공개 조회: `terms_select_app` + `term_versions_select_app` 모두 `USING (true)`
 - 앱에서 특정 약관의 최신 버전 본문 표시: `data[].term_versions` 배열에서 최신 `effective_date` 항목 사용
+- **컬럼명 주의**: `term_versions` 테이블의 버전 컬럼은 `version_number` (DDL 기준). 앱에서 버전 표시 시 `data[].term_versions[].version_number`로 접근
 
 **응답 매핑**:
 
@@ -5940,12 +5962,17 @@ const fetchEducation = async (kindergartenId: string) => {
 
 ---
 
-### API #62. set_solved.php → education_completions INSERT
+### API #62. set_solved.php → education_completions UPSERT (topic_details JSONB 갱신)
 
-**전환 방식**: 자동 API | **난이도**: 쉬움
+**전환 방식**: 자동 API | **난이도**: 중
 **관련 파일**: `app/kindergarten/tutorial/index.tsx`
-**Supabase 대응**: `supabase.from('education_completions').insert({ member_id, topic_id })`
+**Supabase 대응**: `supabase.from('education_completions').upsert({ kindergarten_id, topic_details, ... }, { onConflict: 'kindergarten_id' })`
 **Supabase 테이블**: `education_completions`
+
+> **⚠️ 스키마 주의**: `education_completions`는 퀴즈 단위(1 quiz = 1 row)가 아닌 **유치원 단위(1 kindergarten = 1 row)**입니다.
+> 개별 주제의 이수 상태는 `topic_details` JSONB 배열 내부에 `{ topic_id, completed_at }` 형태로 저장됩니다.
+> `member_id`, `topic_id` 컬럼은 이 테이블에 **존재하지 않습니다**.
+> RLS 정책은 `kindergarten_id IN (SELECT id FROM kindergartens WHERE member_id = auth.uid())` 로 본인 소유 유치원만 허용합니다.
 
 **Before**:
 ```typescript
@@ -5973,22 +6000,91 @@ const markSolved = async (educationId: string) => {
 // 파일: app/kindergarten/tutorial/index.tsx (수정)
 import { supabase } from '@/lib/supabase'
 
-// 교육 퀴즈 이수 완료 저장
-const markSolved = async (topicId: string) => {
+/**
+ * 교육 퀴즈 이수 완료 저장
+ *
+ * education_completions 테이블 구조:
+ *   - kindergarten_id (uuid, UNIQUE) — 유치원 단위 1행
+ *   - topic_details   (jsonb)        — [{ topic_id, completed_at }, ...]
+ *   - total_topics    (int)          — 공개 교육 주제 총 수
+ *   - completed_topics(int)          — 이수 완료 주제 수
+ *   - progress_rate   (numeric)      — 진행률 (0~100)
+ *   - completion_status(text)        — '미시작' | '진행중' | '이수완료'
+ *   - all_completed_at(timestamptz)  — 전체 이수 완료 시각 (null 가능)
+ *   - checklist_confirmed(bool)      — 체크리스트 확인 여부
+ *   - pledge_agreed   (bool)         — 서약 동의 여부
+ *
+ * 흐름:
+ *   1. 현재 이수 기록 조회 (없으면 신규 생성)
+ *   2. topic_details JSONB에 해당 topic_id가 없으면 추가
+ *   3. completed_topics, progress_rate, completion_status 재계산
+ *   4. UPSERT (onConflict: 'kindergarten_id')
+ */
+const markSolved = async (
+  kindergartenId: string,
+  topicId: string,
+  totalTopics: number,         // RPC app_get_education_with_progress 응답의 completion.total_topics
+) => {
   try {
-    const { error } = await supabase
+    // ── 1. 현재 이수 기록 조회 ──
+    const { data: current, error: fetchError } = await supabase
       .from('education_completions')
-      .insert({
-        member_id: user.id,
-        topic_id: topicId,
-      })
+      .select('topic_details, completed_topics')
+      .eq('kindergarten_id', kindergartenId)
+      .maybeSingle()            // 첫 이수 시 null 반환 (에러 아님)
 
-    if (error) {
-      // 23505: unique_violation — 이미 이수한 교육은 무시
-      if (error.code === '23505') return
-      Alert.alert('오류', error.message)
+    if (fetchError) {
+      Alert.alert('오류', fetchError.message)
       return
     }
+
+    // ── 2. topic_details JSONB 갱신 ──
+    const existingDetails: Array<{ topic_id: string; completed_at: string }>
+      = current?.topic_details ?? []
+
+    // 이미 이수한 주제면 중복 방지 → 무시
+    if (existingDetails.some(d => d.topic_id === topicId)) {
+      return
+    }
+
+    const updatedDetails = [
+      ...existingDetails,
+      { topic_id: topicId, completed_at: new Date().toISOString() },
+    ]
+
+    // ── 3. 진행 상태 재계산 ──
+    const completedCount = updatedDetails.length
+    const progressRate = totalTopics > 0
+      ? Math.round((completedCount / totalTopics) * 1000) / 10  // 소수점 1자리
+      : 0
+    const completionStatus: '미시작' | '진행중' | '이수완료'
+      = completedCount === 0
+        ? '미시작'
+        : completedCount >= totalTopics
+          ? '이수완료'
+          : '진행중'
+
+    // ── 4. UPSERT (신규면 INSERT, 기존이면 UPDATE) ──
+    const { error: upsertError } = await supabase
+      .from('education_completions')
+      .upsert({
+        kindergarten_id: kindergartenId,
+        topic_details: updatedDetails,
+        total_topics: totalTopics,
+        completed_topics: completedCount,
+        progress_rate: progressRate,
+        completion_status: completionStatus,
+        all_completed_at: completionStatus === '이수완료'
+          ? new Date().toISOString()
+          : null,
+      }, { onConflict: 'kindergarten_id' })
+
+    if (upsertError) {
+      Alert.alert('오류', upsertError.message)
+      return
+    }
+
+    // UI 갱신 — 이수 완료 목록에 추가
     setSolvedList(prev => [...prev, topicId])
   } catch (error) {
     Alert.alert('오류', '서버와 통신할 수 없습니다')
@@ -5997,15 +6093,23 @@ const markSolved = async (topicId: string) => {
 ```
 
 **변환 포인트**:
-- `mb_id` → `member_id` (UUID), `education_id` → `topic_id` (UUID)
-- 중복 체크: PHP에서 서버 측 처리 → Supabase는 UNIQUE 제약 위반 시 `23505` 에러 코드 → 앱에서 무시 처리
-- `.insert()` 단순 호출 (반환값 불필요)
+- **테이블 구조 차이**: 레거시는 퀴즈 단위(1 quiz = 1 row, `mb_id` + `education_id`), Supabase는 유치원 단위(1 kindergarten = 1 row, `kindergarten_id` + `topic_details` JSONB)
+- `mb_id`(전화번호) → RLS가 `auth.uid()` 기반으로 자동 검증. `member_id` 컬럼은 이 테이블에 없음
+- `education_id` → `topic_id`를 JSONB 배열 내부 요소로 관리 (컬럼이 아님)
+- **단순 INSERT가 아닌 Read-Modify-Write 패턴**: 현재 `topic_details` 조회 → 주제 추가 → `completed_topics`/`progress_rate`/`completion_status` 재계산 → UPSERT
+- `onConflict: 'kindergarten_id'` — `education_completions` 테이블의 UNIQUE 제약이 `kindergarten_id`에 존재
+- 중복 이수 방지: JSONB 배열에서 `topic_id` 일치 여부를 앱 측에서 체크 (레거시의 `23505` 에러 대신)
+- `totalTopics` 파라미터: 교육 목록 조회 시 `app_get_education_with_progress` RPC 응답의 `completion.total_topics`를 사용
+- `checklist_confirmed`, `pledge_agreed` 필드는 별도 플로우에서 갱신 (이 함수에서는 건드리지 않음)
 
 **응답 매핑**:
 
 | PHP 응답 필드 | Supabase 응답 필드 | 변환 필요 |
 |---|---|---|
-| `result` (`'Y'`/`'N'`) | `error` (`null`이면 성공) | 예 |
+| `result` (`'Y'`/`'N'`) | `upsertError` (`null`이면 성공) | 예 |
+| — | `topic_details` (JSONB 배열) | — (신규: 주제별 이수 상세) |
+| — | `completion_status` | — (신규: `'미시작'`/`'진행중'`/`'이수완료'`) |
+| — | `progress_rate` | — (신규: 진행률 %) |
 
 ---
 
@@ -6013,7 +6117,7 @@ const markSolved = async (topicId: string) => {
 
 **전환 방식**: 자동 API | **난이도**: 쉬움
 **관련 파일**: `hooks/useBankList.ts`
-**Supabase 대응**: `supabase.from('banks').select('*').eq('is_active', true).order('sort_order')`
+**Supabase 대응**: `supabase.from('banks').select('id, code, name').eq('use_yn', true).order('sort_order')`
 **Supabase 테이블**: `banks`
 
 **Before**:
@@ -6043,7 +6147,7 @@ const fetchBankList = async () => {
     const { data, error } = await supabase
       .from('banks')
       .select('id, code, name')
-      .eq('is_active', true)
+      .eq('use_yn', true)              // DDL 컬럼명: use_yn (boolean) — 사용 중인 은행만
       .order('sort_order')
 
     if (error) {
@@ -6059,7 +6163,7 @@ const fetchBankList = async () => {
 
 **변환 포인트**:
 - 파라미터 없음 (마스터 데이터 전체 조회)
-- `is_active=true`: 사용 중인 은행만 필터
+- `use_yn=true`: 사용 중인 은행만 필터 (DDL 컬럼명 `use_yn`, boolean)
 - `sort_order`: 정렬 순서 (은행 코드 순 등)
 
 **응답 매핑**:
