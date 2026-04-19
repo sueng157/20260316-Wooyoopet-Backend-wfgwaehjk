@@ -3581,8 +3581,12 @@ const updateReservation = async (
     const { data, error } = await supabase.functions.invoke('create-reservation', {
       body: {
         reservation_id: reservationId,  // 기존 예약 UUID → 업데이트 모드
-        status: status,                 // '예약확정', '거절', '취소' 등
-        ...options,                     // reject_reason, cancel_reason 등
+        status: status,                 // '예약확정', '거절', '취소' (API 파라미터값)
+        ...options,                     // reject_reason, reject_detail, cancel_reason 등
+        // ⚠️ DB 상태값 변환: EF 내부에서 isGuardian/isKgOwner 판단 후 동적 매핑
+        //   '예약확정' → DB '예약확정' (변환 없음)
+        //   '거절'     → DB '유치원거절'
+        //   '취소'     → DB isGuardian ? '보호자취소' : '유치원취소'
       },
     })
 
@@ -3614,6 +3618,7 @@ const updateReservation = async (
 - **`payment_approval_id` → `payment_id`**: 정수 ID → UUID. `inicis-callback` EF에서 반환된 값 사용
 - **부가 처리 원자적 통합**: 기존에는 예약 생성 후 앱에서 채팅 시스템 메시지를 별도 전송했으나, 전환 후에는 EF 내부에서 채팅방 자동 생성 + 시스템 메시지 + FCM 푸시를 원자적으로 처리
 - **상태 변경도 같은 EF**: `reservation_id`를 추가로 전달하면 업데이트 모드. 생성과 변경이 하나의 Edge Function으로 통합
+- **API→DB 상태값 변환**: 앱은 `'거절'`/`'취소'`를 보내지만, EF 내부에서 호출자 역할(`isGuardian`/`isKgOwner`) 판단 후 DB 실제 상태값으로 동적 변환 — `'거절'→'유치원거절'`, `'취소'→isGuardian?'보호자취소':'유치원취소'`. 시스템 메시지도 각각 `reservation_rejected`/`reservation_cancelled` 타입으로 생성
 - `response.result` 비교 제거 → `data?.success` 또는 `error` 체크
 
 **응답 매핑** (생성 모드):

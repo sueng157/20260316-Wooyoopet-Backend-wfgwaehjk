@@ -1908,10 +1908,16 @@ WHERE cm.chat_room_id = crm.chat_room_id
 | `error` | string | 에러 메시지 (실패 시) |
 
 **업데이트 모드**: `reservation_id`를 추가로 전달하면 UPDATE 모드로 동작합니다.
-- `status='거절'` → `reject_reason`, `reject_detail` 설정 + 시스템 메시지 + FCM
-- `status='취소'` → 위약금 계산 + `refunds` INSERT + 시스템 메시지 + FCM
-- `status='예약확정'` → 시스템 메시지 (`message_type='reservation_confirmed'`) + FCM
+- `status='예약확정'` → DB `'예약확정'` 그대로 저장, `message_type='reservation_confirmed'` 시스템 메시지 + FCM
+- `status='거절'` → DB `'유치원거절'`으로 변환 저장, `reject_reason`/`reject_detail` 기록, `message_type='reservation_rejected'` 시스템 메시지 + FCM
+- `status='취소'` → DB `'보호자취소'`(보호자) 또는 `'유치원취소'`(유치원)으로 변환 저장, `message_type='reservation_cancelled'` 시스템 메시지 + FCM
+  - ⚠️ 위약금 계산 + `refunds` INSERT 로직은 TODO (향후 구현 예정)
 
+> 📝 **DB 상태값 변환 노트**: 앱은 API 파라미터로 `'거절'`/`'취소'`를 보내지만, EF 내부에서 `isGuardian`/`isKgOwner` 판단 후 DB 실제 상태값으로 동적 변환합니다:
+> - `'거절'` → `'유치원거절'`
+> - `'취소'` → `isGuardian ? '보호자취소' : '유치원취소'`
+> - `'예약확정'` → `'예약확정'` (변환 없음)
+>
 > 📝 코드 예시: `APP_MIGRATION_CODE.md` #36 참조
 
 ### 15-5. API #39. set_care_complete.php → Edge Function `complete-care`
@@ -2222,9 +2228,9 @@ const { data, error } = await supabase.functions.invoke('send-chat-message', {
 8. `notifications` INSERT
 
 **EF 내부 처리** (업데이트 모드):
-- `status='예약확정'`: 예약 확정 시스템 메시지 + FCM
-- `status='거절'`: `reject_reason`/`reject_detail` 기록, 시스템 메시지 + FCM
-- `status='취소'`: 위약금 계산(policy에 따라), `refunds` INSERT, 시스템 메시지 + FCM
+- `status='예약확정'`: DB `'예약확정'` 그대로 저장, `message_type='reservation_confirmed'` 시스템 메시지 + FCM
+- `status='거절'`: DB `'유치원거절'`으로 변환 저장, `reject_reason`/`reject_detail` 기록, `message_type='reservation_rejected'` 시스템 메시지 + FCM
+- `status='취소'`: DB `'보호자취소'`(보호자) 또는 `'유치원취소'`(유치원)으로 변환 저장, `message_type='reservation_cancelled'` 시스템 메시지 + FCM (⚠️ 위약금/`refunds` 로직은 TODO)
 
 **출력 스펙**:
 
